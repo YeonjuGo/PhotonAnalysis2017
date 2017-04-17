@@ -56,13 +56,14 @@ const TCut evtSelFilterCut = "pcollisionEventSelection";
 const TCut evtSelFilterCut_pp = "pBeamScrapingFilter && pPAprimaryVertexFilter";// pVertexFilterCutEandG is for pPb pileup
 const TCut spikeRejection = "(phoSigmaIEtaIEta_2012>=0.002) && (pho_swissCrx<=0.9) && (abs(pho_seedTime)<=3)";
 
-const TCut dataCut = trigCut && evtSelFilterCut && spikeRejection;
-const TCut dataCut_pp = trigCut && evtSelFilterCut_pp && spikeRejection;
-
 const TCut hoeCut = "phoHoverE<0.1";
 const TCut sumIsoCut = "(pho_ecalClusterIsoR4 + pho_hcalRechitIsoR4 + pho_trackIsoR4PtCut20) < 1.0";
 const TCut sigmaCut = "(phoSigmaIEtaIEta_2012)<0.010";
-const TCut hotspotCut = "!((phoE3x3/phoE5x5 > 2/3-0.03 && phoE3x3/phoE5x5 < 2/3+0.03) && (phoE1x5/phoE5x5 > 1/3-0.03 && phoE1x5/phoE5x5 < 1/3+0.03) && (phoE2x5/phoE5x5 > 2/3-0.03 && phoE2x5/phoE5x5 < 2/3+0.03))";
+const TCut hotspotCut = "pho_is2015Noise==0";
+//const TCut hotspotCut = "!((phoE3x3/phoE5x5 > 2/3-0.03 && phoE3x3/phoE5x5 < 2/3+0.03) && (phoE1x5/phoE5x5 > 1/3-0.03 && phoE1x5/phoE5x5 < 1/3+0.03) && (phoE2x5/phoE5x5 > 2/3-0.03 && phoE2x5/phoE5x5 < 2/3+0.03))";
+
+const TCut dataCut = trigCut && evtSelFilterCut && spikeRejection && hotspotCut;
+const TCut dataCut_pp = trigCut && evtSelFilterCut_pp && spikeRejection && hotspotCut;
 
 const TCut phoSignalCut = hoeCut && sumIsoCut && sigmaCut && hotspotCut;
 

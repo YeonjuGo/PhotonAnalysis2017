@@ -341,11 +341,32 @@ Double_t cleverRange(TH1* h,TH1* h2, Float_t fac=1.2, Float_t minY=1.e-3)
 
   Float_t minY1 =  (2.0-fac) * h->GetBinContent(h->GetMinimumBin());
   Float_t minY2 =  (2.0-fac) * h2->GetBinContent(h2->GetMinimumBin());
-  cout <<" range will be set as " << minY1 << " ~ " << minY2 << endl;
+  //cout <<" range will be set as " << minY1 << " ~ " << minY2 << endl;
   //   cout <<" range will be set as " << minY << " ~ " << maxY << endl;
   h->SetAxisRange(min(minY1,minY2),max(maxY1,maxY2),"Y");
   h2->SetAxisRange(min(minY1,minY2),max(maxY1,maxY2),"Y");
-  return max(maxY1,maxY2);
+  return min(minY1,minY2);
+  //return max(maxY1,maxY2);
+}
+
+Double_t cleverRange(TH1* h,TH1* h2, TH1* h3, Float_t fac=1.2)
+{
+  Float_t maxY1 =  fac * h->GetBinContent(h->GetMaximumBin());
+  Float_t maxY2 =  fac * h2->GetBinContent(h2->GetMaximumBin());
+  Float_t maxY3 =  fac * h3->GetBinContent(h3->GetMaximumBin());
+
+  Float_t minY1 =  (2.0-fac) * h->GetBinContent(h->GetMinimumBin());
+  Float_t minY2 =  (2.0-fac) * h2->GetBinContent(h2->GetMinimumBin());
+  Float_t minY3 =  (2.0-fac) * h3->GetBinContent(h3->GetMinimumBin());
+  //   cout <<" range will be set as " << minY << " ~ " << maxY << endl;
+  Float_t firstmin = min(minY1,minY2);
+  Float_t firstmax = max(maxY1,maxY2);
+  Float_t finalmin = min(firstmin,minY3);
+  Float_t finalmax = max(firstmax,maxY3);
+  h->SetAxisRange(finalmin,finalmax,"Y");
+  h2->SetAxisRange(finalmin,finalmax,"Y");
+  h3->SetAxisRange(finalmin,finalmax,"Y");
+  return finalmin; 
 }
 
 TF1* cleverGaus(TH1* h, const char* title="h", Float_t c = 2.5, bool quietMode=true)

@@ -151,7 +151,7 @@ PhotonPurity getPurity(CutConfiguration config ,TTree *dataTree, TTree *mcTree,
   
   PhotonPurity fitr = doFit(config, hSig, hBkg, hCand);
 
-  std::cout << "Purity: " << fitr.purity << std::endl;
+  std::cout << ">>>>Purity: " << fitr.purity << std::endl;
   std::cout << "nSig: " << fitr.nSig << std::endl;
   std::cout << "chisq: " << fitr.chisq << std::endl;
 
