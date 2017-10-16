@@ -1,6 +1,6 @@
 // yj_quickPhotonPurity.C
 // Author: Yeonju Go
-// Modifired : 2017 June 10 
+// Modifired : 2017 May 23 
 // Created : 2017 April 10 
 // Cobbled together from code written by Alex
 
@@ -21,13 +21,13 @@
 #include "stdio.h"
 #include <iostream>
 
-#include "PhotonPurity_SBcorrection.h"
+#include "PhotonPurity.h"
 #include "../phoRaaCuts/phoRaaCuts_temp.h"
 #include "../ElectroWeak-Jet-Track-Analyses/Utilities/interface/CutConfigurationParser.h"
 #include "../ElectroWeak-Jet-Track-Analyses/Utilities/interface/InputConfigurationParser.h"
 #include "../ElectroWeak-Jet-Track-Analyses/Plotting/commonUtility.h"
 
-int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="170523_temp_v1_NewPurityMethod", bool useSBcorr=1, bool noCentDepCorr=1, bool useMCSB=0){
+int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="temp", bool useMCSB=0){
     gStyle->SetOptStat(0);
     TH1::SetDefaultSumw2();
 
@@ -70,6 +70,9 @@ int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="170523_te
     if(collisionType==2) nCENTBINS=1;
 
     std::string trigger = configCuts.proc[CUTS::kHISTOGRAM].obj[CUTS::kPHOTON].s[CUTS::PHO::k_trigger_gammaJet].c_str();
+    // trigger is named differently in MC, hardcode for now :(
+    std::string triggerMC_forPurity = "HLT_HISinglePhoton40_Eta1p5_v2";//HIMC
+    if(collisionType==2) triggerMC_forPurity = "HLT_HISinglePhoton40_Eta1p5ForPPRef_v1"; // PPMC
     TFile* input = TFile::Open(inputData);
     TTree* tHlt = (TTree*)input->Get("hltTree");
     TTree* tPho = (TTree*)input->Get("EventTree");    // photons
@@ -121,41 +124,31 @@ int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="170523_te
                         centBins_i[j], centBins_f[j]);
                 if(collisionType==2) centCut = "hiBin<10000";
 
+                TCut triggerCut = Form("%s == 1", trigger.c_str());
+                TCut triggerCutMC =  Form("%s == 1", triggerMC_forPurity.c_str());
                 //TCut sampleIsolation = "(pho_sumIsoCorrected < (16.7202-0.154349*hiBin+0.00040613*hiBin*hiBin)) && phoHoverE<0.1"; //for PbPb
-                TCut dataCandidateCut = sampleIsolation && etaCut && ptCut && centCut;
-                if(collisionType==2) dataCandidateCut = sampleIsolation_pp && etaCut && ptCut;
+                TCut dataCandidateCut = sampleIsolation && dataCut && etaCut && ptCut && centCut;
+                if(collisionType==2) dataCandidateCut = sampleIsolation_pp && dataCut_pp && etaCut && ptCut;
 
                 TCut sidebandCut = ""; 
-                if(useMCSB==0 && collisionType==0) sidebandCut = sidebandIsolation && etaCut && ptCut && centCut;
-                else if(useMCSB==0 && collisionType==2) sidebandCut = sidebandIsolation_pp && etaCut && ptCut;
-                else if(useMCSB==1 && collisionType==0) sidebandCut = mcBkgIsolation && mcCut && hoeCut && isoCut && etaCut && ptCut && centCut;
-                else if(useMCSB==1 && collisionType==2) sidebandCut = mcBkgIsolation && mcCut_pp && hoeCut_pp && isoCut_pp && etaCut && ptCut;
+                if(useMCSB==0 && collisionType==0) sidebandCut = sidebandIsolation && etaCut && ptCut && centCut && dataCut;
+                else if(useMCSB==0 && collisionType==2) sidebandCut = sidebandIsolation_pp && etaCut && ptCut && dataCut_pp;
+                else if(useMCSB==1 && collisionType==0) sidebandCut = mcBkgIsolation && etaCut && ptCut && centCut && trigCut_mc_pbpb && evtSelFilterCut && ;
+                else if(useMCSB==1 && collisionType==2) sidebandCut = mcBkgIsolation && etaCut && ptCut && trigCut_mc_pp && evtSelFilterCut_pp;
                 else cout << "something's wrong" << endl; 
 
-                TCut mcSignalCut = mcSignalCut_woKine && etaCut && ptCut && centCut;
-                if(collisionType==2) mcSignalCut = mcSignalCut_woKine_pp && etaCut && ptCut;
-
-                TString fname_SBcorr = "";
-                if(useSBcorr==1 && coll=="pbpb" && noCentDepCorr==1) fname_SBcorr=Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/performance/output/BKG_Iso_nonIso_%s_%s_pt%dto%d_cent0to100.root",ver.Data(),coll.Data(),(int)ptBins[i],(int)ptBins[i+1]);
-                if(useSBcorr==1 && coll=="pbpb" && noCentDepCorr==0) fname_SBcorr=Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/performance/output/BKG_Iso_nonIso_%s_%s_pt%dto%d_cent%dto%d.root",ver.Data(),coll.Data(),(int)ptBins[i],(int)ptBins[i+1],(int)centBins_i[j]/2,(int)centBins_f[j]/2);
-                if(useSBcorr==1 && coll=="pp") fname_SBcorr=Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/performance/output/BKG_Iso_nonIso_%s_%s_pt%dto%d.root",ver.Data(),coll.Data(),(int)ptBins[i],(int)ptBins[i+1]);
+                TCut mcSignalCut =  mcIsolation && etaCut && ptCut && centCut && trigCut_mc_pbpb && evtSelFilterCut && spikeRejection && hotspotCut && electronCut;
+                if(collisionType==2) mcSignalCut =  mcIsolation && etaCut && ptCut && trigCut_mc_pp && evtSelFilterCut_pp && spikeRejection && hotspotCut && electronCut;
 
                 PhotonPurity fitr;
-                if(useMCSB==0 && useSBcorr==0){
-                    fitr = getPurity(coll, configCuts, tPho, tmcPho,
+                if(useMCSB==0){
+                    fitr = getPurity(configCuts, tPho, tmcPho,
                             dataCandidateCut, sidebandCut,
                             mcSignalCut);
-                } else if(useMCSB==0 && useSBcorr==1){
-                    fitr = getPurity(coll, configCuts, tPho, tmcPho,
+                } else{
+                    fitr = getPurity(configCuts, tPho, tmcPho,
                             dataCandidateCut, sidebandCut,
-                            mcSignalCut, fname_SBcorr);
-                } else if(useMCSB==1 && useSBcorr==0){
-                    fitr = getPurity(coll, configCuts, tPho, tmcPho,
-                            dataCandidateCut, sidebandCut,
-                            mcSignalCut, "",tmcBkgPho);
-                } else if(useMCSB==1 && useSBcorr==1){
-                    std::cout << "ERROR ::: Can't correct isolated Bkg distribution from MC :::" << std::endl;
-                    return 1;
+                            mcSignalCut, tmcBkgPho);
                 }
                 cPurity->cd((k+j)*nPtBin+i+1);
 
@@ -317,9 +310,5 @@ int main(int argc, char* argv[]) {
         return yj_quickPhotonPurity(argv[1], argv[2]);
     if (argc == 4)
         return yj_quickPhotonPurity(argv[1], argv[2], atoi(argv[3]));
-    if (argc == 5)
-        return yj_quickPhotonPurity(argv[1], argv[2], atoi(argv[3]), atoi(argv[4]));
-    if (argc == 6)
-        return yj_quickPhotonPurity(argv[1], argv[2], atoi(argv[3]), atoi(argv[4]), atoi(argv[5]));
     return 1;
 }

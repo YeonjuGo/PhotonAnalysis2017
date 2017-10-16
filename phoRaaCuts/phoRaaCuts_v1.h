@@ -67,7 +67,7 @@ const TCut dataCut_pp = trigCut && evtSelFilterCut_pp && spikeRejection && hotsp
 
 const TCut phoSignalCut = hoeCut && sumIsoCut && sigmaCut && hotspotCut;
 
-
+//from pp Egamma group
 const TCut isoCut_ppGED = "((pfcIso4<=1.37) && (pfnIso4<=1.06+0.014*phoEt+0.000019*phoEt*phoEt) && pfpIso4<=(0.28+0.0053*phoEt))";
 const TCut hoeCut_ppGED = "phoHoverE<0.05";
 const TCut sigmaCut_ppGED = "phoSigmaIEtaIEta<0.0102";

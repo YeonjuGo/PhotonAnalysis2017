@@ -114,9 +114,9 @@ PhotonPurity doFit(CutConfiguration config, TH1D* hSig=0, TH1D* hBkg=0, TH1D* hD
   return res;
 }
 
-PhotonPurity getPurity(CutConfiguration config ,TTree *dataTree, TTree *mcTree,
+PhotonPurity getPurity(const TString coll, CutConfiguration config, TTree *dataTree, TTree *mcTree,
 		       TCut dataCandidateCut, TCut sidebandCut,
-		       TCut mcSignalCut, TTree *bkgmcTree=0)
+		       TCut mcSignalCut, TString fname_SBcorr="", TTree *bkgmcTree=0)
 {
   Float_t signalShift = config.proc[CUTS::kHISTOGRAM].obj[CUTS::kPHOTON].f[CUTS::PHO::k_puritySignalShift];
   Float_t backgroundShift = config.proc[CUTS::kHISTOGRAM].obj[CUTS::kPHOTON].f[CUTS::PHO::k_purityBackgroundShift];
@@ -133,22 +133,41 @@ PhotonPurity getPurity(CutConfiguration config ,TTree *dataTree, TTree *mcTree,
   sigshift += signalShift;
   TString bkgshift = "+";
   bkgshift += backgroundShift;
+ 
+  TString varHere="";
+  if(coll=="pp") varHere=purityVar_pp;
+  else if(coll=="pbpb") varHere=purityVar;
+  else cout << "There's no '" << coll << "' type of collision" << endl;
 
-  //dataTree->Project(hCand->GetName(), "phoSigmaIEtaIEta_2012", mcWeightLabel*dataCandidateCut, "");
-  dataTree->Project(hCand->GetName(), "phoSigmaIEtaIEta_2012", dataCandidateCut, "");
+  dataTree->Project(hCand->GetName(), varHere, dataCandidateCut, "");
   if(bkgmcTree==0){
-    //dataTree->Project(hBkg->GetName(), "phoSigmaIEtaIEta_2012"+bkgshift, mcWeightLabel*sidebandCut, "");
-    dataTree->Project(hBkg->GetName(), "phoSigmaIEtaIEta_2012"+bkgshift, sidebandCut, "");
+    dataTree->Project(hBkg->GetName(), varHere+bkgshift, sidebandCut, "");
   } else {
-    //bkgmcTree->Project(hBkg->GetName(), "phoSigmaIEtaIEta_2012"+bkgshift, sidebandCut, "");
-    bkgmcTree->Project(hBkg->GetName(), "phoSigmaIEtaIEta_2012"+bkgshift, mcWeightLabel*sidebandCut, "");
+    bkgmcTree->Project(hBkg->GetName(), varHere+bkgshift, mcWeightLabel*sidebandCut, "");
   }
-  //mcTree->Project(hSig->GetName(), "phoSigmaIEtaIEta_2012"+sigshift, mcSignalCut, "");
-  mcTree->Project(hSig->GetName(), "phoSigmaIEtaIEta_2012"+sigshift, mcWeightLabel*mcSignalCut, "");
+  mcTree->Project(hSig->GetName(), varHere+sigshift, mcWeightLabel*mcSignalCut, "");
 
   std::cout << "dataCount: " << hCand->GetEntries() << std::endl;
   std::cout << "bkgCount: " << hBkg->GetEntries() << std::endl;
   std::cout << "sigCount: " << hSig->GetEntries() << std::endl;
+  
+  TFile* fcorr;
+  TF1* f1; 
+  cout << "SideBand correction file :: " << fname_SBcorr << endl;
+  if(fname_SBcorr!="") {
+      fcorr = new TFile(fname_SBcorr);
+      f1 = (TF1*) fcorr->Get("f1");
+      f1->SetName("f1");
+      cout << "formula : " << f1->GetExpFormula()<<", p0="<<f1->GetParameter(0)<<", p1="<<f1->GetParameter(1) << ", f(0) = " << f1->Eval(0)<< endl;
+
+      for(int vv=0;vv<hBkg->GetNbinsX();++vv){
+          double binVal = hBkg->GetBinContent(vv+1);
+          double binErr = hBkg->GetBinError(vv+1);
+          double binX = hBkg->GetBinLowEdge(vv+1)+(double)hBkg->GetBinWidth(vv+1)/2.;
+          hBkg->SetBinContent(vv+1,binVal*abs(f1->Eval(binX)));
+          hBkg->SetBinError(vv+1,binErr*abs(f1->Eval(binX)));
+      }
+  }
   
   PhotonPurity fitr = doFit(config, hSig, hBkg, hCand);
 
@@ -159,6 +178,8 @@ PhotonPurity getPurity(CutConfiguration config ,TTree *dataTree, TTree *mcTree,
   delete hSig;
   delete hBkg;
   delete hCand;
+  //delete fcorr;
+  //delete f1;
 
   fitr.sigMeanShift = signalShift;
 

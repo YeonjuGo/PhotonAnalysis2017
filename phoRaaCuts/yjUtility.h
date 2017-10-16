@@ -22,6 +22,7 @@
 #include <TStyle.h>
 #include <TROOT.h>
 #include <TCut.h>
+#include <TSystem.h>
 
 #include <iostream>     // std::cout
 #include <ctime>        // std::clock()
@@ -44,8 +45,8 @@ void SetyjPadStyle(){
     gStyle->SetPaperSize(20,26);
     gStyle->SetPadTopMargin(0.05);
     gStyle->SetPadRightMargin(0.05);
-    gStyle->SetPadBottomMargin(0.17);
-    gStyle->SetPadLeftMargin(0.17);
+    gStyle->SetPadBottomMargin(0.15);
+    gStyle->SetPadLeftMargin(0.15);
 }
 void SetHistTitleStyle(double titlesize=0.06, double labelsize = 0.05){
     gStyle->SetTextFont(42); 
@@ -69,7 +70,9 @@ void SetHistTitleStyle(double titlesize=0.06, double labelsize = 0.05){
    // gStyle->SetLabelSize( labelsize, "Y" ); gStyle->SetLabelOffset(labeloffset, "Y");
 //}
 void SetHistTextSize(TH1* h, double divRatio=1.0, double titlesize=17, double labelsize=14, int fontst=43){
-    double titleoffset = 2.4;
+    double titleoffset;
+    if(divRatio!=1.0) titleoffset = 2.4;
+    else titleoffset = 1.2;
     double labeloffset = 0.01;
     h->GetXaxis()->SetLabelFont(fontst);
     h->GetYaxis()->SetLabelFont(fontst);
@@ -332,6 +335,17 @@ Double_t getCleverRange(TH1* h)
       maxY = h->GetBinContent(ibin);
   }
   return maxY;
+}
+
+Double_t cleverRangeOnlyMax(TH1* h,TH1* h2, Float_t fac=1.2, Float_t minY=1.e-3)
+{
+  Float_t maxY1 =  fac * h->GetBinContent(h->GetMaximumBin());
+  Float_t maxY2 =  fac * h2->GetBinContent(h2->GetMaximumBin());
+
+  //   cout <<" range will be set as " << minY << " ~ " << maxY << endl;
+  h->SetAxisRange(minY,max(maxY1,maxY2),"Y");
+  h2->SetAxisRange(minY,max(maxY1,maxY2),"Y");
+  return max(maxY1,maxY2);
 }
 
 Double_t cleverRange(TH1* h,TH1* h2, Float_t fac=1.2, Float_t minY=1.e-3)
