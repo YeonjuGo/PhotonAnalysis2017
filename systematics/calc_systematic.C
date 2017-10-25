@@ -1,8 +1,7 @@
-// drawRaaXsec.C 
-// This version gets photon raw distributions from the output/rawDist.root, while version 1 calculate these in that code. 
+// calc_systematic.C 
+// calculate systematics  
 // Author: Yeonju Go 
-// Written at 2017 Mar 17
-// Written at 2017 Mar 17
+// Written at 2017 Oct 25
 
 #include "TFile.h"
 #include "TTree.h"
@@ -29,7 +28,7 @@ const TString LABEL = "PbPb #sqrt{s}_{_{NN}}=5.02 TeV";
 const int colHere[]={1,2,4,kGreen+1,kYellow+1};
 const int markerHere[]={24,28,28,28,28,28};
 const int markerHere_closed[]={20,33,33,33,33};
-void drawRaaXsec(TString ver="170601_temp_v3")
+void calc_systematic(TString ver="170601_temp_v3")
 {
     TH1::SetDefaultSumw2();
     gStyle->SetOptStat(0000);
@@ -37,6 +36,31 @@ void drawRaaXsec(TString ver="170601_temp_v3")
     //SetHistTitleStyle(0.05);
     // http://dde.web.cern.ch/dde/glauber_lhc.htm
 
+    std::vector<std::string> sys_types {
+        "nominal",
+        "JES_up", "JES_down", "JES_up2", "JES_down2", "JES_gluon", "JES_quark", "purity_up", "purity_down",
+        "JER", "ele_rejection", "photon_energy",
+        "photon_iso"                                                // photon isolation _must_ be the last in this list
+    };
+    int n_sys_types = sys_types.size();
+
+
+
+
+void TH1D_SqrtSumofSquares(TH1D* h1, TH1D* h2) {
+    for (int i=1; i<=h1->GetNbinsX(); ++i) {
+        double sys1 = h1->GetBinContent(i);
+        double sys2 = h2->GetBinContent(i);
+        double sys_total = TMath::Sqrt(sys1 * sys1 + sys2 * sys2);
+
+        double err1 = h1->GetBinError(i);
+        double err2 = h2->GetBinError(i);
+        double err_total = TMath::Sqrt(err1 * err1 + err2 * err2);
+
+        h1->SetBinContent(i, sys_total);
+        h1->SetBinError(i, err_total);
+    }
+}
     // nCentBin+1 : 0th array is for inclusive[0-100%]
     TFile* f_eff = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pbpb_efficiency_%s.root",ver.Data()));
     TFile* f_effpp = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pp_efficiency_%s.root",ver.Data()));;

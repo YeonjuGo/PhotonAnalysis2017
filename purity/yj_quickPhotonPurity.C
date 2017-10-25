@@ -115,8 +115,8 @@ int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="170523_te
     for (Int_t i = 0; i < nPtBin; ++i) {
         for (Int_t j = 0; j < nCENTBINS; ++j) {
             for (Int_t k = 0; k < 1; ++k) {
-                TString ptCut = Form("(phoEtCorrected >= %f) && (phoEtCorrected < %f)",
-                        ptBins[i], ptBins[i+1]);
+                TString ptCut = Form("(%s>= %f) && (%s< %f)",
+                        phoEtVar.Data(), phoEtVar.Data(), ptBins[i], ptBins[i+1]);
                 TString centCut = Form("(hiBin>=%i) && (hiBin<%i)",
                         centBins_i[j], centBins_f[j]);
                 if(collisionType==2) centCut = "hiBin<10000";

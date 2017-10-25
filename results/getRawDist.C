@@ -65,9 +65,9 @@ void getRawDist(TString ver="temp")
         TCut centCut;
         centCut = Form("hiBin>=%d && hiBin < %d",centBins_i[j],centBins_f[j]);
         cout << centCut.GetTitle() << endl; 
-        tpbpb->Draw(Form("phoEtCorrected>>%s",h1D_raw[j]->GetName()), phoSignalCut && centCut && etaCut);
+        tpbpb->Draw(Form("%s>>%s",phoEtVar.Data(),h1D_raw[j]->GetName()), phoSignalCut && centCut && etaCut);
         if(j==0){
-            tpp->Draw(Form("phoEtCorrected>>%s",h1D_rawpp->GetName()), phoSignalCut_pp && etaCut); 
+            tpp->Draw(Form("%s>>%s",phoEtVar.Data(),h1D_rawpp->GetName()), phoSignalCut_pp && etaCut); 
             //cout << "################ pp done ################"<< endl;
         }
     }
