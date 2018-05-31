@@ -1,11 +1,11 @@
 // Created : 2017 April 11
-// Modified : 2017 April 11
+// Modified : 2018 Feb 15
 // Author : Yeonju Go
 // 
 // To compare two datasets (ex. allqcdphoton and emenricheddijet) 
 
 #include "../phoRaaCuts/yjUtility.h"
-#include "../phoRaaCuts/phoRaaCuts_v1.h"
+#include "../phoRaaCuts/phoRaaCuts_temp.h"
 
 int compareTwo(TTree* t1=0 ,TTree* t2=0,TString var="pt", int nBins=10, double xMin=0, double xMax=10, TCut cut1="",TCut cut2="", const char* cap="");
 void compare_AllQCD_EmEnr(TString coll="pbpb"){

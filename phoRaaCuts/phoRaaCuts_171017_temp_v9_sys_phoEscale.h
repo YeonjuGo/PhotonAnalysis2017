@@ -44,8 +44,6 @@ TString ppMC_config = "/home/goyeonju/CMS/2016/PhotonAnalysis2016/ElectroWeak-Je
 const double ptBins[] = {40,50,60,80,100,999};
 const double ptBins_draw[] = {40,50,60,80,100,120};
 const int nPtBin = sizeof(ptBins)/sizeof(double) -1;
-const double ptBins_mean_pbpb[] = {44.1827,54.2862,67.7425,88.1946,111.643};
-const double ptBins_mean_pp[] = {44.5213,54.188,67.5644,88.1521,111.85};
 const double ptBins_i[] = {40,40,50,60,80,100};
 const double ptBins_f[] = {999,50,60,80,100,999};
 const int nPtBinIF = sizeof(ptBins_i)/sizeof(double);
@@ -58,7 +56,7 @@ const double TA[nCentBinIF] = {5.607*1000,23.22*1000,11.51*1000,1.405*1000};
 
 /////////////// CUTS ///////////////////
 //Systematics
-const TString phoEtVar = "phoEtCorrected";
+const TString phoEtVar = "phoEtCorrected_sys";
 //Trigger and EvtSelection Cuts
 const TCut trigCut = "HLT_HISinglePhoton40_Eta1p5_v1";
 const TCut trigCut_mc = "HLT_HISinglePhoton40_Eta1p5_v2";

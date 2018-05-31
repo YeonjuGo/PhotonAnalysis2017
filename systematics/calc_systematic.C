@@ -3,250 +3,150 @@
 // Author: Yeonju Go 
 // Written at 2017 Oct 25
 
-#include "TFile.h"
-#include "TTree.h"
-#include "TNtuple.h"
-#include "TH1D.h"
-#include "TH1F.h"
-#include "TCut.h"
-#include "TProfile.h"
-#include "TGraphAsymmErrors.h"
-#include "TGraphErrors.h"
-#include "TCanvas.h"
-#include "TLegend.h"
-#include "TString.h"
-#include "TLatex.h"
-#include "stdio.h"
-#include <iostream>
 #include "../phoRaaCuts/yjUtility.h"
-#include "../ElectroWeak-Jet-Track-Analyses/Histogramming/PhotonPurity.h"
-#include "../ElectroWeak-Jet-Track-Analyses/Utilities/interface/CutConfigurationParser.h"
-#include "../ElectroWeak-Jet-Track-Analyses/TreeHeaders/CutConfigurationTree.h"
 #include "../phoRaaCuts/phoRaaCuts_temp.h"
+#include "../ElectroWeak-Jet-Track-Analyses/Systematics/interface/SysVar.h"
 
-const TString LABEL = "PbPb #sqrt{s}_{_{NN}}=5.02 TeV";
-const int colHere[]={1,2,4,kGreen+1,kYellow+1};
-const int markerHere[]={24,28,28,28,28,28};
-const int markerHere_closed[]={20,33,33,33,33};
-void calc_systematic(TString ver="170601_temp_v3")
+void calc_systematic(TString ver="171017_temp_v9")
 {
     TH1::SetDefaultSumw2();
     gStyle->SetOptStat(0000);
     SetyjPadStyle();
-    //SetHistTitleStyle(0.05);
-    // http://dde.web.cern.ch/dde/glauber_lhc.htm
+
+#define _PURITY_UP   1
+#define _PURITY_DOWN 2
+#define _PHOTON_ISO  5
 
     std::vector<std::string> sys_types {
         "nominal",
-        "JES_up", "JES_down", "JES_up2", "JES_down2", "JES_gluon", "JES_quark", "purity_up", "purity_down",
-        "JER", "ele_rejection", "photon_energy",
-        "photon_iso"                                                // photon isolation _must_ be the last in this list
+        "sys_purUp",
+        "sys_purDown",
+        "sys_phoEscale",
+        "sys_eleCont"
+        //"sys_phoIso"                                              
     };
     int n_sys_types = sys_types.size();
 
+    std::vector<std::string> input_list;
 
-
-
-void TH1D_SqrtSumofSquares(TH1D* h1, TH1D* h2) {
-    for (int i=1; i<=h1->GetNbinsX(); ++i) {
-        double sys1 = h1->GetBinContent(i);
-        double sys2 = h2->GetBinContent(i);
-        double sys_total = TMath::Sqrt(sys1 * sys1 + sys2 * sys2);
-
-        double err1 = h1->GetBinError(i);
-        double err2 = h2->GetBinError(i);
-        double err_total = TMath::Sqrt(err1 * err1 + err2 * err2);
-
-        h1->SetBinContent(i, sys_total);
-        h1->SetBinError(i, err_total);
+    for(int i=0; i<n_sys_types; ++i){
+        input_list.push_back(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/results/output/phoRaa_%s_%s.root",ver.Data(),sys_types.at(i).c_str()));
+        cout << "input file : " << input_list.at(i) << endl;
     }
-}
-    // nCentBin+1 : 0th array is for inclusive[0-100%]
-    TFile* f_eff = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pbpb_efficiency_%s.root",ver.Data()));
-    TFile* f_effpp = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pp_efficiency_%s.root",ver.Data()));;
-    TFile* f_pur = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/purity/output/pbpb_purity_%s.root",ver.Data()));
-    TFile* f_purpp = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/purity/output/pp_purity_%s.root",ver.Data()));;
-    TFile* f_raw = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/results/output/rawDist_%s.root",ver.Data()));
+    const int n_input_files = input_list.size();
 
-    TH1D* h1D_eff[nCentBinIF];
-    TH1D* h1D_effpp;
-    TH1D* h1D_pur[nCentBinIF];
-    TH1D* h1D_purpp;
-    TH1D* h1D_raw[nCentBinIF];
-    TH1D* h1D_rawpp;
+    if (n_input_files != n_sys_types) {
+        printf("%i input files for %i systematic variations\n", n_input_files, n_sys_types);
+        //printf("please add dummy files to input file list: %s\n", inputList.Data());
+        //return 1;
+    } 
 
-    Int_t nCor = 3;
-    TH1D* h1D_corr[nCor][nCentBinIF]; // corrected yield 1. purity, 2. efficiency 
-    TH1D* h1D_corrpp[nCor]; // corrected yield 1. purity, 2. efficiency 
-    TH1D* h1D_Raa[nCentBinIF]; // total Raa!!
+    TFile* input_files[n_input_files];
+    std::vector<bool> valid_input(n_input_files, false);
+    for (int i=0; i<n_input_files; ++i) {
+        input_files[i] = new TFile(input_list.at(i).c_str(), "read");
+        valid_input[i] = (input_files[i] && input_files[i]->IsOpen());
+    }
 
-    /////////////////////////////////////////////////////////////////////////// 
-    /// Get efficiency & purity hist. 
-    for(int j=0;j<nCentBinIF;++j)
-    {
-        h1D_raw[j] = (TH1D*) f_raw->Get(Form("h1D_raw_cent%d",j));
-        h1D_eff[j] = (TH1D*) f_eff->Get(Form("sig_eff%d",j));
-        //h1D_eff[j] = (TH1D*) f_eff->Get(Form("h1D_efficiency_cent%d",j));
-        h1D_pur[j] = (TH1D*) f_pur->Get(Form("h1D_purity_cent%d",j));
-       
-        h1D_Raa[j] = new TH1D(Form("h1D_Raa_cent%d",j),Form(";p_{T}^{#gamma} (GeV);R_{AA}"),nPtBin,ptBins_draw);
-        
-        if(j==0){
-            h1D_rawpp = (TH1D*) f_raw->Get("h1D_raw_pp");
-            h1D_effpp = (TH1D*) f_effpp->Get("sig_eff0");
-            //h1D_effpp = (TH1D*) f_effpp->Get("h1D_effciency_pp");
-            h1D_purpp = (TH1D*) f_purpp->Get("h1D_purity_pp");
+    if (!valid_input[0]) {
+        printf("file with nominal histograms broken!\n");
+    }
+
+    std::vector<std::string> hist_types {
+        "Raa", "dNdpt_corr2"
+    };
+    int n_hist_types = hist_types.size();
+    
+    // std::vector<std::string> data_types {"PbPb_Data", "PbPb_MC", "pp_Data", "pp_MC"};
+    // int n_data_types = data_types.size();
+
+    //////////////////////////////////////////////////
+    // Calculate Systematics and write it in output file
+    //////////////////////////////////////////////////
+    TString dir = "/home/goyeonju/CMS/2017/PhotonAnalysis2017/systematics";
+    const TString outputFile = Form("%s/output/systematics_%s.root",dir.Data(),ver.Data());
+    TFile* output = new TFile(outputFile, "recreate");
+
+
+    typedef std::vector<SysVar*>    vvector;
+    typedef std::vector<vvector>    vvvector;
+    typedef std::vector<vvvector>   vvvvector;
+    //typedef std::vector<vvvvector>  vvvvvector;
+    //typedef std::vector<vvvvvector> vvvvvvector;
+
+    vvvvector systematics(n_hist_types, vvvector(nCentBinIF, vvector()));
+
+    for (int i=0; i<n_hist_types; ++i) {
+        for (int k=0; k<nCentBinIF; ++k) { //k=0 is allCentBin
+
+            std::string hist_name;
+            if (hist_types[i] == "Raa" || hist_types[i] == "dNdpt_corr2")
+                hist_name = Form("%s_cent%d", hist_types[i].c_str(), k);
+            else
+                printf("invalid histogram type: %s\n", hist_types[i].c_str());
+
+            // for (int l=0; l<n_data_types; ++l) {
+            //     if (hist_types[i] == "Raa")
+            //         if (l) break;
+
+            printf("nominal: %s\n", hist_name.c_str());
+            TH1D* h1D_nominal = (TH1D*)input_files[0]->Get(Form("h1D_%s", hist_name.c_str()));
+
+            printf("calculating systematics...\n");
+
+            for (int m=1; m<n_sys_types; ++m) {
+                if (!valid_input[m])
+                    continue;
+                TH1D* h1D_varied = (TH1D*)input_files[m]->Get(Form("h1D_%s", hist_name.c_str()));
+
+                SysVar* sys_hists = new SysVar(hist_name, sys_types[m]);
+                sys_hists->init(h1D_nominal, h1D_varied);
+
+                sys_hists->calc_sys();
+
+                if (sys_types[m] == "sys_eleCont")
+                    sys_hists->scale_sys(0.25);
+
+                systematics[i][k].push_back(sys_hists);
+                //    }
+        }
         }
     }
 
 
-    /////////////////////////////////////////////////////////////////////////// 
-    /// Get corrected distributions
-    for(int j=0;j<nCentBin+1;j++)
-    {
-        h1D_raw[j]->Scale(1.,"width");
-        for(int ii=0;ii<nCor;ii++){ // corrected yield 0th:raw 1st:purity 2nd:purity and efficiency
-            h1D_corr[ii][j] = new TH1D(Form("h1D_dNdpt_corr%d_cent%d",ii,j),";p_{T}^{#gamma} (GeV); dN/dp_{T} (GeV^{-1})",nPtBin,ptBins_draw);
-            if(j==0){ 
-                h1D_corrpp[ii] = new TH1D(Form("h1D_dNdpt_corr%d_pp",ii),";p_{T}^{#gamma} (GeV); dN/dp_{T} (GeV^{-1})",nPtBin,ptBins_draw);
+    std::vector<TotalSysVar*> total_sys;
+
+    printf("calculating total systematics...\n");
+    for (std::size_t i=0; i<systematics.size(); ++i) {
+        printf("for %s\n", hist_types[i].c_str());
+        for (std::size_t k=0; k<systematics[i].size(); ++k) {
+            if (!systematics[i][k].size())
+                continue;
+
+            std::size_t m = 0;
+            TotalSysVar* total_sys_hists = new TotalSysVar();
+
+            if (valid_input[_PURITY_UP] && valid_input[_PURITY_DOWN]) {
+                TotalSysVar* purity_sys_hists = new TotalSysVar(systematics[i][k][m], systematics[i][k][m+1]);
+                total_sys_hists->add_SysVar(purity_sys_hists);
+                ++m; ++m;
+            } else if (valid_input[_PURITY_UP] ^ valid_input[_PURITY_DOWN]) {
+                total_sys_hists->add_SysVar(systematics[i][k][m]);
+                ++m;
+            }
+
+            for (; m<systematics[i][k].size(); ++m)
+                total_sys_hists->add_SysVar(systematics[i][k][m]);
+
+            if (total_sys_hists->non_zero()) {
+                total_sys.push_back(total_sys_hists);
+                //total_sys_hists->print_latex(sys_types);
             }
         }
-        for(int ipt=0;ipt<nPtBin;++ipt){
-            Double_t vEff, vPur, vRaw;
-            vEff = h1D_eff[j]->GetBinContent(ipt+1);
-            vPur = h1D_pur[j]->GetBinContent(ipt+1)-0.1;
-            vRaw = h1D_raw[j]->GetBinContent(ipt+1);
-
-            cout << centBins_i[j]/2<<"%-"<<centBins_f[j]/2<<"% : " << ptBins[ipt] << "<pt<"<< ptBins[ipt+1]<<" :: \traw=\t" << vRaw << "\teff\t" << vEff << "\tpur\t" << vPur << endl; 
-            h1D_corr[0][j]->SetBinContent(ipt+1, vRaw); 
-            h1D_corr[1][j]->SetBinContent(ipt+1, vRaw*vPur); 
-            h1D_corr[2][j]->SetBinContent(ipt+1, vRaw*vPur/vEff); 
-        }
-        if(j==0) {
-            h1D_rawpp->Scale(1.,"width");
-            for(int ipt=0;ipt<nPtBin;++ipt){
-                Double_t vEff, vPur, vRaw;
-                vEff = h1D_effpp->GetBinContent(ipt+1);
-                vPur = h1D_purpp->GetBinContent(ipt+1);
-                vRaw = h1D_rawpp->GetBinContent(ipt+1);
-                
-                cout <<"PP : " << ptBins[ipt] << "<pt<"<< ptBins[ipt+1] <<" :: \traw=\t" << vRaw << "\teff\t" << vEff << "\tpur\t" << vPur << endl; 
-                h1D_corrpp[0]->SetBinContent(ipt+1, vRaw); 
-                h1D_corrpp[1]->SetBinContent(ipt+1, vRaw*vPur); 
-                h1D_corrpp[2]->SetBinContent(ipt+1, vRaw*vPur/vEff); 
-            }
-        }
-
     }
 
-
-    /////////////////////////////////////////////////////////////////////////// 
-    /// Set Global Values 
-
-    double lumi_pp = 25.775*1e12; //25.775 pb-1
-    //double lumi_pp = 27.87*1e12; //27.87 pb-1
-    double lumi_pbpb = 404.0*1e6; // 0.56 nb-1, 404ub-1
-    //double nColl[nCentBin+1] = {392.5,1079, 98.36};//0-100,0-30,30-100//provided centrality group AN-15-080 
-    const double nMBTot = 2.722608696*1e9; 
-    //const double nMB[nCentBin+1] = {nMBTot,nMBTot*0.3,nMBTot*0.7}; // ?*pbpb lumi?
-    double nMB[nCentBin+1];
-    nMB[0] = nMBTot;
-    for(int j=1;j<nCentBin+1;j++){
-        nMB[j] = nMBTot*(centBins_f[j]-centBins_i[j])/2./100.;
-    }
-    //const double nMB[nCentBin+1] = {7750*lumi_pbpb,7750*lumi_pbpb*0.3,7750*lumi_pbpb*0.7}; // ?*pbpb lumi?
-    //const double TA[nCentBin+1] = {5.607*1000,15.41*1000,1.405*1000};//provided centrality group AN-15-080 in the unit of [mb-1] 
-
-    for(int j=0;j<nCentBin+1;j++){
-        cout << "cent "<<centBins_i[j]/2<<"%-"<<centBins_f[j]/2<<"% TA = " << TA[j] << endl;
-        cout << "cent "<<centBins_i[j]/2<<"%-"<<centBins_f[j]/2<<"\% nMB = " << nMB[j] << endl;
-        cout << "cent "<<centBins_i[j]/2<<"%-"<<centBins_f[j]/2<<"\% lumipp/TA/nMB = " << lumi_pp/TA[j]/nMB[j] << endl;
-    }
-
-    /////////////////////////////////////////////////////////////////////////// 
-    /// Draw Raa 
-    TString dir = "/home/goyeonju/CMS/2017/PhotonAnalysis2017/results/";
-    cout << "!!DRAW RAA!!" << endl;
-
-    TLegend* l1 = new TLegend(0.6,0.65,0.8,0.89);
-    legStyle(l1);
-
-    TCanvas* c1 = new TCanvas("craa","",400,400);
-    for(int j=0;j<nCentBin+1;j++)
-    {
-        SetHistTextSize(h1D_Raa[j]);
-        if(j==0){
-            h1D_Raa[j]->Divide(h1D_corr[2][j],h1D_corrpp[2]);
-            h1D_Raa[j]->Scale(lumi_pp/(TA[j])/(nMB[j]));
-           // h1D_Raa[j]->Divide(h1D_corr[2][j],h1D_corrpp[2]);
-           // h1D_Raa[j]->Scale(lumi_pp/lumi_pbpb/208/208);
-        } else{
-            h1D_Raa[j]->Divide(h1D_corr[2][j],h1D_corrpp[2]);
-            h1D_Raa[j]->Scale(lumi_pp/(TA[j])/(nMB[j]));
-        }
-        h1D_Raa[j]->SetMarkerColor(colHere[j]);
-        h1D_Raa[j]->SetMarkerStyle(markerHere_closed[j]);
-        h1D_Raa[j]->SetMarkerSize(1);
-        h1D_Raa[j]->GetYaxis()->SetRangeUser(0.5,1.5);
-        h1D_Raa[j]->GetYaxis()->CenterTitle();
-        h1D_Raa[j]->GetXaxis()->CenterTitle();
-        h1D_Raa[j]->SetTitle(";isolated p_{T}^{#gamma} (GeV);R_{AA}");
-        if(j==0) h1D_Raa[j]->Draw("pel");
-        else h1D_Raa[j]->Draw("pel same");
-        jumSun(40,1,120,1);
-        l1->AddEntry(h1D_Raa[j],Form("%d%s-%d%s",centBins_i[j]/2,"%",centBins_f[j]/2,"%")); 
-    }
-    l1->Draw("same");
-    c1->SaveAs(Form("%sfigures/phoRaa_%s.pdf",dir.Data(),ver.Data()));
-   
-    /////////////////////////////////////////////////////////////////////////// 
-    /// Draw cross section
-
-    TLegend* l2 = new TLegend(0.6,0.65,0.8,0.89);
-    legStyle(l2);
-
-    TCanvas* c2 = new TCanvas("cXsec","",400,400);
-    c2->cd();
-    c2->SetLogy();
-    SetHistTextSize(h1D_corrpp[2]);
-    h1D_corrpp[2]->Scale(1./lumi_pp);
-    h1D_corrpp[2]->Scale(1e12);
-    h1D_corrpp[2]->SetMarkerStyle(21);
-    h1D_corrpp[2]->SetMarkerColor(kGreen+1);
-    h1D_corrpp[2]->SetTitle(";p_{T}^{#gamma} (GeV); #frac{1}{T_{AA}} #frac{dN}{dp_{T}} (pb/GeV)");
-    h1D_corrpp[2]->GetYaxis()->CenterTitle();
-    h1D_corrpp[2]->GetXaxis()->CenterTitle();
-    h1D_corrpp[2]->Draw("pe");
-    l2->AddEntry(h1D_corrpp[2],"pp"); 
-    for(int j=0;j<nCentBinIF;j++){
-        h1D_corr[2][j]->Scale(1./TA[j]/nMB[j]);
-        h1D_corr[2][j]->Scale(1e12);
-        h1D_corr[2][j]->SetMarkerStyle(markerHere[j]);
-        h1D_corr[2][j]->SetMarkerColor(colHere[j]);
-        h1D_corr[2][j]->Draw("pe same");
-        l2->AddEntry(h1D_corr[2][j],Form("%d%s-%d%s",centBins_i[j]/2,"%",centBins_f[j]/2,"%")); 
-    }
-    l2->Draw("same");
-    c2->SaveAs(Form("%sfigures/phoXsec_%s.pdf",dir.Data(),ver.Data()));
-
-    TFile* outf = new TFile(Form("%soutput/phoRaa_%s.root",dir.Data(),ver.Data()),"recreate");
-    outf->cd();
-    for(int j=0;j<nCentBinIF;j++){
-        h1D_raw[j]->Write();
-        h1D_eff[j]->Write();
-        h1D_pur[j]->Write();
-        h1D_Raa[j]->Write();
-        for(int ii=0;ii<3;ii++){
-            h1D_corr[ii][j]->Write();
-        }
-    }
-    h1D_rawpp->Write();
-    h1D_effpp->Write();
-    h1D_purpp->Write();
-    for(int ii=0;ii<3;ii++){
-        h1D_corrpp[ii]->Write();
-    }
-    c1->Write();
-    c2->Write();
+    printf("writing objects...\n");
+    output->Write("", TObject::kOverwrite);
+    output->Close();
 
 }

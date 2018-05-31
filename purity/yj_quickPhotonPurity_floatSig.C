@@ -1,6 +1,6 @@
-// yj_quickPhotonPurity.C
+// yj_quickPhotonPurity_floatSig.C
 // Author: Yeonju Go
-// Modifired : 2017 June 10 
+// Modifired : 2017 December 14 
 // Created : 2017 April 10 
 // Cobbled together from code written by Alex
 
@@ -21,13 +21,13 @@
 #include "stdio.h"
 #include <iostream>
 
-#include "PhotonPurity_SBcorrection.h"
+#include "PhotonPurity_floatSig.h"
 #include "../phoRaaCuts/phoRaaCuts_temp.h"
 #include "../ElectroWeak-Jet-Track-Analyses/Utilities/interface/CutConfigurationParser.h"
 #include "../ElectroWeak-Jet-Track-Analyses/Utilities/interface/InputConfigurationParser.h"
 #include "../ElectroWeak-Jet-Track-Analyses/Plotting/commonUtility.h"
 
-int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="170523_temp_v1_NewPurityMethod", bool useSBcorr=1, bool noCentDepCorr=1, bool useMCSB=0){
+int yj_quickPhotonPurity_floatSig(const TString coll="pbpb", const TString ver="170523_temp_v1_NewPurityMethod", bool useSBcorr=1, bool noCentDepCorr=1, bool useMCSB=0){
     gStyle->SetOptStat(0);
     TH1::SetDefaultSumw2();
 
@@ -35,7 +35,7 @@ int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="170523_te
     TString inputData=""; 
     TString inputMC=""; 
     TString inputBkgMC ="";
-    TString outputName=Form("%s_purity_%s",coll.Data(),ver.Data());
+    TString outputName=Form("%s_purity_%s_floatSig",coll.Data(),ver.Data());
     if(coll=="pbpb"){
         configFile = pbpbData_config;
         inputData = pbpbDatafname;
@@ -140,8 +140,8 @@ int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="170523_te
                 if(useSBcorr==1 && coll=="pbpb" && noCentDepCorr==0) fname_SBcorr=Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/performance/output/BKG_Iso_nonIso_%s_%s_pt%dto%d_cent%dto%d.root",ver.Data(),coll.Data(),(int)ptBins[i],(int)ptBins[i+1],(int)centBins_i[j]/2,(int)centBins_f[j]/2);
                 if(useSBcorr==1 && coll=="pp") fname_SBcorr=Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/performance/output/BKG_Iso_nonIso_%s_%s_pt%dto%d.root",ver.Data(),coll.Data(),(int)ptBins[i],(int)ptBins[i+1]);
 
-                PhotonPurity fitr;
-                //Purity* fitr;
+                //PhotonPurity fitr;
+                Purity* fitr;
                 if(useMCSB==0 && useSBcorr==0){
                     fitr = getPurity(coll, configCuts, tPho, tmcPho,
                             dataCandidateCut, sidebandCut,
@@ -160,13 +160,13 @@ int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="170523_te
                 }
                 cPurity->cd((k+j)*nPtBin+i+1);
 
-               // TH1D* hSigPdf = fitr->htotal_fit;
-               // TH1D* hBckPdf = fitr->hbkg_fit;
-               // TH1D* hData1  = fitr->hdata;
-                TH1F* hSigPdf = fitr.sigPdf;
-                TH1F* hBckPdf = fitr.bckPdf;
-                TH1D* hData1  = fitr.data;
-                hSigPdf->Add(hBckPdf);
+                TH1D* hSigPdf = fitr->htotal_fit;
+                TH1D* hBckPdf = fitr->hbkg_fit;
+                TH1D* hData1  = fitr->hdata;
+               // TH1F* hSigPdf = fitr.sigPdf;
+               // TH1F* hBckPdf = fitr.bckPdf;
+               // TH1D* hData1  = fitr.data;
+                //hSigPdf->Add(hBckPdf);
 
                 TString name = "mcfit_total_ptbin";
                 name += i;
@@ -233,11 +233,9 @@ int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="170523_te
                 hBckPdf->DrawCopy("same hist");
                 hData1->DrawCopy("same");
 
-                Float_t xpos = 0.45;
+                Float_t xpos = 0.48;
                 //if (2*(k+j)*nPtBin+i+1 == 1) xpos = 0.6;
-                if (i == 0) xpos = 0.57;
-                //Float_t xpos = 0.48;
-                //if (i == 0) xpos = 0.6;
+                if (i == 0) xpos = 0.6;
 
                 if (i == 0) {
                     // drawText("CMS Preliminary", 0.225, 0.90, 1, 27);
@@ -264,22 +262,17 @@ int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="170523_te
                     drawText(Form("p_{T}^{#gamma} > %.0f GeV/c", ptBins[i]), 0.24, 0.90, 1, 27);
                 }
                 if (i == 0) {
-                    drawText(Form("Purity : %.2f", (Float_t)fitr.purity), xpos, 0.70, 1, 27);
+                    drawText(Form("Purity : %.2f", (Float_t)fitr->purity), xpos, 0.70, 1, 27);
                 } else {
-                    drawText(Form("Purity : %.2f", (Float_t)fitr.purity), xpos, 0.80, 1, 27);
+                    drawText(Form("Purity : %.2f", (Float_t)fitr->purity), xpos, 0.80, 1, 27);
                 }
                 if (i == 0) {
-                    drawText(Form("#chi^{2}/ndf : %.2f/%d", (Float_t)fitr.chisq,(Int_t)fitr.ndf), xpos, 0.60, 1, 27);
+                    drawText(Form("#chi^{2}/ndf : %.2f", (Float_t)fitr->chisq/fitr->ndf), xpos, 0.60, 1, 27);
                 } else {
-                    drawText(Form("#chi^{2}/ndf : %.2f/%d", (Float_t)fitr.chisq,(Int_t)fitr.ndf), xpos, 0.70, 1, 27);
-                }
-                if (i == 0) {
-                    drawText(Form("sig. shift : %.5f", (Float_t)fitr.sigMeanShift), xpos, 0.50, 1, 27);
-                } else {
-                    drawText(Form("sig. shift : %.5f", (Float_t)fitr.sigMeanShift), xpos, 0.60, 1, 27);
+                    drawText(Form("#chi^{2}/ndf : %.2f", (Float_t)fitr->chisq/fitr->ndf), xpos, 0.70, 1, 27);
                 }
 
-                h1D_pur[j]->SetBinContent(i+1,(Float_t)fitr.purity);
+                h1D_pur[j]->SetBinContent(i+1,(Float_t)fitr->purity);
             }
         }
     }
@@ -325,12 +318,12 @@ int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="170523_te
 
 int main(int argc, char* argv[]) {
     if (argc == 3)
-        return yj_quickPhotonPurity(argv[1], argv[2]);
+        return yj_quickPhotonPurity_floatSig(argv[1], argv[2]);
     if (argc == 4)
-        return yj_quickPhotonPurity(argv[1], argv[2], atoi(argv[3]));
+        return yj_quickPhotonPurity_floatSig(argv[1], argv[2], atoi(argv[3]));
     if (argc == 5)
-        return yj_quickPhotonPurity(argv[1], argv[2], atoi(argv[3]), atoi(argv[4]));
+        return yj_quickPhotonPurity_floatSig(argv[1], argv[2], atoi(argv[3]), atoi(argv[4]));
     if (argc == 6)
-        return yj_quickPhotonPurity(argv[1], argv[2], atoi(argv[3]), atoi(argv[4]), atoi(argv[5]));
+        return yj_quickPhotonPurity_floatSig(argv[1], argv[2], atoi(argv[3]), atoi(argv[4]), atoi(argv[5]));
     return 1;
 }

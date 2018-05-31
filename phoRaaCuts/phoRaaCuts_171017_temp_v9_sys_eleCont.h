@@ -44,8 +44,6 @@ TString ppMC_config = "/home/goyeonju/CMS/2016/PhotonAnalysis2016/ElectroWeak-Je
 const double ptBins[] = {40,50,60,80,100,999};
 const double ptBins_draw[] = {40,50,60,80,100,120};
 const int nPtBin = sizeof(ptBins)/sizeof(double) -1;
-const double ptBins_mean_pbpb[] = {44.1827,54.2862,67.7425,88.1946,111.643};
-const double ptBins_mean_pp[] = {44.5213,54.188,67.5644,88.1521,111.85};
 const double ptBins_i[] = {40,40,50,60,80,100};
 const double ptBins_f[] = {999,50,60,80,100,999};
 const int nPtBinIF = sizeof(ptBins_i)/sizeof(double);
@@ -68,7 +66,7 @@ const TCut evtSelFilterCut_pp = "pBeamScrapingFilter && pPAprimaryVertexFilter";
 //Noise Cuts
 const TCut spikeRejection = "(phoSigmaIEtaIEta_2012>=0.002) && (pho_swissCrx<=0.9) && (abs(pho_seedTime)<=3)";
 const TCut hotspotCut = "pho_is2015Noise==0";
-const TCut electronCut = "pho_isEle==0";
+const TCut electronCut = "pho_isEle==0 || pho_isEle==1";
 const TCut noiseCut = spikeRejection && hotspotCut && electronCut;
 //Kinematic Cuts
 const TCut etaCut = "abs(phoEta)<1.44";

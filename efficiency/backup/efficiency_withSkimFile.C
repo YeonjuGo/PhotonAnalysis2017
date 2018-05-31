@@ -72,9 +72,11 @@ void efficiency_withSkimFile(TString coll="pbpb", TString ver="170523_temp_v1"){
         numCut = evtSelFilterCut_pp && noiseCut && hoeCut_pp && isoCut_pp && sigmaCut_pp; 
     }
     for(Int_t i=0;i<nCENTBINS;++i){
-        t1->Draw(Form("%s>>%s",phoEtVar.Data(),sig_den[i]->GetName()),mcIsolation && commonCut[i]);
+        t1->Draw(Form("%s>>%s",phoEtVar.Data(),sig_den[i]->GetName()),Form("(%s)*((%s) && (%s))","weight",mcIsolation.GetTitle(),commonCut[i].GetTitle()));
+        //t1->Draw(Form("%s>>%s",phoEtVar.Data(),sig_den[i]->GetName()),Form("(%s)*(%s && %s)","weight",mcIsolation && commonCut[i]);
         sig_den[i]=(TH1D*)gDirectory->Get(sig_den[i]->GetName());
-        t1->Draw(Form("%s>>%s",phoEtVar.Data(),sig_num[i]->GetName()),mcIsolation && commonCut[i] && numCut); 
+        t1->Draw(Form("%s>>%s",phoEtVar.Data(),sig_num[i]->GetName()),Form("(%s)*((%s) && (%s) && (%s))","weight",mcIsolation.GetTitle(), commonCut[i].GetTitle(), numCut.GetTitle())); 
+        //t1->Draw(Form("%s>>%s",phoEtVar.Data(),sig_num[i]->GetName()),mcIsolation && commonCut[i] && numCut); 
         sig_num[i]=(TH1D*)gDirectory->Get(sig_num[i]->GetName());
         t2->Draw(Form("%s>>%s",phoEtVar.Data(),bkg_den[i]->GetName()),mcBkgIsolation && commonCut[i]);
         bkg_den[i]=(TH1D*)gDirectory->Get(bkg_den[i]->GetName());

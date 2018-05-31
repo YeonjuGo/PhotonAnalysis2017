@@ -1,8 +1,11 @@
-#ifndef phoRaaCuts_171017_temp_v9_H
-#define phoRaaCuts_171017_temp_v9_H
+#ifndef phoRaaCuts_180427_temp_v12_H 
+#define phoRaaCuts_180427_temp_v12_H 
 // 1. pp photon selections(ID cuts) are the same as pbpb photons.
 // 2. pbpb MC is new ones (Flt30) and v14 of EmEnrichedDijet
 // 3. centrality bin (0,10,30,100)
+// 4. exactly the same with v9 but pp skim is non-GED. (pp reconstruction is the same with PbPb) 
+// 5. use (pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20) instead of sumIsoCorrected.  
+// 6. for pp, replace sigmaIEtaIEta with sigmaIEtaIEta_2012
 #include <TCut.h>
 
 #define PI 3.141592653589
@@ -29,8 +32,8 @@ TString getSampleName ( int colli) {
 
 //////////////// FILES ///////////////////
 TString ppDatafname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2017-03-29-nominal/pp_Data_photonRaaSkim.root";
-TString ppMCfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2017-03-29-nominal/pp_MC_photonRaaSkim.root";
-TString ppMCEmEnrfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2017-03-29-nominal/pp_EmEnrMC_photonRaaSkim.root";
+TString ppMCfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2018-03-06-nominal/pp_MC_photonRaaSkim_nonGED.root";
+TString ppMCEmEnrfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2018-03-06-nominal/pp_EmEnrMC_photonRaaSkim_nonGED.root";
 TString pbpbDatafname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2017-03-29-nominal/PbPb_Data_photonRaaSkim.root";
 TString pbpbMCfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2017-06-23-nominal/PbPb_MC_photonRaaSkim_Flt30.root";
 TString pbpbMCEmEnrfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2017-06-23-nominal/PbPb_EmEnrMC_photonRaaSkim_v14.root";
@@ -44,8 +47,6 @@ TString ppMC_config = "/home/goyeonju/CMS/2016/PhotonAnalysis2016/ElectroWeak-Je
 const double ptBins[] = {40,50,60,80,100,999};
 const double ptBins_draw[] = {40,50,60,80,100,120};
 const int nPtBin = sizeof(ptBins)/sizeof(double) -1;
-const double ptBins_mean_pbpb[] = {44.1827,54.2862,67.7425,88.1946,111.643};
-const double ptBins_mean_pp[] = {44.5213,54.188,67.5644,88.1521,111.85};
 const double ptBins_i[] = {40,40,50,60,80,100};
 const double ptBins_f[] = {999,50,60,80,100,999};
 const int nPtBinIF = sizeof(ptBins_i)/sizeof(double);
@@ -74,14 +75,15 @@ const TCut noiseCut = spikeRejection && hotspotCut && electronCut;
 const TCut etaCut = "abs(phoEta)<1.44";
 //Isolation Cuts for PbPb
 const TCut hoeCut = "phoHoverE<0.1";
-const TCut isoCut = "pho_sumIsoCorrected<1.0";
+const TCut isoCut = "(pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20)<1.0";
 const TCut sigmaCut = "phoSigmaIEtaIEta_2012<0.010";
-const TCut nonIsoSBCut = "pho_sumIsoCorrected > 10.0 && pho_sumIsoCorrected < 20.0";
+const TCut nonIsoSBCut = "(pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20) > 10.0 && (pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20) < 20.0";
 //Isolation Cuts for pp
 const TCut isoCut_pp = isoCut;
 const TCut hoeCut_pp = hoeCut;
 //const TCut isoCut_pp = "((pfcIso4<=1.37) && (pfnIso4<=1.06+0.014*phoEt+0.000019*phoEt*phoEt) && pfpIso4<=(0.28+0.0053*phoEt))";
 //const TCut hoeCut_pp = "phoHoverE<0.05";
+//const TCut sigmaCut_pp = "phoSigmaIEtaIEta_2012<0.010";
 const TCut sigmaCut_pp = sigmaCut;
 const TCut nonIsoSBCut_pp = nonIsoSBCut;
 

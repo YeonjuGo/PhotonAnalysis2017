@@ -2,7 +2,9 @@
 // This version gets photon raw distributions from the output/rawDist.root, while version 1 calculate these in that code. 
 // Author: Yeonju Go 
 // Written at 2017 Mar 17
-// Written at 2017 Mar 17
+// Modified : 2018 May 31
+// It's modified to be used from phoRaaCuts_v10.h 
+// from v10, efficiency macro has been changed to divide efficiency into reco & iso seperately.  
 
 #include "TFile.h"
 #include "TTree.h"
@@ -29,7 +31,7 @@ const TString LABEL = "PbPb #sqrt{s}_{_{NN}}=5.02 TeV";
 const int colHere[]={1,2,4,kGreen+1,kYellow+1};
 const int markerHere[]={24,28,28,28,28,28};
 const int markerHere_closed[]={20,33,33,33,33};
-void drawRaaXsec(TString ver="170601_temp_v3", bool purityTest = false)
+void drawRaaXsec_v2(TString ver="170601_temp_v3", bool purityTest = false)
 {
     TH1::SetDefaultSumw2();
     gStyle->SetOptStat(0000);
@@ -38,12 +40,18 @@ void drawRaaXsec(TString ver="170601_temp_v3", bool purityTest = false)
     // http://dde.web.cern.ch/dde/glauber_lhc.htm
 
     // nCentBin+1 : 0th array is for inclusive[0-100%]
-    TFile* f_eff = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pbpb_efficiency_%s.root",ver.Data()));
-    TFile* f_effpp = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pp_efficiency_%s.root",ver.Data()));;
+    TFile* f_eff_reco = new TFile("/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pbpb_reco_efficiency_180306_temp_v10_nonGED.root");
+    TFile* f_eff_recopp = new TFile("/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pp_reco_efficiency_180306_temp_v10_nonGED.root");
+    TFile* f_eff_iso = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pbpb_iso_efficiency_%s.root",ver.Data()));
+    TFile* f_eff_isopp = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pp_iso_efficiency_%s.root",ver.Data()));;
     TFile* f_pur = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/purity/output/pbpb_purity_%s.root",ver.Data()));
     TFile* f_purpp = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/purity/output/pp_purity_%s.root",ver.Data()));;
     TFile* f_raw = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/results/output/rawDist_%s.root",ver.Data()));
 
+    TH1D* h1D_eff_reco[nCentBinIF];
+    TH1D* h1D_eff_recopp;
+    TH1D* h1D_eff_iso[nCentBinIF];
+    TH1D* h1D_eff_isopp;
     TH1D* h1D_eff[nCentBinIF];
     TH1D* h1D_effpp;
     TH1D* h1D_pur[nCentBinIF];
@@ -61,16 +69,19 @@ void drawRaaXsec(TString ver="170601_temp_v3", bool purityTest = false)
     for(int j=0;j<nCentBinIF;++j)
     {
         h1D_raw[j] = (TH1D*) f_raw->Get(Form("h1D_raw_cent%d",j));
-        h1D_eff[j] = (TH1D*) f_eff->Get(Form("sig_eff%d",j));
-        //h1D_eff[j] = (TH1D*) f_eff->Get(Form("h1D_efficiency_cent%d",j));
+        h1D_eff_reco[j] = (TH1D*) f_eff_reco->Get(Form("reco_eff_cent%d",j));
+        h1D_eff_iso[j] = (TH1D*) f_eff_iso->Get(Form("sig_eff_cent%d_tot",j));
+        h1D_eff[j]->Multiply(h1D_eff_reco[j],h1D_eff_iso[j]);
+        
         h1D_pur[j] = (TH1D*) f_pur->Get(Form("h1D_purity_cent%d",j));
        
         h1D_Raa[j] = new TH1D(Form("h1D_Raa_cent%d",j),Form(";p_{T}^{#gamma} (GeV);R_{AA}"),nPtBin,ptBins_draw);
         
         if(j==0){
             h1D_rawpp = (TH1D*) f_raw->Get("h1D_raw_pp");
-            h1D_effpp = (TH1D*) f_effpp->Get("sig_eff0");
-            //h1D_effpp = (TH1D*) f_effpp->Get("h1D_effciency_pp");
+            h1D_eff_recopp = (TH1D*) f_eff_recopp->Get("reco_eff_cent0");
+            h1D_eff_isopp = (TH1D*) f_eff_isopp->Get("sig_eff_cent0_tot");
+            h1D_effpp->Multiply(h1D_eff_recopp,h1D_eff_isopp);
             h1D_purpp = (TH1D*) f_purpp->Get("h1D_purity_pp");
         }
     }

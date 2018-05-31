@@ -1,8 +1,9 @@
-#ifndef phoRaaCuts_171017_temp_v9_H
-#define phoRaaCuts_171017_temp_v9_H
+#ifndef phoRaaCuts_180306_temp_v10_H 
+#define phoRaaCuts_180306_temp_v10_H 
 // 1. pp photon selections(ID cuts) are the same as pbpb photons.
 // 2. pbpb MC is new ones (Flt30) and v14 of EmEnrichedDijet
 // 3. centrality bin (0,10,30,100)
+// 4. exactly the same with v9 but pp skim is non-GED. (pp reconstruction is the same with PbPb) 
 #include <TCut.h>
 
 #define PI 3.141592653589
@@ -29,8 +30,8 @@ TString getSampleName ( int colli) {
 
 //////////////// FILES ///////////////////
 TString ppDatafname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2017-03-29-nominal/pp_Data_photonRaaSkim.root";
-TString ppMCfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2017-03-29-nominal/pp_MC_photonRaaSkim.root";
-TString ppMCEmEnrfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2017-03-29-nominal/pp_EmEnrMC_photonRaaSkim.root";
+TString ppMCfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2018-03-06-nominal/pp_MC_photonRaaSkim_nonGED.root";
+TString ppMCEmEnrfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2018-03-06-nominal/pp_EmEnrMC_photonRaaSkim_nonGED.root";
 TString pbpbDatafname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2017-03-29-nominal/PbPb_Data_photonRaaSkim.root";
 TString pbpbMCfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2017-06-23-nominal/PbPb_MC_photonRaaSkim_Flt30.root";
 TString pbpbMCEmEnrfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2017-06-23-nominal/PbPb_EmEnrMC_photonRaaSkim_v14.root";
@@ -44,8 +45,6 @@ TString ppMC_config = "/home/goyeonju/CMS/2016/PhotonAnalysis2016/ElectroWeak-Je
 const double ptBins[] = {40,50,60,80,100,999};
 const double ptBins_draw[] = {40,50,60,80,100,120};
 const int nPtBin = sizeof(ptBins)/sizeof(double) -1;
-const double ptBins_mean_pbpb[] = {44.1827,54.2862,67.7425,88.1946,111.643};
-const double ptBins_mean_pp[] = {44.5213,54.188,67.5644,88.1521,111.85};
 const double ptBins_i[] = {40,40,50,60,80,100};
 const double ptBins_f[] = {999,50,60,80,100,999};
 const int nPtBinIF = sizeof(ptBins_i)/sizeof(double);

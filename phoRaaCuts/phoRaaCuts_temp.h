@@ -1,7 +1,8 @@
-#ifndef phoRaaCuts_171016_temp_v8_H
-#define phoRaaCuts_171016_temp_v8_H
+#ifndef phoRaaCuts_171017_temp_v9_H
+#define phoRaaCuts_171017_temp_v9_H
 // 1. pp photon selections(ID cuts) are the same as pbpb photons.
-//
+// 2. pbpb MC is new ones (Flt30) and v14 of EmEnrichedDijet
+// 3. centrality bin (0,10,30,100)
 #include <TCut.h>
 
 #define PI 3.141592653589
@@ -31,8 +32,8 @@ TString ppDatafname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2017-03
 TString ppMCfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2017-03-29-nominal/pp_MC_photonRaaSkim.root";
 TString ppMCEmEnrfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2017-03-29-nominal/pp_EmEnrMC_photonRaaSkim.root";
 TString pbpbDatafname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2017-03-29-nominal/PbPb_Data_photonRaaSkim.root";
-TString pbpbMCfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2017-03-29-nominal/PbPb_MC_photonRaaSkim.root";
-TString pbpbMCEmEnrfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2017-03-29-nominal/PbPb_EmEnrMC_photonRaaSkim.root";
+TString pbpbMCfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2017-06-23-nominal/PbPb_MC_photonRaaSkim_Flt30.root";
+TString pbpbMCEmEnrfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2017-06-23-nominal/PbPb_EmEnrMC_photonRaaSkim_v14.root";
 
 TString pbpbData_config = "/home/goyeonju/CMS/2016/PhotonAnalysis2016/ElectroWeak-Jet-Track-Analyses/CutConfigurations/photonRaa.conf";
 TString pbpbMC_config = "/home/goyeonju/CMS/2016/PhotonAnalysis2016/ElectroWeak-Jet-Track-Analyses/CutConfigurations/photonRaa_mc.conf";
@@ -43,17 +44,21 @@ TString ppMC_config = "/home/goyeonju/CMS/2016/PhotonAnalysis2016/ElectroWeak-Je
 const double ptBins[] = {40,50,60,80,100,999};
 const double ptBins_draw[] = {40,50,60,80,100,120};
 const int nPtBin = sizeof(ptBins)/sizeof(double) -1;
+const double ptBins_mean_pbpb[] = {44.1827,54.2862,67.7425,88.1946,111.643};
+const double ptBins_mean_pp[] = {44.5213,54.188,67.5644,88.1521,111.85};
 const double ptBins_i[] = {40,40,50,60,80,100};
 const double ptBins_f[] = {999,50,60,80,100,999};
 const int nPtBinIF = sizeof(ptBins_i)/sizeof(double);
-const int centBins[] = {0,20,60,100,200};
+const int centBins[] = {0,20,60,200};
 const int nCentBin = sizeof(centBins)/sizeof(int) -1;
-const int centBins_i[] = {0,0,20,60,100};
-const int centBins_f[] = {200,20,60,100,200};
+const int centBins_i[] = {0,0,20,60};
+const int centBins_f[] = {200,20,60,200};
 const int nCentBinIF = sizeof(centBins_i)/sizeof(int);
-const double TA[nCentBinIF] = {5.607*1000,23.22*1000,11.51*1000,3.819*1000,0.4395*1000}; 
+const double TA[nCentBinIF] = {5.607*1000,23.22*1000,11.51*1000,1.405*1000}; 
 
 /////////////// CUTS ///////////////////
+//Systematics
+const TString phoEtVar = "phoEtCorrected";
 //Trigger and EvtSelection Cuts
 const TCut trigCut = "HLT_HISinglePhoton40_Eta1p5_v1";
 const TCut trigCut_mc = "HLT_HISinglePhoton40_Eta1p5_v2";
