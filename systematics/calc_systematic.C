@@ -53,7 +53,7 @@ void calc_systematic(TString ver="171017_temp_v9")
     }
 
     std::vector<std::string> hist_types {
-        "Raa", "dNdpt_corr2"
+        "Raa", "dNdpt_corr2", "dNdpt_corr2_pp"
     };
     int n_hist_types = hist_types.size();
     
@@ -78,12 +78,14 @@ void calc_systematic(TString ver="171017_temp_v9")
 
     for (int i=0; i<n_hist_types; ++i) {
         for (int k=0; k<nCentBinIF; ++k) { //k=0 is allCentBin
-
             std::string hist_name;
             if (hist_types[i] == "Raa" || hist_types[i] == "dNdpt_corr2")
                 hist_name = Form("%s_cent%d", hist_types[i].c_str(), k);
-            else
+            else if(hist_types[i] == "dNdpt_corr2_pp") hist_name =  Form("%s", hist_types[i].c_str()); 
+            else 
                 printf("invalid histogram type: %s\n", hist_types[i].c_str());
+
+            if((hist_types[i] == "dNdpt_corr2_pp") && k>0) continue;
 
             // for (int l=0; l<n_data_types; ++l) {
             //     if (hist_types[i] == "Raa")
@@ -108,8 +110,7 @@ void calc_systematic(TString ver="171017_temp_v9")
                     sys_hists->scale_sys(0.25);
 
                 systematics[i][k].push_back(sys_hists);
-                //    }
-        }
+            }
         }
     }
 
