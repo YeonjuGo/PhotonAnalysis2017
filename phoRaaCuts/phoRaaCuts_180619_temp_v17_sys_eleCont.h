@@ -69,7 +69,7 @@ const double TA[nCentBinIF] = {5.607*1000,23.22*1000,11.51*1000,1.405*1000};
 
 /////////////// CUTS ///////////////////
 //Systematics
-const TString phoEtVar = "phoEtCorrected_sys";
+const TString phoEtVar = "phoEtCorrected";
 //Trigger and EvtSelection Cuts
 const TCut trigCut = "HLT_HISinglePhoton40_Eta1p5_v1";
 const TCut trigCut_mc = "HLT_HISinglePhoton40_Eta1p5_v2";
@@ -79,7 +79,7 @@ const TCut evtSelFilterCut_pp = "pBeamScrapingFilter && pPAprimaryVertexFilter";
 //Noise Cuts
 const TCut spikeRejection = "(phoSigmaIEtaIEta_2012>=0.002) && (pho_swissCrx<=0.9) && (abs(pho_seedTime)<=3)";
 const TCut hotspotCut = "pho_is2015Noise==0";
-const TCut electronCut = "pho_isEle==0";
+const TCut electronCut = "pho_isEle>=0";
 const TCut noiseCut = spikeRejection && hotspotCut;
 //Kinematic Cuts
 const TCut ptCut = "phoEtCorrected>40";

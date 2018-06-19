@@ -69,7 +69,7 @@ const double TA[nCentBinIF] = {5.607*1000,23.22*1000,11.51*1000,1.405*1000};
 
 /////////////// CUTS ///////////////////
 //Systematics
-const TString phoEtVar = "phoEtCorrected_sys";
+const TString phoEtVar = "phoEtCorrected";
 //Trigger and EvtSelection Cuts
 const TCut trigCut = "HLT_HISinglePhoton40_Eta1p5_v1";
 const TCut trigCut_mc = "HLT_HISinglePhoton40_Eta1p5_v2";
@@ -86,7 +86,7 @@ const TCut ptCut = "phoEtCorrected>40";
 const TCut etaCut = "abs(phoEta)<1.44";
 //Isolation Cuts for PbPb
 const TCut hoeCut = "phoHoverE<0.1";
-const TCut isoCut = "(pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20)<1.0";
+const TCut isoCut = "(pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20)<3.0";
 const TCut sigmaCut = "phoSigmaIEtaIEta_2012<0.010";
 const TCut nonIsoSBCut = "(pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20) > 10.0 && (pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20) < 20.0";
 //Isolation Cuts for pp

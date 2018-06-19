@@ -4,7 +4,7 @@
 // Modified at 2018 June 10
 
 #include "../phoRaaCuts/yjUtility.h"
-#include "../phoRaaCuts/phoRaaCuts_temp.h"
+#include "../phoRaaCuts/temp_phoRaaCuts_temp.h"
 //#include "../phoRaaCuts/styleUtil.h"
 #include "../phoRaaCuts/tdrstyle.C"
 #include "TGraphErrors.h"
@@ -42,10 +42,11 @@ for (int p=0; p<npoints; ++p) {                                         \
     graph->SetPointError(p,Xerr_l,Xerr_h,Yerr_l,Yerr_h);                \
 }
 
-void photonRaaPlot(TString ver="180610_temp_v15") {
+void photonRaaPlot_withJetphox(TString ver="180610_temp_v15") {
     gStyle->SetOptTitle(0);
     gStyle->SetOptStat(0);
 
+    TString cap = "withJetphox_ppNLO";
     // input files 
     TString dir = "/home/goyeonju/CMS/2017/PhotonAnalysis2017/";
     const std::string input_file = Form("%sresults/output/phoRaa_%s_nominal.root",dir.Data(),ver.Data());
@@ -318,17 +319,40 @@ void photonRaaPlot(TString ver="180610_temp_v15") {
     //globalUncBox -> Draw("l same");
 
 
+    /////////////////////////////////////////////////////////////////////////////////////////////
+    // Draw Jetphox pp NLO
+    // direct contribution
+    TFile* fdir = TFile::Open("/home/goyeonju/CMS/2016/JETPHOX/jetphox_1.3.1_3_pp/pawres/ggd_2test_pp_0609.root","read");
+    TH1D* h1D_jp_dir[2];//0:Leading Order, 1:Next-to-Leading Order
+    h1D_jp_dir[0] = (TH1D*) fdir->Get("hp40"); 
+    h1D_jp_dir[1] = (TH1D*) fdir->Get("hp41"); 
+   
+    // one fragmentation contribution
+    TFile* fonef = TFile::Open("/home/goyeonju/CMS/2016/JETPHOX/jetphox_1.3.1_3_pp/pawres/ggo_2test_pp_0609.root","read");
+    TH1D* h1D_jp_onef[2];//0:Leading Order, 1:Next-to-Leading Order
+    h1D_jp_onef[0] = (TH1D*) fonef->Get("hp40"); 
+    h1D_jp_onef[1] = (TH1D*) fonef->Get("hp41"); 
+   
+    TH1D* h1D_jp_inclusive[2];//0:Leading Order, 1:Next-to-Leading Order
+    h1D_jp_inclusive[0] = (TH1D*) h1D_jp_dir[0]->Clone("jp_dir_onef_lo");
+    h1D_jp_inclusive[0]->Add(h1D_jp_onef[0]);
+    
+    h1D_jp_inclusive[1] = (TH1D*) h1D_jp_dir[1]->Clone("jp_dir_onef_nlo");
+    h1D_jp_inclusive[1]->Add(h1D_jp_onef[1]);
 
-
-
-
-
-
-
-
-
-
-
+    for(int i=0;i<2;++i){
+        h1D_jp_dir[i]->Scale(1./2.88); 
+        h1D_jp_onef[i]->Scale(1./2.88); 
+        h1D_jp_inclusive[i]->Scale(1./2.88); 
+        h1D_jp_dir[i]->SetLineColor(2);
+        h1D_jp_onef[i]->SetLineColor(4);
+        h1D_jp_inclusive[i]->SetLineColor(8);
+    }
+    //Cross section
+    c[1]->cd();
+    h1D_jp_dir[1]->Draw("hist same");
+    h1D_jp_onef[1]->Draw("hist same");
+    h1D_jp_inclusive[1]->Draw("hist same");
 
 
     /////////////////////////////////////////////////////////////////////////////////////////////
@@ -336,10 +360,10 @@ void photonRaaPlot(TString ver="180610_temp_v15") {
     cout << "Save figures..." << endl;
     for (int i=0; i<n_hist_types; ++i) {
         if(hist_types[i] != "dNdpt_corr2_pp") 
-            c[i]->SaveAs(Form("%splotting/figures/finalPlot_%s_%s_total.pdf",dir.Data(),hist_types[i].c_str(),ver.Data()));
+            c[i]->SaveAs(Form("%splotting/figures/finalPlot_%s_%s_total_%s.pdf",dir.Data(),hist_types[i].c_str(),ver.Data(),cap.Data()));
         for (int k=0; k<nCentBinIF; ++k) { //k=0 is 0-100 % 
             if(hist_types[i] == "dNdpt_corr2_pp" && k>0) continue;
-            c_sep[i][k]->SaveAs(Form("%splotting/figures/finalPlot_%s_%s_cent%d_%d.pdf",dir.Data(),hist_types[i].c_str(),ver.Data(),(int)centBins_i[k]/2,(int)centBins_f[k]/2));
+            c_sep[i][k]->SaveAs(Form("%splotting/figures/finalPlot_%s_%s_%s_cent%d_%d.pdf",dir.Data(),hist_types[i].c_str(),ver.Data(),cap.Data(),(int)centBins_i[k]/2,(int)centBins_f[k]/2));
         }
     }
 

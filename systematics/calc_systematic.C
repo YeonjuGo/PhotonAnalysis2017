@@ -7,23 +7,36 @@
 #include "../phoRaaCuts/phoRaaCuts_temp.h"
 #include "../ElectroWeak-Jet-Track-Analyses/Systematics/interface/SysVar.h"
 
-void calc_systematic(TString ver="171017_temp_v9")
+void calc_systematic(TString ver="180610_temp_v15")
 {
     TH1::SetDefaultSumw2();
     gStyle->SetOptStat(0000);
     SetyjPadStyle();
 
-#define _PURITY_UP   1
-#define _PURITY_DOWN 2
-#define _PHOTON_ISO  5
+#define _EFF_UP   1
+#define _EFF_DOWN 2
+#define _PURITY_UP   3
+#define _PURITY_DOWN 4
+#define _RESOL_SIG_UP  5
+#define _RESOL_SIG_DOWN  6
+//#define _RESOL_RMS_UP  7
+//#define _RESOL_RMS_DOWN  8
 
     std::vector<std::string> sys_types {
         "nominal",
+        "sys_effUp",
+        "sys_effDown",
         "sys_purUp",
         "sys_purDown",
+        "sys_phoEresol_sigUp",
+        "sys_phoEresol_sigDown",
+//        "sys_phoEresol_rmsUp",
+//        "sys_phoEresol_rmsDown",
         "sys_phoEscale",
-        "sys_eleCont"
-        //"sys_phoIso"                                              
+        "sys_eleCont",
+        //"sys_phoIso",                                            
+        //"sys_mc",
+        "sys_TAA"
     };
     int n_sys_types = sys_types.size();
 
@@ -99,6 +112,9 @@ void calc_systematic(TString ver="171017_temp_v9")
             for (int m=1; m<n_sys_types; ++m) {
                 if (!valid_input[m])
                     continue;
+                
+                if(hist_types[i] == "dNdpt_corr2_pp" && sys_types[m]=="sys_TAA") continue; 
+                if(hist_types[i] == "Raa" && sys_types[m]=="sys_TAA") continue; 
                 TH1D* h1D_varied = (TH1D*)input_files[m]->Get(Form("h1D_%s", hist_name.c_str()));
 
                 SysVar* sys_hists = new SysVar(hist_name, sys_types[m]);
@@ -106,14 +122,24 @@ void calc_systematic(TString ver="171017_temp_v9")
 
                 sys_hists->calc_sys();
 
-                if (sys_types[m] == "sys_eleCont")
-                    sys_hists->scale_sys(0.25);
-
+               // if (sys_types[m] == "sys_eleCont")
+               //     sys_hists->scale_sys(0.25);
+                
                 systematics[i][k].push_back(sys_hists);
             }
         }
     }
 
+    //pp lumi systematic 2.3%
+    std::string hist_name = "dNdpt_corr2_pp"; 
+    SysVar* sys_pplumi= new SysVar(hist_name,"sys_TAA");
+    TH1D* h1D_nominal = (TH1D*)input_files[0]->Get(Form("h1D_dNdpt_corr2_pp%s",""));
+    TH1D* h1D_varied = (TH1D*) h1D_nominal->Clone(Form("h1D_dNdpt_corr2_pp%s","_varied"));
+    //TH1D* h1D_varied = (TH1D*)input_files[0]->Get(Form("h1D_dNdpt_corr2_pp%s",""));
+    h1D_varied->Scale(1./1.023);
+    sys_pplumi->init(h1D_nominal, h1D_varied);
+    sys_pplumi->calc_sys();
+    systematics[2][0].push_back(sys_pplumi);
 
     std::vector<TotalSysVar*> total_sys;
 
@@ -126,7 +152,16 @@ void calc_systematic(TString ver="171017_temp_v9")
 
             std::size_t m = 0;
             TotalSysVar* total_sys_hists = new TotalSysVar();
-
+            //eff total
+            if (valid_input[_EFF_UP] && valid_input[_EFF_DOWN]) {
+                TotalSysVar* eff_sys_hists = new TotalSysVar(systematics[i][k][m], systematics[i][k][m+1]);
+                total_sys_hists->add_SysVar(eff_sys_hists);
+                ++m; ++m;
+            } else if (valid_input[_EFF_UP] ^ valid_input[_EFF_DOWN]) {
+                total_sys_hists->add_SysVar(systematics[i][k][m]);
+                ++m;
+            }
+            //purity total
             if (valid_input[_PURITY_UP] && valid_input[_PURITY_DOWN]) {
                 TotalSysVar* purity_sys_hists = new TotalSysVar(systematics[i][k][m], systematics[i][k][m+1]);
                 total_sys_hists->add_SysVar(purity_sys_hists);
@@ -135,6 +170,24 @@ void calc_systematic(TString ver="171017_temp_v9")
                 total_sys_hists->add_SysVar(systematics[i][k][m]);
                 ++m;
             }
+            //resolution sig total(when there's two source)
+            if (valid_input[_RESOL_SIG_UP] && valid_input[_RESOL_SIG_DOWN]) {
+                TotalSysVar* resol_sig_sys_hists = new TotalSysVar(systematics[i][k][m], systematics[i][k][m+1]);
+                total_sys_hists->add_SysVar(resol_sig_sys_hists);
+                ++m; ++m;
+            } else if (valid_input[_RESOL_SIG_UP] ^ valid_input[_RESOL_SIG_DOWN]) {
+                total_sys_hists->add_SysVar(systematics[i][k][m]);
+                ++m;
+            }
+            //resolution rms total(when there's two source)
+           // if (valid_input[_RESOL_RMS_UP] && valid_input[_RESOL_RMS_DOWN]) {
+           //     TotalSysVar* resol_rms_sys_hists = new TotalSysVar(systematics[i][k][m], systematics[i][k][m+1]);
+           //     total_sys_hists->add_SysVar(resol_rms_sys_hists);
+           //     ++m; ++m;
+           // } else if (valid_input[_RESOL_RMS_UP] ^ valid_input[_RESOL_RMS_DOWN]) {
+           //     total_sys_hists->add_SysVar(systematics[i][k][m]);
+           //     ++m;
+           // }
 
             for (; m<systematics[i][k].size(); ++m)
                 total_sys_hists->add_SysVar(systematics[i][k][m]);
@@ -149,5 +202,4 @@ void calc_systematic(TString ver="171017_temp_v9")
     printf("writing objects...\n");
     output->Write("", TObject::kOverwrite);
     output->Close();
-
 }

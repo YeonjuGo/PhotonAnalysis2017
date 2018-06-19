@@ -29,7 +29,7 @@ const TString LABEL = "PbPb #sqrt{s}_{_{NN}}=5.02 TeV";
 const int colHere[]={1,2,4,kGreen+1,kYellow+1};
 const int markerHere[]={24,28,28,28,28,28};
 const int markerHere_closed[]={20,33,33,33,33};
-void drawRaaXsec(TString ver="170601_temp_v3", bool purityTest = false)
+void drawRaaXsec(TString ver="171017_temp_v9_nominal", bool purityTest = false)
 {
     TH1::SetDefaultSumw2();
     gStyle->SetOptStat(0000);
@@ -55,6 +55,7 @@ void drawRaaXsec(TString ver="170601_temp_v3", bool purityTest = false)
     TH1D* h1D_corr[nCor][nCentBinIF]; // corrected yield 1. purity, 2. efficiency 
     TH1D* h1D_corrpp[nCor]; // corrected yield 1. purity, 2. efficiency 
     TH1D* h1D_Raa[nCentBinIF]; // total Raa!!
+
     
     /////////////////////////////////////////////////////////////////////////// 
     /// Get efficiency & purity hist. 
@@ -256,6 +257,41 @@ void drawRaaXsec(TString ver="170601_temp_v3", bool purityTest = false)
     l2->Draw("same");
     if(purityTest) c2->SaveAs(Form("%sfigures/phoXsec_%s_purityTest.pdf",dir.Data(),ver.Data()));
     else c2->SaveAs(Form("%sfigures/phoXsec_%s.pdf",dir.Data(),ver.Data()));
+   
+    ///////////////////////////////////////////////////////////////////////////
+    /// Calulate 0-100 % bin
+
+    TH1D* h1D_corr_noCal = (TH1D*) h1D_corr[2][0]->Clone(Form("%s_noCal",h1D_corr[2][0]->GetName()));//
+    TH1D* h1D_Raa_noCal = (TH1D*) h1D_Raa[0]->Clone(Form("%s_noCal",h1D_Raa[0]->GetName())); //
+    TH1D* h1D_corr_temp[nCentBinIF];
+    TH1D* h1D_Raa_temp[nCentBinIF];
+    // dN/dpt
+    for(int j=1;j<nCentBinIF;j++){
+       double centWeight = (centBins_f[j]-centBins_i[j])/2./100.;
+       h1D_corr_temp[j] = (TH1D*) h1D_corr[2][j]->Clone(Form("%s_temp",h1D_corr[2][j]->GetName()));
+       h1D_corr_temp[j]->Scale(centWeight);
+       if(j==1) h1D_corr[2][0] = (TH1D*) h1D_corr_temp[j]->Clone(Form("%s",h1D_corr[2][0]->GetName())); //
+       else h1D_corr[2][0]->Add(h1D_corr_temp[j]);
+    }
+    h1D_corr[2][0]->SetMarkerStyle(markerHere[0]);
+    h1D_corr[2][0]->SetMarkerColor(colHere[0]);
+    // RAA
+    for(int j=1;j<nCentBinIF;j++){
+        double centWeight = (centBins_f[j]-centBins_i[j])/2./100.;
+        h1D_Raa_temp[j] = (TH1D*) h1D_Raa[j]->Clone(Form("%s_temp",h1D_Raa[j]->GetName()));
+        h1D_Raa_temp[j]->Scale(centWeight);
+        if(j==1) h1D_Raa[0] = (TH1D*) h1D_Raa_temp[j]->Clone(Form("%s",h1D_Raa[0]->GetName())); //
+        else h1D_Raa[0]->Add(h1D_Raa_temp[j]);
+        h1D_corr[2][j]->SetMarkerStyle(markerHere[j]);
+        h1D_corr[2][j]->SetMarkerColor(colHere[j]);
+    }
+    h1D_Raa[0]->SetMarkerColor(colHere[0]);
+    h1D_Raa[0]->SetMarkerStyle(markerHere_closed[0]);
+    h1D_Raa[0]->SetMarkerSize(1);
+    h1D_Raa[0]->GetYaxis()->SetRangeUser(0.5,1.5);
+
+    /////////////////////////////////////////////////////////////////////////// 
+    /// Write all in output file 
 
     TString outName = Form("%soutput/phoRaa_%s.root",dir.Data(),ver.Data());
     if(purityTest) outName = Form("%soutput/phoRaa_%s_purityTest.root",dir.Data(),ver.Data());
@@ -271,6 +307,8 @@ void drawRaaXsec(TString ver="170601_temp_v3", bool purityTest = false)
             h1D_corr[ii][j]->Write();
         }
     }
+    h1D_corr_noCal->Write();
+    h1D_Raa_noCal->Write();
     h1D_rawpp->Write();
     h1D_effpp->Write();
     h1D_purpp->Write();
@@ -279,5 +317,6 @@ void drawRaaXsec(TString ver="170601_temp_v3", bool purityTest = false)
     }
     c1->Write();
     c2->Write();
+    
 
 }

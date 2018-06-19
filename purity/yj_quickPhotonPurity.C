@@ -27,7 +27,7 @@
 #include "../ElectroWeak-Jet-Track-Analyses/Utilities/interface/InputConfigurationParser.h"
 #include "../ElectroWeak-Jet-Track-Analyses/Plotting/commonUtility.h"
 
-int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="170523_temp_v1_NewPurityMethod", bool useSBcorr=1, bool noCentDepCorr=1, bool useMCSB=0){
+int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="170523_temp_v1_NewPurityMethod", bool useSBcorr=0, bool noCentDepCorr=0, bool useMCSB=0){
     gStyle->SetOptStat(0);
     TH1::SetDefaultSumw2();
 
@@ -35,7 +35,7 @@ int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="170523_te
     TString inputData=""; 
     TString inputMC=""; 
     TString inputBkgMC ="";
-    TString outputName=Form("%s_purity_%s",coll.Data(),ver.Data());
+    TString outputName=Form("purity_%s_%s",coll.Data(),ver.Data());
     if(coll=="pbpb"){
         configFile = pbpbData_config;
         inputData = pbpbDatafname;
@@ -261,7 +261,8 @@ int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="170523_te
                 } else if (i != 0 && i != nPtBin-1) {
                     drawText(Form("%.0f GeV/c < p_{T}^{#gamma} < %.0f GeV/c", ptBins[i], ptBins[i+1]), 0.15, 0.90, 1, 27);
                 } else {
-                    drawText(Form("p_{T}^{#gamma} > %.0f GeV/c", ptBins[i]), 0.24, 0.90, 1, 27);
+                    drawText(Form("%.0f GeV/c < p_{T}^{#gamma} < %.0f GeV/c", ptBins[i], ptBins[i+1]), 0.15, 0.90, 1, 27);
+                    //drawText(Form("p_{T}^{#gamma} > %.0f GeV/c", ptBins[i]), 0.24, 0.90, 1, 27);
                 }
                 if (i == 0) {
                     drawText(Form("Purity : %.2f", (Float_t)fitr.purity), xpos, 0.70, 1, 27);
@@ -280,6 +281,7 @@ int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="170523_te
                 }
 
                 h1D_pur[j]->SetBinContent(i+1,(Float_t)fitr.purity);
+                //h1D_pur[j]->SetBinError(i+1,(Float_t)fitr.purity);
             }
         }
     }

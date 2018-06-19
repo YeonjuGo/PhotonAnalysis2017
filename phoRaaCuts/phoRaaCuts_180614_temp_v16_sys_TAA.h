@@ -1,11 +1,11 @@
-#ifndef phoRaaCuts_180619_temp_v17_H 
-#define phoRaaCuts_180619_temp_v17_H 
+#ifndef phoRaaCuts_180614_temp_v16_H 
+#define phoRaaCuts_180614_temp_v16_H 
 // 1. pp photon selections(ID cuts) are the same as pbpb photons.
 // 2. pbpb MC is new ones (without Flt30) and v14 of EmEnrichedDijet
 // 3. centrality bin (0,10,30,100)
 // 4. exactly the same with v9 but pp skim is non-GED. (pp reconstruction is the same with PbPb) 
 // 5. use (pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20) instead of sumIsoCorrected.  
-// 6. sumIso < 1 GeV 
+// 6. sumIso < 5 GeV 
 // 7. pp bin (40,50,60,80,100,130) 
 // 8. electron rejection has been seperated from noise cut 
 #include <TCut.h>
@@ -63,13 +63,13 @@ const int nCentBin = sizeof(centBins)/sizeof(int) -1;
 const int centBins_i[] = {0,0,20,60};
 const int centBins_f[] = {200,20,60,200};
 const int nCentBinIF = sizeof(centBins_i)/sizeof(int);
-const double TA[nCentBinIF] = {5.607*1000,23.22*1000,11.51*1000,1.405*1000}; 
-//const double TA[nCentBinIF] = {6.108*1000,23.612*1000,11.784*1000,1.571*1000}; //err {8.9 1.7, 2.4, 12} % 
+//const double TA[nCentBinIF] = {5.607*1000,23.22*1000,11.51*1000,1.405*1000}; 
+const double TA[nCentBinIF] = {6.108*1000,23.612*1000,11.784*1000,1.571*1000}; //err {8.9 1.7, 2.4, 12} % 
 //double lumi_pp = 28.0302*1e12; //2.3 % err 
 
 /////////////// CUTS ///////////////////
 //Systematics
-const TString phoEtVar = "phoEtCorrected_sys";
+const TString phoEtVar = "phoEtCorrected";
 //Trigger and EvtSelection Cuts
 const TCut trigCut = "HLT_HISinglePhoton40_Eta1p5_v1";
 const TCut trigCut_mc = "HLT_HISinglePhoton40_Eta1p5_v2";
@@ -86,7 +86,7 @@ const TCut ptCut = "phoEtCorrected>40";
 const TCut etaCut = "abs(phoEta)<1.44";
 //Isolation Cuts for PbPb
 const TCut hoeCut = "phoHoverE<0.1";
-const TCut isoCut = "(pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20)<1.0";
+const TCut isoCut = "(pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20)<3.0";
 const TCut sigmaCut = "phoSigmaIEtaIEta_2012<0.010";
 const TCut nonIsoSBCut = "(pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20) > 10.0 && (pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20) < 20.0";
 //Isolation Cuts for pp

@@ -63,13 +63,13 @@ const int nCentBin = sizeof(centBins)/sizeof(int) -1;
 const int centBins_i[] = {0,0,20,60};
 const int centBins_f[] = {200,20,60,200};
 const int nCentBinIF = sizeof(centBins_i)/sizeof(int);
-const double TA[nCentBinIF] = {5.607*1000,23.22*1000,11.51*1000,1.405*1000}; 
-//const double TA[nCentBinIF] = {6.108*1000,23.612*1000,11.784*1000,1.571*1000}; //err {8.9 1.7, 2.4, 12} % 
+//const double TA[nCentBinIF] = {5.607*1000,23.22*1000,11.51*1000,1.405*1000}; 
+const double TA[nCentBinIF] = {6.108*1000,23.612*1000,11.784*1000,1.571*1000}; //err {8.9 1.7, 2.4, 12} % 
 //double lumi_pp = 28.0302*1e12; //2.3 % err 
 
 /////////////// CUTS ///////////////////
 //Systematics
-const TString phoEtVar = "phoEtCorrected_sys";
+const TString phoEtVar = "phoEtCorrected";
 //Trigger and EvtSelection Cuts
 const TCut trigCut = "HLT_HISinglePhoton40_Eta1p5_v1";
 const TCut trigCut_mc = "HLT_HISinglePhoton40_Eta1p5_v2";

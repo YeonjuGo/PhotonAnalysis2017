@@ -6,8 +6,10 @@
 #include "../phoRaaCuts/yjUtility.h"
 #include "../phoRaaCuts/phoRaaCuts_temp.h"
 bool isConsBin = false;
+bool doPthatWeight = true;
+bool doEmEnrSample = true;
 const int colHere[]={2,4,8,kYellow+2,kCyan+1};
-void noise_inefficiency_test(TString coll="pbpb", TString ver="180501_temp_v13_eleRejNew", bool doSeparation=true){
+void noise_inefficiency_test(TString coll="pp", TString ver="180501_temp_v13_eleRejNew_iso", bool doSeparation=true){
     cout << " :::::: noise_inefficiency_test.C :::::: " << endl;
     if(doSeparation) cout << " :::::: Isolation Separation will be processed :::::: " << endl;
     else cout << " :::::: Only total efficiency will be calculated :::::: " << endl;
@@ -36,7 +38,10 @@ void noise_inefficiency_test(TString coll="pbpb", TString ver="180501_temp_v13_e
     TChain* t1_skim = new TChain("skim");
     TChain* t1_evt = new TChain("HiEvt");
     TChain* t1_hlt = new TChain("hltTree");
-    for(Int_t j=0;j<2;++j){
+    int nSAMPLE = 2;
+    if(doEmEnrSample) nSAMPLE = 2;
+    else nSAMPLE = 1;
+    for(Int_t j=0;j<nSAMPLE;++j){
         t1->Add(fname[j]);
         t1_skim->Add(fname[j]);
         t1_evt->Add(fname[j]);
@@ -52,8 +57,10 @@ void noise_inefficiency_test(TString coll="pbpb", TString ver="180501_temp_v13_e
     Int_t nEff = 3;//0(electron):spikeRejection && hotspotCut && electronCut (= noiseCut), 1(hotspot):spikeRejection && hotspotCut, 2(spike):spikeRejection
     Int_t nEffloop = nEff;
     if(doSeparation==0) nEffloop = 1;
-    TString effSt[] = {"tot","hotspot","spike"};
-    TString effSt_legend[] = {"total noise(spike & hotspot & electron)","spike & hotspot","spike"};
+    TString effSt[] = {"eleRej","sig_sumIso","sig"};
+    TString effSt_legend[] = {"noise & H/E & #sigma_{I#etaI#eta} & sumIso & electron rej.","noise & H/E & #sigma_{I#etaI#eta} & sumIso","noise & H/E & #sigma_{I#etaI#eta}"};
+   // TString effSt[] = {"tot","hotspot","spike"};
+   // TString effSt_legend[] = {"total noise(spike & hotspot & electron)","spike & hotspot","spike"};
     TH1D* bkg_den[nCENTBINS];
     TH1D* bkg_num[nCENTBINS][nEff];
     TH1D* bkg_eff[nCENTBINS][nEff];
@@ -90,9 +97,12 @@ void noise_inefficiency_test(TString coll="pbpb", TString ver="180501_temp_v13_e
     TCut commonCut[nCENTBINS];
     TCut numCut[nEff];
     //numCut[0] = electronCut; // only electronCut
-    numCut[0] = spikeRejection && hotspotCut && electronCut; // it's the same with noiseCut
-    numCut[1] = spikeRejection && hotspotCut;
-    numCut[2] = spikeRejection;
+    numCut[0] = spikeRejection && hotspotCut && hoeCut && sigmaCut && isoCut && electronCut; // it's the same with noiseCut
+    numCut[1] = spikeRejection && hotspotCut && hoeCut && sigmaCut && isoCut;
+    numCut[2] = spikeRejection && hotspotCut && hoeCut && sigmaCut;
+   // numCut[0] = spikeRejection && hotspotCut && electronCut; // it's the same with noiseCut
+   // numCut[1] = spikeRejection && hotspotCut;
+   // numCut[2] = spikeRejection;
 
     for(Int_t i=0;i<nCENTBINS;++i){
         centCut[i] = Form("(hiBin>=%d)&&(hiBin<%d)",centBins_i[i],centBins_f[i]);
@@ -102,25 +112,33 @@ void noise_inefficiency_test(TString coll="pbpb", TString ver="180501_temp_v13_e
 
     if(coll=="pp") {
         commonCut[0] = trigCut_mc_pp && etaCut; 
-        numCut[0] = spikeRejection && hotspotCut && electronCut; // it's the same with noiseCut
-        numCut[1] = spikeRejection && hotspotCut;
-        numCut[2] = spikeRejection;
+        numCut[0] = spikeRejection && hotspotCut && hoeCut && sigmaCut && isoCut && electronCut;
+        numCut[1] = spikeRejection && hotspotCut && hoeCut && sigmaCut && isoCut;
+        numCut[2] = spikeRejection && hotspotCut && hoeCut && sigmaCut;  
+       // numCut[0] = spikeRejection && hotspotCut && electronCut; // it's the same with noiseCut
+       // numCut[1] = spikeRejection && hotspotCut;
+       // numCut[2] = spikeRejection;
     }
     for(Int_t i=0;i<nCENTBINS;++i){
-        //t1->Draw(Form("%s>>%s",phoEtVar.Data(),sig_den[i]->GetName()));
-        //t1->Draw(Form("%s>>%s",phoEtVar.Data(),sig_den[i]->GetName()), commonCut[i]);
-        //t1->Draw(Form("%s>>%s",phoEtVar.Data(),sig_den[i]->GetName()),Form("(%s)*((%s) && (%s))","weight",mcIsolation.GetTitle(),commonCut[i].GetTitle()));
-        t1->Draw(Form("%s>>%s",phoEtVar.Data(),sig_den[i]->GetName()), mcIsolation && commonCut[i]);
+        //fill signal photons denominator 
+        if(doPthatWeight) t1->Draw(Form("%s>>%s",phoEtVar.Data(),sig_den[i]->GetName()),Form("(%s)*((%s) && (%s))","weight",mcIsolation.GetTitle(),commonCut[i].GetTitle()));
+        else t1->Draw(Form("%s>>%s",phoEtVar.Data(),sig_den[i]->GetName()), mcIsolation && commonCut[i]);
         sig_den[i]=(TH1D*)gDirectory->Get(sig_den[i]->GetName());
-        //t1->Draw(Form("%s>>%s",phoEtVar.Data(),bkg_den[i]->GetName()));
-        t1->Draw(Form("%s>>%s",phoEtVar.Data(),bkg_den[i]->GetName()),mcBkgIsolation && commonCut[i]);
+        
+        //fill background photons denominator 
+        if(doPthatWeight) t1->Draw(Form("%s>>%s",phoEtVar.Data(),bkg_den[i]->GetName()),Form("(%s)*((%s) && (%s))","weight",mcBkgIsolation.GetTitle(),commonCut[i].GetTitle()));
+        else t1->Draw(Form("%s>>%s",phoEtVar.Data(),bkg_den[i]->GetName()),mcBkgIsolation && commonCut[i]);
         bkg_den[i]=(TH1D*)gDirectory->Get(bkg_den[i]->GetName());
+
         for(Int_t j=0;j<nEffloop;++j){
-            t1->Draw(Form("%s>>%s",phoEtVar.Data(),sig_num[i][j]->GetName()), mcIsolation && commonCut[i] && numCut[j]); 
-            //t1->Draw(Form("%s>>%s",phoEtVar.Data(),sig_num[i][j]->GetName()),Form("(%s)*((%s) && (%s) && (%s))","weight",mcIsolation.GetTitle(), commonCut[i].GetTitle(), numCut[j].GetTitle())); 
+            //fill signal photons numerator 
+            if(doPthatWeight) t1->Draw(Form("%s>>%s",phoEtVar.Data(),sig_num[i][j]->GetName()),Form("(%s)*((%s) && (%s) && (%s))","weight",mcIsolation.GetTitle(), commonCut[i].GetTitle(), numCut[j].GetTitle())); 
+            else t1->Draw(Form("%s>>%s",phoEtVar.Data(),sig_num[i][j]->GetName()), mcIsolation && commonCut[i] && numCut[j]); 
             sig_num[i][j]=(TH1D*)gDirectory->Get(sig_num[i][j]->GetName());
-            t1->Draw(Form("%s>>%s",phoEtVar.Data(),bkg_num[i][j]->GetName()),mcBkgIsolation && commonCut[i] && numCut[j]); 
-            //t1->Draw(Form("%s>>%s",phoEtVar.Data(),bkg_num[i][j]->GetName()),mcBkgIsolation && commonCut[i] && numCut[j]); 
+            
+            //fill background photons numerator 
+            if(doPthatWeight) t1->Draw(Form("%s>>%s",phoEtVar.Data(),bkg_num[i][j]->GetName()),Form("(%s)*((%s) && (%s) && (%s))","weight",mcBkgIsolation.GetTitle(), commonCut[i].GetTitle(), numCut[j].GetTitle())); 
+            else t1->Draw(Form("%s>>%s",phoEtVar.Data(),bkg_num[i][j]->GetName()),mcBkgIsolation && commonCut[i] && numCut[j]); 
             bkg_num[i][j]=(TH1D*)gDirectory->Get(bkg_num[i][j]->GetName());
         }
     }
@@ -171,7 +189,8 @@ void noise_inefficiency_test(TString coll="pbpb", TString ver="180501_temp_v13_e
         }
         sig_eff_draw[i][0]->SetMarkerColor(colHere[i]);
         bkg_eff_draw[i][0]->SetMarkerColor(colHere[i]);
-        sig_eff_draw[i][0]->GetYaxis()->SetRangeUser(0.8,1);
+        sig_eff_draw[i][0]->GetYaxis()->SetRangeUser(0.0,1);
+        //sig_eff_draw[i][0]->GetYaxis()->SetRangeUser(0.8,1);
         sig_eff_draw[i][0]->GetXaxis()->CenterTitle();
         sig_eff_draw[i][0]->GetYaxis()->CenterTitle();
         if(i==0) sig_eff_draw[i][0]->Draw("p");
@@ -181,12 +200,14 @@ void noise_inefficiency_test(TString coll="pbpb", TString ver="180501_temp_v13_e
     } 
     if(coll=="pbpb") l1->Draw("same");
     drawText(Form("%s Total Isolation Efficiency",coll.Data()),0.2,1.0-c1->GetBottomMargin()+0.06,0,kBlack,16);
-    c1->SaveAs(Form("%sfigures/%s_tot_noise_inefficiency_centDep_%s.pdf",dir.Data(),coll.Data(),ver.Data()));
+    if(doPthatWeight) ver += "_pthatWeighted";
+    if(!doEmEnrSample) ver += "_noEmEnrSample"; 
+    c1->SaveAs(Form("%sfigures/%s_tot_noise_inefficiency_centDep_%s.pdf",dir.Data(),coll.Data(),ver.Data())); 
 
     /////////////////////////////////////////////////////////////////////
     // DRAWING : Centrality Dependence and Isolation Cut Dependence (Seperately)
     cout << "sss" << endl; 
-    TLegend* l2 = new TLegend(0.2,0.2,0.9,0.4);
+    TLegend* l2 = new TLegend(0.13,0.2,0.9,0.4);
     legStyle(l2);
     TCanvas* c2[nCENTBINS];
     cout << "sss" << endl; 
@@ -205,7 +226,8 @@ void noise_inefficiency_test(TString coll="pbpb", TString ver="180501_temp_v13_e
             }
             sig_eff_draw[i][j]->SetMarkerColor(colHere[j]);
             bkg_eff_draw[i][j]->SetMarkerColor(colHere[j]);
-            sig_eff_draw[i][j]->GetYaxis()->SetRangeUser(0.8,1);
+            sig_eff_draw[i][j]->GetYaxis()->SetRangeUser(0.0,1);
+            //sig_eff_draw[i][j]->GetYaxis()->SetRangeUser(0.8,1);
             sig_eff_draw[i][j]->GetXaxis()->CenterTitle();
             sig_eff_draw[i][j]->GetYaxis()->CenterTitle();
             if(j==0) sig_eff_draw[i][j]->Draw("p");

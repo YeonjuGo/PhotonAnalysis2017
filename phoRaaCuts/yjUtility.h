@@ -53,13 +53,73 @@
 #include <TRandom.h>
 #include <TStopwatch.h>
 #include <ctime>        // std::clock()
+//etc. 
+#include "tdrstyle.C"   // std::clock()
 using namespace std;
 
 const int col[] = {1,2,3,4,6,7,28,46,41};
 const int ycol[] = {8,9,28,46,41};
 const int marker[] = {24,25,26,27,28,29,31,33,34};
 
+void settdrStyleHist(TH1D* h, float xoffset=1.5, float yoffset=1.8){
+    h->GetXaxis()->CenterTitle();
+    h->GetYaxis()->CenterTitle();
+    h->GetYaxis()->SetTitleOffset(yoffset);
+    h->GetXaxis()->SetTitleOffset(xoffset);
+    h->GetXaxis()->SetTitleFont(42);
+    h->GetYaxis()->SetTitleFont(42);
+    h->GetXaxis()->SetTitleColor(1);
+    h->GetYaxis()->SetTitleColor(1);
+    h->GetXaxis()->SetLabelSize(0.04);
+}
 
+void drawLumi(TCanvas* c, TString lumiSt,double lumiTextOffset=0.2){
+    float ll = c->GetLeftMargin();
+    float tt = c->GetTopMargin();
+    float rr = c->GetRightMargin();
+    float bb = c->GetBottomMargin();
+    //cout << ll << ", " << tt << ", " << rr << ", " << bb << endl;
+    double lumiTextSize =0.525;
+    TLatex latex;
+    latex.SetNDC();
+    latex.SetTextAngle(0);
+    latex.SetTextColor(kBlack);
+    latex.SetTextFont(42);
+    latex.SetTextAlign(31);
+    latex.SetTextSize(lumiTextSize*tt);
+    latex.DrawLatex(1-rr,1-tt+lumiTextOffset*tt,Form("%s",lumiSt.Data()));
+}
+
+void drawCMS(TCanvas* c, TString extraSt, double cmsTextOffset=0.2){
+    float ll = c->GetLeftMargin();
+    float tt = c->GetTopMargin();
+    float rr = c->GetRightMargin();
+    float bb = c->GetBottomMargin();
+    //cout << ll << ", " << tt << ", " << rr << ", " << bb << endl;
+    double cmsTextSize =0.75;
+    TLatex latex;
+    latex.SetNDC();
+    latex.SetTextAngle(0);
+    latex.SetTextColor(kBlack);
+    latex.SetTextFont(62);
+    latex.SetTextAlign(13);
+    //latex.SetTextSize(0.025);
+    latex.SetTextSize(cmsTextSize*tt);
+    latex.DrawLatex(ll+cmsTextOffset*tt,1-tt-cmsTextOffset*tt,"CMS");
+    
+    float extraOverCmsTextSize  = 0.76;
+    float relExtraDY = 1.2;
+    TLatex latex_ex;
+    latex_ex.SetNDC();
+    latex_ex.SetTextAngle(0);
+    latex_ex.SetTextColor(kBlack);
+    latex_ex.SetTextFont(52);
+    latex_ex.SetTextAlign(13);
+    //latex_ex.SetTextSize(0.025);
+    latex_ex.SetTextSize(cmsTextSize*tt*extraOverCmsTextSize);
+    latex_ex.DrawLatex(ll+cmsTextOffset*tt,1-tt-cmsTextOffset*tt-relExtraDY*cmsTextSize*tt,Form("%s",extraSt.Data()));
+
+}
 
 void yjStyleRoot(){
     gStyle -> SetOptStat(0);
@@ -67,10 +127,10 @@ void yjStyleRoot(){
 }
 void SetyjPadStyle(){
     gStyle->SetPaperSize(20,26);
-    gStyle->SetPadTopMargin(0.05);
-    gStyle->SetPadRightMargin(0.05);
-    gStyle->SetPadBottomMargin(0.15);
-    gStyle->SetPadLeftMargin(0.15);
+    gStyle->SetPadTopMargin(0.07);
+    gStyle->SetPadRightMargin(0.07);
+    gStyle->SetPadBottomMargin(0.16);
+    gStyle->SetPadLeftMargin(0.16);
 }
 void SetHistTitleStyle(double titlesize=0.06, double labelsize = 0.05){
     gStyle->SetTextFont(42); 
@@ -96,7 +156,7 @@ void SetHistTitleStyle(double titlesize=0.06, double labelsize = 0.05){
 void SetHistTextSize(TH1* h, double divRatio=1.0, double titlesize=17, double labelsize=14, int fontst=43){
     double titleoffset;
     if(divRatio!=1.0) titleoffset = 2.4;
-    else titleoffset = 1.2;
+    else titleoffset = 1.6;
     double labeloffset = 0.01;
     h->GetXaxis()->SetLabelFont(fontst);
     h->GetYaxis()->SetLabelFont(fontst);
@@ -107,6 +167,8 @@ void SetHistTextSize(TH1* h, double divRatio=1.0, double titlesize=17, double la
     h->GetYaxis()->SetLabelSize(labelsize); h->SetTitleOffset(titleoffset/divRatio, "Y");
     h->GetXaxis()->SetTitleSize(titlesize); h->SetLabelOffset(labeloffset/divRatio, "X");
     h->GetYaxis()->SetTitleSize(titlesize); h->SetLabelOffset(labeloffset/divRatio, "Y");
+    h->GetXaxis()->CenterTitle();
+    h->GetYaxis()->CenterTitle();
 }
 void SetHistTitleOffsetStyle(TH1* h, double titlesize=0.08, double titleoffset=0.01, double labelsize=0.05,double labeloffset=0.01){
     h->SetTitleSize( titlesize, "X" ); h->SetTitleOffset(titleoffset, "X");
@@ -132,7 +194,7 @@ void legStyle( TLegend *a)
   a->SetFillStyle(0);
 //  a->SetHeader(head);
 //  a->SetTextFont(62);
-  a->SetTextSize(0.04);
+//  a->SetTextSize(0.04);
 //  a->SetLineColor(1);
 //  a->SetLineStyle(1);
 //  a->SetLineWidth(1);
@@ -164,7 +226,7 @@ void hMarkerStyle(TH1 *h1=0, Int_t mstyle=20, Int_t mcolor=1, Double_t msize=1.0
 	h1->SetMarkerColor(mcolor);
 	h1->SetMarkerSize(msize);
 }
-void drawText(const char *text, float xp, float yp, bool isRightAlign=0, int textColor=kBlack, int textSize=14, int textFont = 43){
+void drawText(const char *text, float xp, float yp, bool isRightAlign=0, int textColor=kBlack, double textSize=0.04, int textFont = 42){
 	TLatex *tex = new TLatex(xp,yp,text);
 	tex->SetTextFont(textFont);
 	//   if(bold)tex->SetTextFont(43);

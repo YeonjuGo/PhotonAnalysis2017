@@ -1,7 +1,7 @@
 #ifndef phoRaaCuts_180531_temp_v14_H 
 #define phoRaaCuts_180531_temp_v14_H 
 // 1. pp photon selections(ID cuts) are the same as pbpb photons.
-// 2. pbpb MC is new ones (Flt30) and v14 of EmEnrichedDijet
+// 2. pbpb MC is new ones (without Flt30) and v14 of EmEnrichedDijet
 // 3. centrality bin (0,10,30,100)
 // 4. exactly the same with v9 but pp skim is non-GED. (pp reconstruction is the same with PbPb) 
 // 5. use (pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20) instead of sumIsoCorrected.  
@@ -34,17 +34,20 @@ TString getSampleName ( int colli) {
 
 //////////////// FILES ///////////////////
 TString ppDatafname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2017-03-29-nominal/pp_Data_photonRaaSkim.root";
-TString ppMCfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2018-03-06-nominal/pp_MC_photonRaaSkim_nonGED.root";
-TString ppMCEmEnrfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2018-03-06-nominal/pp_EmEnrMC_photonRaaSkim_nonGED.root";
+TString ppMCfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2018-04-06-nominal/pp_MC_photonRaaSkim_eleRejNew.root";
+TString ppMCEmEnrfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2018-04-06-nominal/pp_EmEnrMC_photonRaaSkim_eleRejNew.root";
 TString pbpbDatafname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2017-03-29-nominal/PbPb_Data_photonRaaSkim.root";
-TString pbpbMCfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2017-06-23-nominal/PbPb_MC_photonRaaSkim_Flt30.root";
-TString pbpbMCEmEnrfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2017-06-23-nominal/PbPb_EmEnrMC_photonRaaSkim_v14.root";
+TString pbpbMCfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2018-04-06-nominal/PbPb_MC_photonRaaSkim_v14_eleRejNew.root";
+TString pbpbMCEmEnrfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2018-04-06-nominal/PbPb_EmEnrMC_photonRaaSkim_v14_eleRejNew.root";
 
 TString pbpbData_config = "/home/goyeonju/CMS/2016/PhotonAnalysis2016/ElectroWeak-Jet-Track-Analyses/CutConfigurations/photonRaa.conf";
 TString pbpbMC_config = "/home/goyeonju/CMS/2016/PhotonAnalysis2016/ElectroWeak-Jet-Track-Analyses/CutConfigurations/photonRaa_mc.conf";
 TString ppData_config = "/home/goyeonju/CMS/2016/PhotonAnalysis2016/ElectroWeak-Jet-Track-Analyses/CutConfigurations/photonRaa_pp.conf";
 TString ppMC_config = "/home/goyeonju/CMS/2016/PhotonAnalysis2016/ElectroWeak-Jet-Track-Analyses/CutConfigurations/photonRaa_pp_mc.conf";
-
+TString pbpb_forest_inputList = "/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/inputfilelist/pbpblist_v14_HydjetCymbal.txt"; 
+TString pp_forest_inputList = "/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/inputfilelist/pplist.txt"; 
+TString pbpb_recoEfficiency= "/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pbpb_reco_efficiency_AllQCDPhotons_HydjetCymbal_noFlt30.root";
+TString pp_recoEfficiency = "/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pp_reco_efficiency_AllQCDPhotons.root";
 /////////////// BINNING ///////////////////
 const double ptBins[] = {40,50,60,80,100,130};
 const double ptBins_draw[] = {40,50,60,80,100,130};
@@ -76,6 +79,7 @@ const TCut hotspotCut = "pho_is2015Noise==0";
 const TCut electronCut = "pho_isEle==0";
 const TCut noiseCut = spikeRejection && hotspotCut;
 //Kinematic Cuts
+const TCut ptCut = "phoEtCorrected>40";
 const TCut etaCut = "abs(phoEta)<1.44";
 //Isolation Cuts for PbPb
 const TCut hoeCut = "phoHoverE<0.1";

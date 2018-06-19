@@ -135,7 +135,7 @@ PhotonPurity getPurity(const TString coll, CutConfiguration config, TTree *dataT
   const Float_t maxSIGMA = config.proc[CUTS::kHISTOGRAM].obj[CUTS::kPHOTON].f[CUTS::PHO::k_puritySieieHistMax];
   const std::string mcWeightLabel_s = config.proc[CUTS::kHISTOGRAM].obj[CUTS::kPHOTON].s[CUTS::PHO::k_monteCarloWeightLabel];
   TCut mcWeightLabel = mcWeightLabel_s.c_str();
-
+    cout << "Weight is applied : " << mcWeightLabel << endl;
   TH1D* hCand = new TH1D("cand","",nSIGMABINS,0,maxSIGMA);
   TH1D* hBkg = (TH1D*)hCand->Clone("bkg");
   TH1D* hSig = (TH1D*)hCand->Clone("sig");

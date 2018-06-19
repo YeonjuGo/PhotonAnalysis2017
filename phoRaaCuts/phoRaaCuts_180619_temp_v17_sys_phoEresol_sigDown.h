@@ -69,7 +69,8 @@ const double TA[nCentBinIF] = {5.607*1000,23.22*1000,11.51*1000,1.405*1000};
 
 /////////////// CUTS ///////////////////
 //Systematics
-const TString phoEtVar = "phoEtCorrected_sys";
+const TString phoEtVar = "phoEtCorrected";
+//const TString phoEtVar = "phoEtCorrected_resSys_sig2";
 //Trigger and EvtSelection Cuts
 const TCut trigCut = "HLT_HISinglePhoton40_Eta1p5_v1";
 const TCut trigCut_mc = "HLT_HISinglePhoton40_Eta1p5_v2";

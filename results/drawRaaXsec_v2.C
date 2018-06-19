@@ -31,21 +31,21 @@ const TString LABEL = "PbPb #sqrt{s}_{_{NN}}=5.02 TeV";
 const int colHere[]={1,2,4,kGreen+1,kYellow+1};
 const int markerHere[]={24,28,28,28,28,28};
 const int markerHere_closed[]={20,33,33,33,33};
-void drawRaaXsec_v2(TString ver="170601_temp_v3", bool purityTest = false)
+void drawRaaXsec_v2(TString ver="180531_temp_v14", bool purityTest = false)
 {
     TH1::SetDefaultSumw2();
     gStyle->SetOptStat(0000);
-    SetyjPadStyle();
+    //SetyjPadStyle();
     //SetHistTitleStyle(0.05);
     // http://dde.web.cern.ch/dde/glauber_lhc.htm
 
     // nCentBin+1 : 0th array is for inclusive[0-100%]
-    TFile* f_eff_reco = new TFile("/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pbpb_reco_efficiency_180306_temp_v10_nonGED.root");
-    TFile* f_eff_recopp = new TFile("/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pp_reco_efficiency_180306_temp_v10_nonGED.root");
+    TFile* f_eff_reco = new TFile("/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pbpb_reco_efficiency_180531_temp_v14.root");
+    TFile* f_eff_recopp = new TFile("/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pp_reco_efficiency_180531_temp_v14.root");
     TFile* f_eff_iso = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pbpb_iso_efficiency_%s.root",ver.Data()));
     TFile* f_eff_isopp = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pp_iso_efficiency_%s.root",ver.Data()));;
-    TFile* f_pur = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/purity/output/pbpb_purity_%s.root",ver.Data()));
-    TFile* f_purpp = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/purity/output/pp_purity_%s.root",ver.Data()));;
+    TFile* f_pur = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/purity/output/purity_pbpb_%s.root",ver.Data()));
+    TFile* f_purpp = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/purity/output/purity_pp_%s.root",ver.Data()));;
     TFile* f_raw = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/results/output/rawDist_%s.root",ver.Data()));
 
     TH1D* h1D_eff_reco[nCentBinIF];
@@ -58,7 +58,6 @@ void drawRaaXsec_v2(TString ver="170601_temp_v3", bool purityTest = false)
     TH1D* h1D_purpp;
     TH1D* h1D_raw[nCentBinIF];
     TH1D* h1D_rawpp;
-
     Int_t nCor = 3;
     TH1D* h1D_corr[nCor][nCentBinIF]; // corrected yield 1. purity, 2. efficiency 
     TH1D* h1D_corrpp[nCor]; // corrected yield 1. purity, 2. efficiency 
@@ -66,25 +65,29 @@ void drawRaaXsec_v2(TString ver="170601_temp_v3", bool purityTest = false)
     
     /////////////////////////////////////////////////////////////////////////// 
     /// Get efficiency & purity hist. 
+    cout << "get efficiency and purity histograms from the input files..." <<endl;
     for(int j=0;j<nCentBinIF;++j)
     {
         h1D_raw[j] = (TH1D*) f_raw->Get(Form("h1D_raw_cent%d",j));
         h1D_eff_reco[j] = (TH1D*) f_eff_reco->Get(Form("reco_eff_cent%d",j));
         h1D_eff_iso[j] = (TH1D*) f_eff_iso->Get(Form("sig_eff_cent%d_tot",j));
-        h1D_eff[j]->Multiply(h1D_eff_reco[j],h1D_eff_iso[j]);
-        
+        h1D_eff[j] = (TH1D*) h1D_eff_reco[j]->Clone(Form("h1D_eff_cent%d",j));
+        h1D_eff[j]->Multiply(h1D_eff_iso[j]);
         h1D_pur[j] = (TH1D*) f_pur->Get(Form("h1D_purity_cent%d",j));
        
         h1D_Raa[j] = new TH1D(Form("h1D_Raa_cent%d",j),Form(";p_{T}^{#gamma} (GeV);R_{AA}"),nPtBin,ptBins_draw);
-        
+       
+        // 
         if(j==0){
             h1D_rawpp = (TH1D*) f_raw->Get("h1D_raw_pp");
             h1D_eff_recopp = (TH1D*) f_eff_recopp->Get("reco_eff_cent0");
             h1D_eff_isopp = (TH1D*) f_eff_isopp->Get("sig_eff_cent0_tot");
-            h1D_effpp->Multiply(h1D_eff_recopp,h1D_eff_isopp);
+            h1D_effpp = (TH1D*) h1D_eff_recopp->Clone("h1D_eff_cent0_tot_pp");
+            h1D_effpp->Multiply(h1D_eff_isopp);
             h1D_purpp = (TH1D*) f_purpp->Get("h1D_purity_pp");
         }
     }
+    cout << "all histgorams were imported successfully" <<endl;
 
     ///////////////////////////////////////////////////////////////////////////
     // Purity TEST
@@ -100,7 +103,7 @@ void drawRaaXsec_v2(TString ver="170601_temp_v3", bool purityTest = false)
     /// Get corrected distributions
     for(int j=0;j<nCentBin+1;j++)
     {
-        h1D_raw[j]->Scale(1.,"width");
+        h1D_raw[j]->Scale(1.,"width");//for dN/dpT
         for(int ii=0;ii<nCor;ii++){ // corrected yield 0th:raw 1st:purity 2nd:purity and efficiency
             h1D_corr[ii][j] = new TH1D(Form("h1D_dNdpt_corr%d_cent%d",ii,j),";p_{T}^{#gamma} (GeV); dN/dp_{T} (GeV^{-1})",nPtBin,ptBins_draw);
             if(j==0){ 
@@ -136,6 +139,7 @@ void drawRaaXsec_v2(TString ver="170601_temp_v3", bool purityTest = false)
         }
     }
     
+    cout << "awwwwwwwwwwwwwwwwwzzzzzzzzsss" <<endl;
     /////////////////////////////////////////////////////////////////////////// 
     /// Get & Calculate & Set statistical errors
     TH1D* h1D_corr_forErr[nCor][nCentBinIF]; // corrected yield 1. purity, 2. efficiency 
@@ -179,10 +183,10 @@ void drawRaaXsec_v2(TString ver="170601_temp_v3", bool purityTest = false)
 
     /////////////////////////////////////////////////////////////////////////// 
     /// Set Global Values 
+    cout << "Define Global Values" <<endl;
 
-    double lumi_pp = 25.775*1e12; //25.775 pb-1
-    //double lumi_pp = 27.87*1e12; //27.87 pb-1
-    double lumi_pbpb = 404.0*1e6; // 0.56 nb-1, 404ub-1
+    double lumi_pp = 27.4*1e12; //25.775 pb-1 systematic 2.3%
+    //double lumi_pbpb = 404.0*1e6; // 0.56 nb-1, 404ub-1
     //double nColl[nCentBin+1] = {392.5,1079, 98.36};//0-100,0-30,30-100//provided centrality group AN-15-080 
     const double nMBTot = 2.722608696*1e9; 
     //const double nMB[nCentBin+1] = {nMBTot,nMBTot*0.3,nMBTot*0.7}; // ?*pbpb lumi?
@@ -211,7 +215,7 @@ void drawRaaXsec_v2(TString ver="170601_temp_v3", bool purityTest = false)
     TCanvas* c1 = new TCanvas("craa","",400,400);
     for(int j=0;j<nCentBin+1;j++)
     {
-        SetHistTextSize(h1D_Raa[j]);
+        //SetHistTextSize(h1D_Raa[j]);
         if(j==0){
             h1D_Raa[j]->Divide(h1D_corr[2][j],h1D_corrpp[2]);
             h1D_Raa[j]->Scale(lumi_pp/(TA[j])/(nMB[j]));
@@ -230,7 +234,7 @@ void drawRaaXsec_v2(TString ver="170601_temp_v3", bool purityTest = false)
         h1D_Raa[j]->SetTitle(";isolated p_{T}^{#gamma} (GeV);R_{AA}");
         if(j==0) h1D_Raa[j]->Draw("pel");
         else h1D_Raa[j]->Draw("pel same");
-        jumSun(40,1,120,1);
+        jumSun(ptBins[0],1,ptBins[nPtBin],1);
         l1->AddEntry(h1D_Raa[j],Form("%d%s-%d%s",centBins_i[j]/2,"%",centBins_f[j]/2,"%")); 
     }
     l1->Draw("same");
@@ -246,9 +250,10 @@ void drawRaaXsec_v2(TString ver="170601_temp_v3", bool purityTest = false)
     TCanvas* c2 = new TCanvas("cXsec","",400,400);
     c2->cd();
     c2->SetLogy();
-    SetHistTextSize(h1D_corrpp[2]);
+    //SetHistTextSize(h1D_corrpp[2]);
     h1D_corrpp[2]->Scale(1./lumi_pp);
     h1D_corrpp[2]->Scale(1e12);
+    h1D_corrpp[2]->Scale(1./2.88);
     h1D_corrpp[2]->SetMarkerStyle(21);
     h1D_corrpp[2]->SetMarkerColor(kGreen+1);
     h1D_corrpp[2]->SetTitle(";p_{T}^{#gamma} (GeV); #frac{1}{T_{AA}} #frac{dN}{dp_{T}} (pb/GeV)");
@@ -257,8 +262,10 @@ void drawRaaXsec_v2(TString ver="170601_temp_v3", bool purityTest = false)
     h1D_corrpp[2]->Draw("pe");
     l2->AddEntry(h1D_corrpp[2],"pp"); 
     for(int j=0;j<nCentBinIF;j++){
+        //SetHistTextSize(h1D_corr[2][j]);
         h1D_corr[2][j]->Scale(1./TA[j]/nMB[j]);
         h1D_corr[2][j]->Scale(1e12);
+        h1D_corr[2][j]->Scale(1./2.88);
         h1D_corr[2][j]->SetMarkerStyle(markerHere[j]);
         h1D_corr[2][j]->SetMarkerColor(colHere[j]);
         h1D_corr[2][j]->Draw("pe same");
@@ -267,7 +274,63 @@ void drawRaaXsec_v2(TString ver="170601_temp_v3", bool purityTest = false)
     l2->Draw("same");
     if(purityTest) c2->SaveAs(Form("%sfigures/phoXsec_%s_purityTest.pdf",dir.Data(),ver.Data()));
     else c2->SaveAs(Form("%sfigures/phoXsec_%s.pdf",dir.Data(),ver.Data()));
+    
+    ///////////////////////////////////////////////////////////////////////////
+    /// Calulate 0-100 % bin &&
+    ///
+    cout << "Calculate 0-100 \% bin... " << endl;
+    TH1D* h1D_corr_noCal = (TH1D*) h1D_corr[2][0]->Clone(Form("%s_noCal",h1D_corr[2][0]->GetName()));// 0-100% from eff. pur. copied
+    TH1D* h1D_Raa_noCal = (TH1D*) h1D_Raa[0]->Clone(Form("%s_noCal",h1D_Raa[0]->GetName())); //
 
+    double weight[nCentBinIF];
+    double entries[nCentBinIF]; 
+    for(int j=0;j<nCentBinIF;j++){
+        entries[j] = h1D_raw[j]->Integral();
+        if(j!=0) weight[j] = entries[j]/entries[0];
+        cout << "weight for cent : " << centBins_i[j] << "\% to " << centBins_f[j] << "\% = " <<entries[j]<<"/"<<entries[0]<<" = " <<  weight[j] << endl;
+    }
+
+    for(int j=1;j<nCentBinIF;j++){
+        if(j==1){
+            h1D_Raa[0] = (TH1D*) h1D_Raa[j]->Clone(Form("%s",h1D_Raa[0]->GetName())); //
+            h1D_Raa[0]->Scale(weight[j]);
+        } else{
+            h1D_Raa[0]->Add(h1D_Raa[j],weight[j]);
+        }
+    }
+    
+    for(int j=1;j<nCentBinIF;j++){
+        if(j==1){
+            h1D_corr[2][0] = (TH1D*) h1D_corr[2][j]->Clone(Form("%s",h1D_corr[2][0]->GetName())); //
+            h1D_corr[2][0]->Scale(weight[j]);
+        } else{
+            h1D_corr[2][0]->Add(h1D_corr[2][j],weight[j]);
+        }
+    }
+/*
+           for(int j=1;j<nCentBinIF;j++){
+           double centWeight = (centBins_f[j]-centBins_i[j])/2./100.;
+        if(j==1){
+            h1D_Raa[0] = (TH1D*) h1D_Raa[j]->Clone(Form("%s",h1D_Raa[0]->GetName())); //
+        } else{
+            h1D_Raa[0]->Multiply(h1D_Raa[j]);
+        }
+        h1D_Raa[0]->Scale(centWeight);
+    }
+    for(int j=1;j<nCentBinIF;j++){
+       double centWeight = (centBins_f[j]-centBins_i[j])/2./100.;
+        if(j==1){
+            h1D_corr[2][0] = (TH1D*) h1D_corr[2][j]->Clone(Form("%s",h1D_corr[2][0]->GetName())); //
+
+        } else{
+            h1D_corr[2][0]->Multiply(h1D_corr[2][j]);
+        }
+        h1D_corr[2][0]->Scale(centWeight);
+    }
+*/
+
+    ///////////////////////////////////////////////////////////////////////////
+    /// Store histograms in output file 
     TString outName = Form("%soutput/phoRaa_%s.root",dir.Data(),ver.Data());
     if(purityTest) outName = Form("%soutput/phoRaa_%s_purityTest.root",dir.Data(),ver.Data());
     
@@ -282,6 +345,8 @@ void drawRaaXsec_v2(TString ver="170601_temp_v3", bool purityTest = false)
             h1D_corr[ii][j]->Write();
         }
     }
+    h1D_corr_noCal->Write();
+    h1D_Raa_noCal->Write();
     h1D_rawpp->Write();
     h1D_effpp->Write();
     h1D_purpp->Write();

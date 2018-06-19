@@ -9,12 +9,12 @@
 const float delta2 = 0.15*0.15;
 const float delta = 0.15;
 
-void reco_efficiency_withForest(TString coll="pp", TString ver="test")
+void reco_efficiency_withForest(TString coll="pbpb", TString ver="HydjetDrum_v1_and_ext1")
 {
     cout << " :::::: reco_efficiency_withForest.C :::::: " << endl;
     TH1::SetDefaultSumw2();
     gStyle->SetOptStat(0);
-    SetyjPadStyle();
+    //SetyjPadStyle();
 
     ///////////////////////////////////////////////////////////////////////////
     // TCAHIN, GET FILE 
@@ -29,7 +29,9 @@ void reco_efficiency_withForest(TString coll="pp", TString ver="test")
     
     int nFiles(0);
     char line[1024];
-    TString inFileName = Form("inputfilelist/%slist.txt",coll.Data());
+    TString inFileName = "/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/inputfilelist/pbpblist_HydjetDrum_v1_and_ext1.txt"; 
+    //TString inFileName = Form("%s",pbpb_forest_inputList.Data());
+    if(coll=="pp") inFileName = Form("%s",pp_forest_inputList.Data());
     ifstream in(inFileName.Data());
     while (in.getline(line,1024,'\n'))
     {
