@@ -8,7 +8,7 @@
 bool isConstBin = false;
 const int colHere[]={2,4,8,kYellow+2,kCyan+1};
 const int markerStyle[]={20,33,22,23,34,29};
-void draw_iso_efficiency(TString coll="pbpb", TString ver="180614_temp_v16_nominal", bool doWeight=true, bool doBkg=false, bool doSeparation=true){
+void draw_iso_efficiency(TString coll="pbpb", TString ver="180619_temp_v17_nominal", bool doWeight=true, bool doBkg=false, bool doSeparation=true){
     
     cout << " :::::: iso_efficiency_withSkimFile.C :::::: " << endl;
     if(doSeparation) cout << " :::::: Isolation Separation will be processed :::::: " << endl;

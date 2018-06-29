@@ -164,19 +164,19 @@ void iso_efficiency_withSkimFile(TString coll="pp", TString ver="test_Island_sig
     //c1->SetLogx(); 
     for(Int_t i=0;i<nCENTBINS;++i){
         SetHistTextSize(sig_eff_draw[i][0]);
-        if(i==0) {
-            sig_eff_draw[i][0]->SetMarkerStyle(33);
-            sig_eff_draw[i][0]->SetMarkerSize(1.4);
-        } else{
-            sig_eff_draw[i][0]->SetMarkerStyle(20);
-        }
+       // if(i==0) {
+       //     sig_eff_draw[i][0]->SetMarkerStyle(33);
+       //     sig_eff_draw[i][0]->SetMarkerSize(1.4);
+       // } else{
+       //     sig_eff_draw[i][0]->SetMarkerStyle(20);
+       // }
         sig_eff_draw[i][0]->SetMarkerColor(colHere[i]);
         sig_eff_draw[i][0]->SetMarkerStyle(markerStyle[i]);
         sig_eff_draw[i][0]->GetYaxis()->SetRangeUser(0,1);
         sig_eff_draw[i][0]->GetXaxis()->CenterTitle();
         sig_eff_draw[i][0]->GetYaxis()->CenterTitle();
-        if(i==0) sig_eff_draw[i][0]->Draw("p");
-        else sig_eff_draw[i][0]->Draw("same p");
+        if(i==0) sig_eff_draw[i][0]->DrawCopy("p");
+        else sig_eff_draw[i][0]->DrawCopy("same p");
         if(coll=="pbpb") l1->AddEntry(sig_eff_draw[i][0], Form("%d%s-%d%s",centBins_i[i]/2,"%",centBins_f[i]/2,"%"));
     } 
     if(coll=="pbpb") l1->Draw("same");
@@ -194,18 +194,18 @@ void iso_efficiency_withSkimFile(TString coll="pp", TString ver="test_Island_sig
 
         for(Int_t j=0;j<nEffloop;++j){
             SetHistTextSize(sig_eff_draw[i][j]);
-            if(j==0) {
-                sig_eff_draw[i][j]->SetMarkerStyle(33);
-            } else{
-                sig_eff_draw[i][j]->SetMarkerStyle(20);
-            }
+           // if(j==0) {
+           //     sig_eff_draw[i][j]->SetMarkerStyle(33);
+           // } else{
+           //     sig_eff_draw[i][j]->SetMarkerStyle(20);
+           // }
             sig_eff_draw[i][j]->SetMarkerColor(colHere[j]);
-            sig_eff_draw[i][j]->SetMarkerStyle(markerStyle[i]);
+            sig_eff_draw[i][j]->SetMarkerStyle(markerStyle[j]);
             sig_eff_draw[i][j]->GetYaxis()->SetRangeUser(0,1);
             sig_eff_draw[i][j]->GetXaxis()->CenterTitle();
             sig_eff_draw[i][j]->GetYaxis()->CenterTitle();
-            if(j==0) sig_eff_draw[i][j]->Draw("p");
-            else sig_eff_draw[i][j]->Draw("same p");
+            if(j==0) sig_eff_draw[i][j]->DrawCopy("p");
+            else sig_eff_draw[i][j]->DrawCopy("same p");
         } 
         for(Int_t j=nEff-1;j>-1;--j){
             if(i==0) l2->AddEntry(sig_eff_draw[i][j], Form("%s",effSt_legend[j].Data()));

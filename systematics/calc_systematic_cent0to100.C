@@ -7,7 +7,7 @@
 #include "../phoRaaCuts/phoRaaCuts_temp.h"
 #include "../ElectroWeak-Jet-Track-Analyses/Systematics/interface/SysVar.h"
 
-void calc_systematic_cent0to100(TString ver="180614_temp_v16")
+void calc_systematic_cent0to100(TString ver="180619_temp_v17")
 {
     TH1::SetDefaultSumw2();
     gStyle->SetOptStat(0000);
@@ -74,7 +74,8 @@ void calc_systematic_cent0to100(TString ver="180614_temp_v16")
             for (int k=0; k<nCentBinIF; ++k) { //k=0 is 0-100%
         cout << "bba" << endl;
                 if(hist_types[i] == "dNdpt_corr2_pp" && k>0) continue;
-                if(hist_types[i] == "Raa" && (list[j] == "diff_abs_sys_TAA" || list[j] == "ratio_abs_sys_TAA") ) continue;
+                if(hist_types[i] == "Raa" && (list[j] == "diff_abs_sys_TAA" || list[j] == "ratio_abs_sys_TAA") ){
+                   cout << list[j] << endl;  continue;}
                 TString hist_name = ""; 
                 if(hist_types[i] == "dNdpt_corr2_pp") hist_name = Form("h1D_%s_%s",hist_types.at(i).c_str(),list.at(j).c_str());
                 else hist_name = Form("h1D_%s_cent%d_%s",hist_types.at(i).c_str(),k,list.at(j).c_str());
@@ -92,18 +93,32 @@ void calc_systematic_cent0to100(TString ver="180614_temp_v16")
     /////////////////////////////////////////////////////////
     // Calculate 0-100 % bin
     std::cout << "Calculate 0-100 \% bin" << endl;
+    TFile* f_raw = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/results/output/rawDist_%s_nominal.root",ver.Data()));
+    TH1D* h1D_raw[nCentBinIF]; 
+    double weight[nCentBinIF];
+    double entries[nCentBinIF];
+    for(int j=0;j<nCentBinIF;j++){
+        h1D_raw[j] = (TH1D*) f_raw->Get(Form("h1D_raw_cent%d",j));
+        entries[j] = h1D_raw[j]->Integral();
+        if(j!=0) weight[j] = entries[j]/entries[0];
+        cout << "weight for cent : " << centBins_i[j] << "\% to " << centBins_f[j] << "\% = " <<entries[j]<<"/"<<entries[0]<<" = " <<  weight[j] << endl;
+    }
+    
     for(int i=0; i<n_hist_types; ++i){
         for(int j=0; j<n_list; ++j){
             if(hist_types[i] == "dNdpt_corr2_pp") continue; 
             for (int k=0; k<nCentBinIF; ++k) { //k=0 is 0-100%
                 TString hist_name = Form("h1D_%s_cent%d_%s",hist_types.at(i).c_str(),k,list.at(j).c_str());
+                if(hist_types[i] == "Raa" && (list[j] == "diff_abs_sys_TAA" || list[j] == "ratio_abs_sys_TAA") ){
+                   cout << list[j] << endl;  continue;}
 
                 if(k==0){
                     h_noCal[i][j] = (TH1D*) h[i][j][k]->Clone(Form("%s_noCal",h[i][j][k]->GetName()));
                 } else{
                     double centWeight = (centBins_f[k]-centBins_i[k])/2./100.;
                     htemp[i][j][k] = (TH1D*) h[i][j][k]->Clone(Form("%s_temp",h[i][j][k]->GetName()));
-                    htemp[i][j][k]->Scale(centWeight);
+                    htemp[i][j][k]->Scale(weight[k]);
+                    //htemp[i][j][k]->Scale(centWeight);
                     if(k==1) h[i][j][0] = (TH1D*) htemp[i][j][k]->Clone(Form("%s",h[i][j][0]->GetName()));
                     else h[i][j][0]->Add(htemp[i][j][k]);
                 }
@@ -119,10 +134,12 @@ void calc_systematic_cent0to100(TString ver="180614_temp_v16")
         for(int j=0; j<n_list; ++j){
     std::cout << "b" << endl;
     std::cout << "" << endl;
-            if(hist_types[i] != "dNdpt_corr2_pp") h_noCal[i][j]->Write();
+            if(hist_types[i] != "dNdpt_corr2_pp" && (hist_types[i] != "Raa" && (list[j] == "diff_abs_sys_TAA" || list[j] == "ratio_abs_sys_TAA"))) h_noCal[i][j]->Write();
     std::cout << "c" << endl;
             for (int k=0; k<nCentBinIF; ++k) { //k=0 is 0-100%
                 if(hist_types[i] == "dNdpt_corr2_pp" && k>0) continue;
+                if(hist_types[i] == "Raa" && (list[j] == "diff_abs_sys_TAA" || list[j] == "ratio_abs_sys_TAA") ){
+                cout << list[j] << endl;  continue;}
                 TString hist_name = ""; 
                 if(hist_types[i] == "dNdpt_corr2_pp") hist_name = Form("h1D_%s_%s",hist_types.at(i).c_str(),list.at(j).c_str());
                 else hist_name = Form("h1D_%s_cent%d_%s",hist_types.at(i).c_str(),k,list.at(j).c_str());

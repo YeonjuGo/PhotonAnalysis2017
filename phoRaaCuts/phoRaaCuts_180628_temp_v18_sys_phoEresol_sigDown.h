@@ -1,5 +1,5 @@
-#ifndef phoRaaCuts_180619_temp_v17_H 
-#define phoRaaCuts_180619_temp_v17_H 
+#ifndef phoRaaCuts_180628_temp_v18_H 
+#define phoRaaCuts_180628_temp_v18_H 
 // 1. pp photon selections(ID cuts) are the same as pbpb photons.
 // 2. pbpb MC is new ones (without Flt30) and v14 of EmEnrichedDijet
 // 3. centrality bin (0,10,30,100)
@@ -58,18 +58,24 @@ const int nPtBin = sizeof(ptBins)/sizeof(double) -1;
 const double ptBins_i[] = {40,40,50,60,80,100};
 const double ptBins_f[] = {130,50,60,80,100,130};
 const int nPtBinIF = sizeof(ptBins_i)/sizeof(double);
-const int centBins[] = {0,20,60,200};
+const int centBins[] = {0,20,60,100,200};
 const int nCentBin = sizeof(centBins)/sizeof(int) -1;
-const int centBins_i[] = {0,0,20,60};
-const int centBins_f[] = {200,20,60,200};
+const int centBins_i[] = {0,0,20,60,100};
+const int centBins_f[] = {200,20,60,100,200};
 const int nCentBinIF = sizeof(centBins_i)/sizeof(int);
-const double TA[nCentBinIF] = {5.607*1000,23.22*1000,11.51*1000,1.405*1000}; 
+const double TA[nCentBinIF] = {5.607*1000,23.22*1000,11.51*1000,3.819*1000,0.4395*1000}; 
+const double TA_err[nCentBinIF] = {0.089,0.017,0.024,0.054,0.112}; //err {8.9 1.7, 2.4, 5.4, 11.2} % 
+const double TA_err_up[nCentBinIF] = {0.034,0.03,0.034,0.054,0.112}; //err {3.4, 3.0, 3.4, 5.4, 11.2} % 
+const double TA_err_down[nCentBinIF] = {0.028,0.019,0.026,0.054,0.073}; //err {2.8, 1.9, 2.6, 5.4, 7.3} % 
+const double TA_up[nCentBinIF] = {5.762*1000,23.651*1000,11.814*1000,4.026*1000,0.4885*1000}; 
+const double TA_down[nCentBinIF] = {5.416*1000,22.531*1000,11.122*1000,3.611*1000,0.4075*1000}; 
 //const double TA[nCentBinIF] = {6.108*1000,23.612*1000,11.784*1000,1.571*1000}; //err {8.9 1.7, 2.4, 12} % 
 //double lumi_pp = 28.0302*1e12; //2.3 % err 
 
 /////////////// CUTS ///////////////////
 //Systematics
 //const TString phoEtVar = "phoEtCorrected";
+//const TString phoEtVar = "phoEtCorrected_resSys_sig";
 const TString phoEtVar = "phoEtCorrected_resSys_sig2";
 //Trigger and EvtSelection Cuts
 const TCut trigCut = "HLT_HISinglePhoton40_Eta1p5_v1";
@@ -90,6 +96,8 @@ const TCut hoeCut = "phoHoverE<0.1";
 const TCut isoCut = "(pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20)<1.0";
 const TCut sigmaCut = "phoSigmaIEtaIEta_2012<0.010";
 const TCut nonIsoSBCut = "(pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20) > 10.0 && (pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20) < 20.0";
+//const TCut nonIsoSBCut = "(pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20) > 5.0 && (pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20) < 10.0"; //purDown
+//const TCut nonIsoSBCut = "(pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20) > 20.0 && (pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20) < 30.0"; //purUp
 //Isolation Cuts for pp
 const TCut isoCut_pp = isoCut;
 const TCut hoeCut_pp = hoeCut;

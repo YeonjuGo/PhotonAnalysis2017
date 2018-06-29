@@ -33,8 +33,8 @@ TString getSampleName ( int colli) {
 }
 
 //////////////// FILES ///////////////////
-TString ppDatafname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2018-06-22-nominal/pp_Data_photonRaaSkim.root";
-TString ppMCfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2018-06-22-nominal/pp_MC_photonRaaSkim.root";
+TString ppDatafname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2018-06-11-nominal/pp_Data_photonRaaSkim.root";
+TString ppMCfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2018-06-11-nominal/pp_MC_photonRaaSkim.root";
 TString ppMCEmEnrfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2018-06-11-nominal/pp_EmEnrMC_photonRaaSkim.root";
 TString pbpbDatafname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2018-06-11-nominal/PbPb_Data_photonRaaSkim.root";
 TString pbpbMCfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2018-06-11-nominal/PbPb_MC_photonRaaSkim_Cymbal_noFlt30.root";
@@ -58,19 +58,19 @@ const int nPtBin = sizeof(ptBins)/sizeof(double) -1;
 const double ptBins_i[] = {40,40,50,60,80,100};
 const double ptBins_f[] = {130,50,60,80,100,130};
 const int nPtBinIF = sizeof(ptBins_i)/sizeof(double);
-const int centBins[] = {0,20,60,200};
+const int centBins[] = {0,20};
 const int nCentBin = sizeof(centBins)/sizeof(int) -1;
-const int centBins_i[] = {0,0,20,60};
-const int centBins_f[] = {200,20,60,200};
+const int centBins_i[] = {0};
+const int centBins_f[] = {20};
 const int nCentBinIF = sizeof(centBins_i)/sizeof(int);
 const double TA[nCentBinIF] = {5.607*1000,23.22*1000,11.51*1000,1.405*1000}; 
+const double TA_err[nCentBinIF] = {0.089,0.017,0.024,0.12}; //err {8.9, 1.7, 2.4, 12} % 
 //const double TA[nCentBinIF] = {6.108*1000,23.612*1000,11.784*1000,1.571*1000}; //err {8.9 1.7, 2.4, 12} % 
 //double lumi_pp = 28.0302*1e12; //2.3 % err 
 
 /////////////// CUTS ///////////////////
 //Systematics
-//const TString phoEtVar = "phoEtCorrected";
-const TString phoEtVar = "phoEtCorrected_resSys_sig2";
+const TString phoEtVar = "phoEtCorrected";
 //Trigger and EvtSelection Cuts
 const TCut trigCut = "HLT_HISinglePhoton40_Eta1p5_v1";
 const TCut trigCut_mc = "HLT_HISinglePhoton40_Eta1p5_v2";
@@ -90,6 +90,8 @@ const TCut hoeCut = "phoHoverE<0.1";
 const TCut isoCut = "(pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20)<1.0";
 const TCut sigmaCut = "phoSigmaIEtaIEta_2012<0.010";
 const TCut nonIsoSBCut = "(pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20) > 10.0 && (pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20) < 20.0";
+//const TCut nonIsoSBCut = "(pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20) > 5.0 && (pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20) < 10.0"; //purDown
+//const TCut nonIsoSBCut = "(pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20) > 20.0 && (pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20) < 30.0"; //purUp
 //Isolation Cuts for pp
 const TCut isoCut_pp = isoCut;
 const TCut hoeCut_pp = hoeCut;

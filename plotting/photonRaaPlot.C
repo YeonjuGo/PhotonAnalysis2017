@@ -42,10 +42,12 @@ for (int p=0; p<npoints; ++p) {                                         \
     graph->SetPointError(p,Xerr_l,Xerr_h,Yerr_l,Yerr_h);                \
 }
 
-void photonRaaPlot(TString ver="180610_temp_v15") {
+void photonRaaPlot(TString ver="180619_temp_v17") {
     gStyle->SetOptTitle(0);
     gStyle->SetOptStat(0);
-
+    
+    TString cap = Form("%s",ver.Data());
+    //TString cap = "_withJetphox_ppNLO";
     // input files 
     TString dir = "/home/goyeonju/CMS/2017/PhotonAnalysis2017/";
     const std::string input_file = Form("%sresults/output/phoRaa_%s_nominal.root",dir.Data(),ver.Data());
@@ -63,7 +65,9 @@ void photonRaaPlot(TString ver="180610_temp_v15") {
     ///////////////////////////////////////////////////////////////////////////////////////
     // Global Uncertainty
     double sys_ppLumi = 0.023; 
-    double sys_global = sys_ppLumi; 
+    double sys_global[nCentBinIF];
+    for (int k=0; k<nCentBinIF; ++k) //k=0 is 0-100 % 
+        sys_global[k] = TMath::Sqrt(TA_err[k]*TA_err[k]+sys_ppLumi*sys_ppLumi);
     //double sys_global = TMath::Sqrt(sys_MB*sys_MB+sys_ppLumi*sys_ppLumi); 
 
     // define histograms, graphs, ..., etc 
@@ -166,13 +170,16 @@ void photonRaaPlot(TString ver="180610_temp_v15") {
     setTDRStyle();   
     TCanvas* c_sep[n_hist_types][nCentBinIF];
 
-    TBox *globalUncBox = new TBox(ptBins_draw_final[0],1-sys_global,ptBins_draw_final[0]+5,1+sys_global);
-    globalUncBox -> SetFillColorAlpha(kGray+2,0.5);
-    globalUncBox -> SetLineColor(kBlack);
-    globalUncBox -> SetLineWidth(2);
+    TBox *globalUncBox[nCentBinIF];
     for (int i=0; i<n_hist_types; ++i) {
         for (int k=0; k<nCentBinIF; ++k) { //k=0 is 0-100 %
             if(hist_types[i] == "dNdpt_corr2_pp" && k>0) continue;
+            if(i==0){
+                globalUncBox[k] = new TBox(ptBins_draw_final[0],1-sys_global[k],ptBins_draw_final[0]+5,1+sys_global[k]);
+                globalUncBox[k] -> SetFillColorAlpha(kGray+2,0.5);
+                globalUncBox[k] -> SetLineColor(kBlack);
+                globalUncBox[k] -> SetLineWidth(2);
+            }
             c_sep[i][k] = new TCanvas(Form("c_%s_%d",hist_types[i].c_str(),k),"",600,600);
             c_sep[i][k]->cd();
             c_sep[i][k]->SetRightMargin(0.05);
@@ -227,7 +234,7 @@ void photonRaaPlot(TString ver="180610_temp_v15") {
             // Draw global uncertainty box for Raa 
             if(i==0){
                 //globalUncBox = new TBox(xpos_l+sys_global_x*3,1-sys_global,xmax-sys_global_x*2,1+sys_global);
-                globalUncBox -> Draw("l same");
+                globalUncBox[k] -> Draw("l same");
             }
         }
     }
@@ -336,10 +343,10 @@ void photonRaaPlot(TString ver="180610_temp_v15") {
     cout << "Save figures..." << endl;
     for (int i=0; i<n_hist_types; ++i) {
         if(hist_types[i] != "dNdpt_corr2_pp") 
-            c[i]->SaveAs(Form("%splotting/figures/finalPlot_%s_%s_total.pdf",dir.Data(),hist_types[i].c_str(),ver.Data()));
+            c[i]->SaveAs(Form("%splotting/figures/finalPlot_%s_%s_total.pdf",dir.Data(),hist_types[i].c_str(),cap.Data()));
         for (int k=0; k<nCentBinIF; ++k) { //k=0 is 0-100 % 
             if(hist_types[i] == "dNdpt_corr2_pp" && k>0) continue;
-            c_sep[i][k]->SaveAs(Form("%splotting/figures/finalPlot_%s_%s_cent%d_%d.pdf",dir.Data(),hist_types[i].c_str(),ver.Data(),(int)centBins_i[k]/2,(int)centBins_f[k]/2));
+            c_sep[i][k]->SaveAs(Form("%splotting/figures/finalPlot_%s_%s_cent%d_%d.pdf",dir.Data(),hist_types[i].c_str(),cap.Data(),(int)centBins_i[k]/2,(int)centBins_f[k]/2));
         }
     }
 
@@ -354,17 +361,6 @@ void photonRaaPlot(TString ver="180610_temp_v15") {
     //    gRFB_sys[0]->SetLineColor(kGreen+3);
     //    gRFB_sys[1]->SetLineColor(kPink-6);
     //    gRFB_sys[2]->SetLineColor(kBlue-3);
-
-    //// global uncertainty from lumi
-    //    TBox * globbox_pp = new TBox(0.0, 1-pp_lumi_relerr, 1.5, 1+pp_lumi_relerr);
-    //    globbox_pp->SetFillColorAlpha(kGray+2,0.5);
-    //    globbox_pp->SetLineColor(kBlack);
-    //    TBox * globbox_pa = new TBox(1.5, 1-pPb_lumi_relerr, 3.0, 1+pPb_lumi_relerr);
-    //    globbox_pa->SetFillColorAlpha(kWhite,0.5);
-    //    globbox_pa->SetLineColor(kBlack);
-    //    TBox * globbox_all = new TBox(0.0, 1-glb_err, 1.5, 1+glb_err);
-    //    globbox_all->SetFillColorAlpha(kGray+2,0.5);
-    //    globbox_all->SetLineColor(kBlack);
 
 }
 

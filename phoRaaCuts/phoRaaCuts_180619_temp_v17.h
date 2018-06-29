@@ -33,8 +33,8 @@ TString getSampleName ( int colli) {
 }
 
 //////////////// FILES ///////////////////
-TString ppDatafname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2018-06-11-nominal/pp_Data_photonRaaSkim.root";
-TString ppMCfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2018-06-11-nominal/pp_MC_photonRaaSkim.root";
+TString ppDatafname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2018-06-22-nominal/pp_Data_photonRaaSkim.root";
+TString ppMCfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2018-06-22-nominal/pp_MC_photonRaaSkim.root";
 TString ppMCEmEnrfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2018-06-11-nominal/pp_EmEnrMC_photonRaaSkim.root";
 TString pbpbDatafname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2018-06-11-nominal/PbPb_Data_photonRaaSkim.root";
 TString pbpbMCfname = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2018-06-11-nominal/PbPb_MC_photonRaaSkim_Cymbal_noFlt30.root";
@@ -64,6 +64,11 @@ const int centBins_i[] = {0,0,20,60};
 const int centBins_f[] = {200,20,60,200};
 const int nCentBinIF = sizeof(centBins_i)/sizeof(int);
 const double TA[nCentBinIF] = {5.607*1000,23.22*1000,11.51*1000,1.405*1000}; 
+const double TA_err[nCentBinIF] = {0.089,0.017,0.024,0.12}; //err {8.9 1.7, 2.4, 12} % 
+const double TA_err_up[nCentBinIF] = {0.034,0.03,0.034,0.044}; //err {3.4, 3.0, 3.4, 4.4} % 
+const double TA_err_down[nCentBinIF] = {0.028,0.019,0.026,0.067}; //err {2.8, 1.9, 2.6, 6.7} % 
+const double TA_up[nCentBinIF] = {5.762*1000,23.651*1000,11.814*1000,1.499*1000}; 
+const double TA_down[nCentBinIF] = {5.416*1000,22.531*1000,11.122*1000,1.344*1000}; 
 //const double TA[nCentBinIF] = {6.108*1000,23.612*1000,11.784*1000,1.571*1000}; //err {8.9 1.7, 2.4, 12} % 
 //double lumi_pp = 28.0302*1e12; //2.3 % err 
 

@@ -22,12 +22,13 @@
 #include <iostream>
 
 #include "PhotonPurity_SBcorrection.h"
+//#include "../phoRaaCuts/phoRaaCuts_purity_forPaper.h"
 #include "../phoRaaCuts/phoRaaCuts_temp.h"
 #include "../ElectroWeak-Jet-Track-Analyses/Utilities/interface/CutConfigurationParser.h"
 #include "../ElectroWeak-Jet-Track-Analyses/Utilities/interface/InputConfigurationParser.h"
 #include "../ElectroWeak-Jet-Track-Analyses/Plotting/commonUtility.h"
 
-int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="170523_temp_v1_NewPurityMethod", bool useSBcorr=0, bool noCentDepCorr=0, bool useMCSB=0){
+int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="phoRaaCuts_purity_forPaper", bool useSBcorr=0, bool noCentDepCorr=0, bool useMCSB=0){
     gStyle->SetOptStat(0);
     TH1::SetDefaultSumw2();
 
@@ -109,7 +110,7 @@ int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="170523_te
         if(collisionType==2) h1D_pur[j] = new TH1D("h1D_purity_pp",";p_{T}^#gamma (GeV);",nPtBin,ptBins_draw);
         else h1D_pur[j] = new TH1D(Form("h1D_purity_cent%d",j),";p_{T}^#gamma (GeV);",nPtBin,ptBins_draw);
     }
-
+    cout << "nPtBin = " << nPtBin << " , nCentBins = " << nCENTBINS << endl;
     TCanvas* cPurity = new TCanvas("c1", "c1", 400*nPtBin, 400*nCENTBINS);
     makeMultiPanelCanvas(cPurity, nPtBin, nCENTBINS, 0.0, 0.0 , 0.2, 0.15, 0.005);
     for (Int_t i = 0; i < nPtBin; ++i) {
@@ -227,11 +228,13 @@ int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="170523_te
                 hSigPdf->GetYaxis()->SetTitleOffset(3);
                 hSigPdf->GetXaxis()->SetTitleOffset(3);
                 //hSigPdf->GetXaxis()->SetTitleOffset(2);
+                hData1->SetMarkerSize(0.5);
+                hData1->SetMarkerStyle(20);
 
                 hSigPdf->DrawCopy("hist");
                 // drawSys(hSigPdf, err, kRed, -1, 0.001);
                 hBckPdf->DrawCopy("same hist");
-                hData1->DrawCopy("same");
+                hData1->DrawCopy("same p");
 
                 Float_t xpos = 0.45;
                 //if (2*(k+j)*nPtBin+i+1 == 1) xpos = 0.6;
@@ -274,11 +277,11 @@ int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="170523_te
                 } else {
                     drawText(Form("#chi^{2}/ndf : %.2f/%d", (Float_t)fitr.chisq,(Int_t)fitr.ndf), xpos, 0.70, 1, 27);
                 }
-                if (i == 0) {
-                    drawText(Form("sig. shift : %.5f", (Float_t)fitr.sigMeanShift), xpos, 0.50, 1, 27);
-                } else {
-                    drawText(Form("sig. shift : %.5f", (Float_t)fitr.sigMeanShift), xpos, 0.60, 1, 27);
-                }
+               // if (i == 0) {
+               //     drawText(Form("sig. shift : %.5f", (Float_t)fitr.sigMeanShift), xpos, 0.50, 1, 27);
+               // } else {
+               //     drawText(Form("sig. shift : %.5f", (Float_t)fitr.sigMeanShift), xpos, 0.60, 1, 27);
+               // }
 
                 h1D_pur[j]->SetBinContent(i+1,(Float_t)fitr.purity);
                 //h1D_pur[j]->SetBinError(i+1,(Float_t)fitr.purity);

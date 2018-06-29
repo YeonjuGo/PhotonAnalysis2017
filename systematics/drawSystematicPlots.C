@@ -8,7 +8,7 @@
 //#include "../ElectroWeak-Jet-Track-Analyses/Systematics/interface/SysVar.h"
 const int colorStyle[]={kBlack,kPink-6,kGreen+3,kBlue-3,kOrange+4,kYellow+2,kMagenta,kCyan+2,kOrange+9,kGreen+2,kBlue+3,kRed,kYellow+3};
 const int markerStyle[]={21,20,33,22,23,22,29};
-void drawSystematicPlots(TString ver="180610_temp_v15")
+void drawSystematicPlots(TString ver="180619_temp_v17")
 {
     TH1::SetDefaultSumw2();
     gStyle->SetOptStat(0000);
@@ -77,11 +77,14 @@ void drawSystematicPlots(TString ver="180610_temp_v15")
             for (int l=0; l<n_sys_method; ++l) { //diff, ratio
                 c[i][j][l] = new TCanvas(Form("c_%d_%d_%d",i,j,l),"",300*nCENTBINS,300);
                 c[i][j][l]->Divide(nCENTBINS,1);
+                if(hist_types[i] == "Raa" && (list[j] == "abs_sys_TAA") ) continue;
+                //if(hist_types[i] == "Raa" && (list[j] == "abs_sys_TAA") ) continue;
                 for (int k=0; k<nCENTBINS; ++k) { //centrality (k=0 is 0-100%)
                     c[i][j][l]->cd(k+1);
                     TString hist_name = Form("h1D_%s_cent%d_%s_%s",hist_types.at(i).c_str(),k,sys_method.at(l).c_str(),list.at(j).c_str());
                     if(hist_types[i] == "dNdpt_corr2_pp") hist_name = Form("h1D_%s_%s_%s",hist_types.at(i).c_str(),sys_method.at(l).c_str(),list.at(j).c_str());
                     h[i][j][l][k] = (TH1D*) file->Get(Form("%s",hist_name.Data()));
+                    
                     if(h[i][j][l][k]->IsZombie()){
                         cout << "There's no <" << hist_name << "> histogram " << endl;
                         continue;
@@ -120,6 +123,7 @@ void drawSystematicPlots(TString ver="180610_temp_v15")
         for (int k=0; k<nCENTBINS; ++k) { //k=0 is 0-100%
             c_tot[i]->cd(k+1);
             for(int j=0; j<n_list; ++j){
+                if(hist_types[i] == "Raa" && (list[j] == "abs_sys_TAA") ) continue;
                 h[i][j][1][k]->GetYaxis()->SetTitle("|(Variation-Nominal)/Nominal|");
                 h[i][j][1][k]->GetYaxis()->SetRangeUser(0,0.5);
                 h[i][j][1][k]->SetLineColor(colorStyle[j]);
