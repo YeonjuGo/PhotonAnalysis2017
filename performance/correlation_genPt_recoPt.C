@@ -8,7 +8,7 @@
 bool isConsBin = false;
 const int colHere[]={2,4,8,kYellow+2,kCyan+1};
 const int markerStyle[]={20,33,22,23,22,29};
-void correlation_genPt_recoPt(TString coll="pbpb", TString ver="180610_temp_v15", bool isFineBinning=true, bool doWeight=true){
+void correlation_genPt_recoPt(TString coll="pp", TString ver="180718_temp_v19", bool isFineBinning=false, bool doWeight=true){
     cout << " :::::: correlation_genPt_recoPt.C :::::: " << endl;
     TH1::SetDefaultSumw2();
     gStyle->SetOptStat(0);
@@ -41,6 +41,7 @@ void correlation_genPt_recoPt(TString coll="pbpb", TString ver="180610_temp_v15"
     TString cap = Form("%s_pbpb",ver.Data());
     if(coll=="pp") cap= Form("%s_pp",ver.Data());
     if(isFineBinning) cap+=Form("_nFinePtBins%d",nFineBin);
+    //cap += "_noRecoEcorrection";
    
     TH1D* h1D_pt[2][nCENTBINS]; // 0:gen 1:reco
     TH1D* h1D_pt_ratio[nCENTBINS]; // 0:gen 1:reco
@@ -63,13 +64,15 @@ void correlation_genPt_recoPt(TString coll="pbpb", TString ver="180610_temp_v15"
         TCut centCut = Form("(hiBin>=%d)&&(hiBin<%d)",centBins_i[i],centBins_f[i]);
         TCut commonCut = centCut && phoSignalCut_mc;
         if(coll=="pp"){
-            centCut = "hiBin>-1"; 
+            centCut = "hiBin>=-999"; 
             commonCut = centCut && phoSignalCut_pp_mc;
         }
         //h1D fineBinning
         if(doWeight)    t1->Draw(Form("%s>>%s","pho_genEt",h1D_pt[0][i]->GetName()), Form("(%s)*((%s) && (%s))","weight",mcIsolation.GetTitle(),commonCut.GetTitle()));
         else            t1->Draw(Form("%s>>%s","pho_genEt",h1D_pt[0][i]->GetName()), mcIsolation && commonCut);
         h1D_pt[0][i]=(TH1D*)gDirectory->Get(h1D_pt[0][i]->GetName());
+       // if(doWeight)    t1->Draw(Form("%s>>%s","phoEt",h1D_pt[1][i]->GetName()), Form("(%s)*((%s) && (%s))","weight",mcIsolation.GetTitle(),commonCut.GetTitle()));
+       // else            t1->Draw(Form("%s>>%s","phoEt",h1D_pt[1][i]->GetName()), mcIsolation && commonCut);
         if(doWeight)    t1->Draw(Form("%s>>%s","phoEtCorrected",h1D_pt[1][i]->GetName()), Form("(%s)*((%s) && (%s))","weight",mcIsolation.GetTitle(),commonCut.GetTitle()));
         else            t1->Draw(Form("%s>>%s","phoEtCorrected",h1D_pt[1][i]->GetName()), mcIsolation && commonCut);
         h1D_pt[1][i]=(TH1D*)gDirectory->Get(h1D_pt[1][i]->GetName());
