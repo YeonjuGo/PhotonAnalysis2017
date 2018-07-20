@@ -7,7 +7,7 @@ bool doEmEnrSample = false;
 bool isDrum = false;
 void compareTwo(TTree* t1=0 ,TTree* t2=0,TString var="pt", int nBins=10, double xMin=0, double xMax=10, TCut cut1="(1)", TCut cut2="(1)", const string cap = "");
 void comparePthat(TTree* t1=0, TString var="pthat", int nBins=100, double xMin=10, double xMax=300, TCut cut1="(1)", const string cap=""); 
-void check_reweight(TString coll="pbpb"){
+void check_reweight(TString coll="pp"){
     TH1::SetDefaultSumw2();
     gStyle->SetOptStat(0);
     SetyjPadStyle();
@@ -82,8 +82,8 @@ void check_reweight(TString coll="pbpb"){
     double hiBinMax=200;
     double vzMin=-15;
     double vzMax=15;
-    double pthatMin=0;
-    double pthatMax=300;
+    double pthatMin=15;
+    double pthatMax=200;
     int nBin = 50;
     if(coll!="pp") compareTwo(t1, t2, "hiBin",nBin,hiBinMin,hiBinMax,     dataCut_,mcCut_,cap);
     compareTwo(t1, t2, "vz",nBin,vzMin,vzMax,                             dataCut_,mcCut_,cap);
@@ -96,8 +96,9 @@ void compareTwo(TTree* t1, TTree* t2, TString var, int nBins, double xMin, doubl
     SetyjPadStyle();
     gStyle->SetOptStat(0); 
     static int j = 0;
-    TCanvas* c=  new TCanvas(Form("c_%s_%d",var.Data(),j),"", 400,800);
-	c->Divide(1,2);
+    TCanvas* c=  new TCanvas(Form("c_%s_%d",var.Data(),j),"", 400,600);
+    ratioPanelCanvas(c);
+	//c->Divide(1,2);
 	c->cd(1);
 	//gPad->SetLogy();
 	TH1D* h1 = new TH1D(Form("h1_%s_%d",var.Data(),j), Form(";%s;Arbitrary Normalization",var.Data()), nBins,xMin,xMax);
@@ -127,12 +128,12 @@ void compareTwo(TTree* t1, TTree* t2, TString var, int nBins, double xMin, doubl
     TLegend* l1 = new TLegend(0.4,0.7,0.90,0.92);
     legStyle(l1);
     l1->AddEntry(h1, "Data", "p");
-    l1->AddEntry(h2, Form("%s",sampleName.Data()), "l");
-    l1->AddEntry(h3, Form("%s_weighted",sampleName.Data()), "l");
+    //l1->AddEntry(h2, Form("%s before weight",sampleName.Data()), "l");
+    l1->AddEntry(h3, Form("%s after weight",sampleName.Data()), "l");
 
     double range = cleverRange(h1,h2,1.5,1.e-4);
 	h1->DrawCopy("L");
-	h2->DrawCopy("hist same");
+	//h2->DrawCopy("hist same");
 	h3->DrawCopy("hist same");
     l1->Draw("same");
    
@@ -149,9 +150,12 @@ void compareTwo(TTree* t1, TTree* t2, TString var, int nBins, double xMin, doubl
 	
     h2_ratio->SetTitle(Form(";%s;DATA / MC",var.Data()));
 	h2_ratio->GetYaxis()->SetRangeUser(0.0,2.0);
+    h3_ratio->SetTitle(Form(";%s;DATA / MC",var.Data()));
+	h3_ratio->GetYaxis()->SetRangeUser(0.0,2.0);
     SetHistTextSize(h2_ratio);
-	h2_ratio->DrawCopy("");
-	h3_ratio->DrawCopy("same");
+    SetHistTextSize(h3_ratio);
+	//h2_ratio->DrawCopy("");
+	h3_ratio->DrawCopy();
 	//h2->DrawCopy("le1");
 	jumSun(xMin,1,xMax,1);
     if(cap!="") drawText(cap.data(),0.2,0.2+0.7);
@@ -170,7 +174,7 @@ void comparePthat(TTree* t1, TString var, int nBins, double xMin, double xMax, T
     TCanvas* c=  new TCanvas(Form("c_%s_%d",var.Data(),j),"", 400,400);
 //	c->Divide(1,2);
 //	c->cd(1);
-	//gPad->SetLogy();
+	gPad->SetLogy();
 	TH1D* h1 = new TH1D(Form("h1_%s_%d",var.Data(),j), Form(";%s;",var.Data()), nBins,xMin,xMax);
 	TH1D* h2 = (TH1D*)h1->Clone(Form("h2_%s_%d",var.Data(),j));
 	h1->Sumw2();
@@ -189,16 +193,17 @@ void comparePthat(TTree* t1, TString var, int nBins, double xMin, double xMax, T
     SetHistTextSize(h1);
     TString sampleName = "AllQCDPhotons";
     if(doEmEnrSample) sampleName = "EmEnrichedDijet";
-    TLegend* l1 = new TLegend(0.4,0.7,0.90,0.92);
+    TLegend* l1 = new TLegend(0.2,0.3,0.70,0.5);
     legStyle(l1);
-    l1->AddEntry(h1, Form("%s",sampleName.Data()), "p");
-    l1->AddEntry(h2, Form("%s_weighted",sampleName.Data()), "l");
-
+    l1->AddEntry(h1, Form("%s before weight",sampleName.Data()), "p");
+    l1->AddEntry(h2, Form("%s after weight",sampleName.Data()), "l");
+    //drawText(Form("%s",cap.data()),0.18,0.9);
     double range = cleverRange(h1,h2,1.5,1.e-4);
 	h1->DrawCopy("L");
 	h2->DrawCopy("hist same");
 	//h3->DrawCopy("hist same");
     l1->Draw("same");
+    if(cap!="") drawText(cap.data(),0.2,0.2);
    
     j++;
 	c-> SaveAs(Form("figures/compare_weight_%s_%s.pdf",var.Data(),cap.data()));
