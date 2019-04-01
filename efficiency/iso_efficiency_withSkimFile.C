@@ -6,9 +6,9 @@
 #include "../phoRaaCuts/yjUtility.h"
 #include "../phoRaaCuts/phoRaaCuts_temp.h"
 bool isConsBin = false;
-const int colHere[]={2,4,8,kYellow+2,kCyan+1};
-const int markerStyle[]={20,33,22,23,22,29};
-void iso_efficiency_withSkimFile(TString coll="pp", TString ver="test_Island_sigIEtaIEta", bool doWeight=true, bool doBkg=false, bool doSeparation=true){
+const int colHere[]={2,4,8,kYellow+2,kCyan+1,kOrange+7,kViolet-7};
+const int markerStyle[]={24,33,26,23,29,22,24,33};
+void iso_efficiency_withSkimFile(TString coll="pbpb", TString ver="test", bool doWeight=true, bool doBkg=false, bool doSeparation=true){
     
     cout << " :::::: iso_efficiency_withSkimFile.C :::::: " << endl;
     if(doSeparation) cout << " :::::: Isolation Separation will be processed :::::: " << endl;
@@ -92,11 +92,12 @@ void iso_efficiency_withSkimFile(TString coll="pp", TString ver="test_Island_sig
     for(Int_t i=0;i<nCENTBINS;++i){
         centCut[i] = Form("(hiBin>=%d)&&(hiBin<%d)",centBins_i[i],centBins_f[i]);
         //commonCut[i] = trigCut_mc && etaCut && centCut[i];
-        commonCut[i] = trigCut_mc && evtSelFilterCut && etaCut && centCut[i];
+        commonCut[i] =etaCut && centCut[i];
+        //commonCut[i] = trigCut_mc && evtSelFilterCut && etaCut && centCut[i];
     } 
     if(coll=="pp") {
         //commonCut[0] = trigCut_mc_pp && etaCut; 
-        commonCut[0] = trigCut_mc_pp && evtSelFilterCut_pp && etaCut; 
+        commonCut[0] = etaCut; 
         numCut[0] = noiseCut && hoeCut_pp && sigmaCut_pp && isoCut_pp && electronCut; 
         numCut[1] = noiseCut && hoeCut_pp && sigmaCut_pp && isoCut_pp; 
         numCut[2] = noiseCut && hoeCut_pp && sigmaCut_pp; 
@@ -142,7 +143,7 @@ void iso_efficiency_withSkimFile(TString coll="pp", TString ver="test_Island_sig
     TH1D* bkg_eff_draw[nCENTBINS][nEff];
     TH1D* sig_eff_draw[nCENTBINS][nEff];
     for(Int_t i=0;i<nCENTBINS;++i){
-        for(Int_t j=0;j<nEffloop;++j){
+        for(Int_t j=nEffloop-1;j>-1;--j){
             bkg_eff_draw[i][j] = new TH1D(Form("bkg_eff_draw_cent%d_%s",i,effSt[j].Data()),";p_{T}^{#gamma} (GeV);Efficiency",nPtBin,ptBins_draw);
             sig_eff_draw[i][j] = new TH1D(Form("sig_eff_draw_cent%d_%s",i,effSt[j].Data()),";p_{T}^{#gamma} (GeV);Efficiency",nPtBin,ptBins_draw);
             int temp_nPtBin = -1;

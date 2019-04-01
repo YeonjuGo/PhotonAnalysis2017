@@ -19,7 +19,7 @@ void reco_efficiency_withForest(TString coll="pbpb", TString ver="Cymbal_noFlt30
     ///////////////////////////////////////////////////////////////////////////
     // TCAHIN, GET FILE 
     TChain* t;
-    if(coll=="pp") t = new TChain("ggHiNtuplizer/EventTree");
+    if(coll=="pp") t = new TChain("ggHiNtuplizerGED/EventTree");
     else if(coll=="pbpb") t = new TChain("ggHiNtuplizer/EventTree");
     else cout << "[ERROR] It's weird, what is the collision? " << coll << endl;
 
@@ -116,9 +116,9 @@ void reco_efficiency_withForest(TString coll="pbpb", TString ver="Cymbal_noFlt30
     TH1D* h1D_Den[nCENTBINS];//generated photons (gen pt & gen eta)
     TH1D* h1D_Eff[nCENTBINS];//reconstructed photons in generated photons / generated photons
     for(Int_t i=0;i<nCENTBINS;++i){
-        h1D_Num[i] = new TH1D(Form("reco_num_cent%d",i), ";p_{T}^{#gamma} (GeV);dN/dp_{T}", nPtBin, ptBins);
+        h1D_Num[i] = new TH1D(Form("reco_num_cent%d",i), ";p_{T}^{#gamma} (GeV);dN/dp_{T}", nPtBin_unfolding, ptBins_unfolding);
         h1D_Den[i] = (TH1D*) h1D_Num[i]->Clone(Form("reco_den_cent%d",i));
-        h1D_Eff[i] = new TH1D(Form("reco_eff_cent%d",i), ";p_{T}^{#gamma} (GeV);Efficiency", nPtBin, ptBins);
+        h1D_Eff[i] = new TH1D(Form("reco_eff_cent%d",i), ";p_{T}^{#gamma} (GeV);Efficiency", nPtBin_unfolding, ptBins_unfolding);
         //inTree->Draw("phoEt:abs(phoEta)>>h2D_Num","pho_genMatchedIndex!=-1","colz");
         //inTree->Draw("mcEt[pho_genMatchedIndex]:abs(mcEta[pho_genMatchedIndex])>>h2D_Den","pho_genMatchedIndex!=-1","colz");
         //inTree->Draw("mcE:abs(mcEta)>>h2D_Den","(mcPID==22||mcPID==-22)&&(mcStatus==1)","colz");

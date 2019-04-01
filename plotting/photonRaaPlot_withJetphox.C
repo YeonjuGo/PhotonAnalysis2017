@@ -30,10 +30,10 @@ const double scale[]={0,10.,100.,1000.,10000.,100000.};
 
 TGraphAsymmErrors* scale_graph(TGraphAsymmErrors* gr, Float_t s);
 TGraphAsymmErrors* devide_graph_by_hist(TGraphAsymmErrors* gr, TH1D* h1);
-#define TH1_TO_TGRAPH(hist, graph)                                      \
+#define TH1_TO_TGRAPH(hist, graph,points)                                      \
     int npoints = hist->GetNbinsX();                                    \
-graph = new TGraphAsymmErrors(npoints);                                 \
-for (int p=0; p<npoints; ++p) {                                         \
+graph = new TGraphAsymmErrors(points);                                 \
+for (int p=0; p<points; ++p) {                                         \
     double Xmean = ptBins_mean_pbpb[p];                                 \
     double Ymean = hist->GetBinContent(p+1);                            \
     double Xerr_l= Xmean-ptBins_draw[p];                                \
@@ -44,7 +44,7 @@ for (int p=0; p<npoints; ++p) {                                         \
     graph->SetPointError(p,Xerr_l,Xerr_h,Yerr_l,Yerr_h);                \
 }
 
-void photonRaaPlot_withJetphox(TString ver="180628_temp_v18", bool doJETPHOX = true) {
+void photonRaaPlot_withJetphox(TString ver="180805_temp_v21", bool doJETPHOX = true) {
     gStyle->SetOptTitle(0);
     gStyle->SetOptStat(0);
     
@@ -127,7 +127,8 @@ void photonRaaPlot_withJetphox(TString ver="180628_temp_v18", bool doJETPHOX = t
             } 
 
             // histogram to graph for nominal value 
-            TH1_TO_TGRAPH(h1D_nominal[i][k], gr_nominal[i][k])
+            
+            TH1_TO_TGRAPH(h1D_nominal[i][k], gr_nominal[i][k],nPtBin-rejectPtBins[k]);
                 gr_nominal[i][k]->SetMarkerColor(colorStyle_marker[k]);
             gr_nominal[i][k]->SetLineColor(colorStyle_marker[k]);
             gr_nominal[i][k]->SetMarkerStyle(markerStyle[k]);
@@ -139,10 +140,18 @@ void photonRaaPlot_withJetphox(TString ver="180628_temp_v18", bool doJETPHOX = t
             } 
 
             //systematic part
-            gr_sys[i][k] = new TGraphAsymmErrors(h1D_nominal[i][k]);
+            //gr_sys[i][k] = new TGraphAsymmErrors(gr_nominal[i][k]);
+            gr_sys[i][k] = new TGraphAsymmErrors(nPtBin-rejectPtBins[k]);
+            //gr_sys[i][k] = new TGraphAsymmErrors(h1D_nominal[i][k]);
             gr_sys[i][k]->SetName(Form("gr_sys_%d_%d",i,k));
-            cout << h1D_nominal[i][k]->GetNbinsX() << endl;
-            for (int ipt=1; ipt<=h1D_nominal[i][k]->GetNbinsX(); ++ipt) {
+            gr_sys[i][k]->SetFillStyle(3001);
+            gr_sys[i][k]->SetFillColor(colorStyle_sys[k]);
+            cout <<  h1D_nominal[i][k]->GetNbinsX()<< endl;
+            //cout << h1D_nominal[i][k]->GetNbinsX() << endl;
+            
+            //for (int ipt=1; ipt<=h1D_nominal[i][k]->GetNbinsX(); ++ipt) {
+            for (int ipt=1; ipt<=nPtBin-rejectPtBins[k]; ++ipt) {
+                //cout << 
                 //if (h1D_nominal[i][k]->GetBinError(i) == 0) continue;
                 double x = h1D_nominal[i][k]->GetBinCenter(ipt);
                 int sys_bin = systematics[i][k]->FindBin(x);
@@ -152,7 +161,7 @@ void photonRaaPlot_withJetphox(TString ver="180628_temp_v18", bool doJETPHOX = t
                 cout << "histname : " << hist_name << ", ipt " << ipt << ", Systematic Error = " << error << endl;
                 Double_t pxtmp, pytmp;
                 gr_sys[i][k]->SetPointError(ipt-1, (bin_width/2), (bin_width/2), error, error); 
-                //gr_sys[i][k]->SetPoint(ipt-1, (bin_width/2), (bin_width/2), error, error); 
+                gr_sys[i][k]->SetPoint(ipt-1, x, val); 
                 //cout << "ipt = "<< ipt << ": " << gr_sys[i][k]->GetErrorYhigh(ipt-1) << endl;
             } 
 
@@ -213,7 +222,7 @@ void photonRaaPlot_withJetphox(TString ver="180628_temp_v18", bool doJETPHOX = t
             else if(hist_types[i] == "dNdpt_corr2") htemp[i]->SetTitle(";Photon E_{T} (GeV/c);#frac{1}{N_{evt}} #frac{1}{<T_{AA}>} #frac{d^{2}N^{PbPb}}{dp_{T}d#eta} (#frac{pb}{GeV/c})");
             else if(hist_types[i] == "dNdpt_corr2_pp") htemp[i]->SetTitle(";Photon E_{T} (GeV);#frac{d^{2}#sigma^{pp}}{dp_{T}d#eta} (#frac{pb}{GeV/c})");
 
-            if(hist_types[i] != "Raa") htemp[i]->GetYaxis()->SetRangeUser(1,1.e+3);
+            if(hist_types[i] != "Raa") htemp[i]->GetYaxis()->SetRangeUser(0.01,1.e+5);
             if(hist_types[i] == "dNdpt_corr2" || hist_types[i] == "dNdpt_corr2_pp")
                 gPad->SetLogy();
 
@@ -274,7 +283,7 @@ void photonRaaPlot_withJetphox(TString ver="180628_temp_v18", bool doJETPHOX = t
             // Dummy hist draw 
             if(hist_types[i] == "Raa") htemp[i]->SetTitle(";Photon E_{T} (GeV);R_{AA}");
             else htemp[i]->SetTitle(";Photon E_{T} (GeV/c);#frac{d^{2}#sigma^{pp}}{dp_{T}d#eta} or #frac{1}{N_{evt}}#frac{1}{<T_{AA}>}#frac{d^{2}N^{PbPb}}{dp_{T}d#eta} (#frac{pb}{GeV/c})");
-            if(hist_types[i] != "Raa") htemp[i]->GetYaxis()->SetRangeUser(0.1,1e+8);
+            if(hist_types[i] != "Raa") htemp[i]->GetYaxis()->SetRangeUser(0.01,1e+10);
             if(k==0 && hist_types[i] != "dNdpt_corr2_pp") htemp[i]->DrawCopy();
 
             ////////////////////////////
@@ -315,11 +324,18 @@ void photonRaaPlot_withJetphox(TString ver="180628_temp_v18", bool doJETPHOX = t
     /////////////////////////////////////////////////////////////////////////////////////////////
     // Draw Jetphox pp NLO
     // direct contribution
+    // /home/samba.old/jaebeom/ForYeonju/ggd_2test_aa_CT14lo.root
+    // /home/samba.old/jaebeom/ForYeonju/ggo_2test_aa_CT14lo.root
+    
     cout << "DRAWING JETPHOX..." << endl; 
-    TFile* fdir_pp = TFile::Open("/home/goyeonju/CMS/2016/JETPHOX/jetphox_1.3.1_3_pp/pawres/ggd_2test_pp_0609.root","read");
-    TFile* fonef_pp = TFile::Open("/home/goyeonju/CMS/2016/JETPHOX/jetphox_1.3.1_3_pp/pawres/ggo_2test_pp_0609.root","read");
-    TFile* fdir_pbpb = TFile::Open("/home/goyeonju/CMS/2016/JETPHOX/jetphox_1.3.1_3_pbpb/pawres/ggd_PbPb5TeV_NLO_EPS09_cteq66.root","read");
-    TFile* fonef_pbpb = TFile::Open("/home/goyeonju/CMS/2016/JETPHOX/jetphox_1.3.1_3_pbpb/pawres/ggo_PbPb5TeV_NLO_EPS09_cteq66.root","read");
+    TFile* fdir_pp = TFile::Open("/home/samba.old/jaebeom/ForYeonju/ggd_2test_pp_CT14nlo_true.root","read");
+    TFile* fonef_pp = TFile::Open("/home/samba.old/jaebeom/ForYeonju/ggo_2test_pp_CT14nlo_true.root","read");
+    TFile* fdir_pbpb = TFile::Open("/home/samba.old/jaebeom/ForYeonju/ggd_2test_aa_CT14nlo_false_601.root","read");
+    TFile* fonef_pbpb = TFile::Open("/home/samba.old/jaebeom/ForYeonju/ggo_2test_aa_CT14nlo_false_601.root","read");
+    //TFile* fdir_pp = TFile::Open("/home/goyeonju/CMS/2016/JETPHOX/jetphox_1.3.1_3_pp/pawres/ggd_2test_pp_0609.root","read");
+    //TFile* fonef_pp = TFile::Open("/home/goyeonju/CMS/2016/JETPHOX/jetphox_1.3.1_3_pp/pawres/ggo_2test_pp_0609.root","read");
+    //TFile* fdir_pbpb = TFile::Open("/home/goyeonju/CMS/2016/JETPHOX/jetphox_1.3.1_3_pbpb/pawres/ggd_PbPb5TeV_NLO_EPS09_cteq66.root","read");
+    //TFile* fonef_pbpb = TFile::Open("/home/goyeonju/CMS/2016/JETPHOX/jetphox_1.3.1_3_pbpb/pawres/ggo_PbPb5TeV_NLO_EPS09_cteq66.root","read");
     
     cout << "Getting JETPHOX histograms..." << endl; 
     TH1D* h1D_jp[3][2][2];//[0:dir, 1:onef, 2:inclusive] [0:Leading Order, 1:Next-to-Leading Order] [0:pbpb, 1:pp]
@@ -388,10 +404,11 @@ void photonRaaPlot_withJetphox(TString ver="180628_temp_v18", bool doJETPHOX = t
         for(int icoll=1;icoll<2;++icoll){ // icoll = 0 is pbpb, 1 is pp
             for (int k=0; k<nCentBinIF; ++k) { //k=0 is 0-100 % 
                     hjp_draw_dndpt[icoll][k]->Draw("hist same"); // option C is for a smooth curve
-                gr_sys[i][k] = scale_graph(gr_sys[i][k],1./hjp_draw_dndpt[icoll][k]);
-                gr_nominal_scaled[k] = scale_graph(gr_nominal[i][k],scale);
-                gr_sys_scaled[k]->Draw("2");
-            }}
+               // gr_sys[i][k] = scale_graph(gr_sys[i][k],1./hjp_draw_dndpt[icoll][k]);
+               // gr_nominal_scaled[k] = scale_graph(gr_nominal[i][k],scale);
+               // gr_sys_scaled[k]->Draw("2");
+            }
+        }
 
         cout << "Draw in Raa panel..." << endl; 
         //final for raa
@@ -458,7 +475,8 @@ void photonRaaPlot_withJetphox(TString ver="180628_temp_v18", bool doJETPHOX = t
     for (int k=nCentBinIF-1; k>0; --k) { //k=0 is 0-100 % 
         if(k==1) leg_dndpt->AddEntry(h1D_nominal[1][k],Form("%d-%d %s      x 10",(int)(centBins_i[k]/2),(int)(centBins_f[k]/2),"%"),"plf");
         else if(k==2) leg_dndpt->AddEntry(h1D_nominal[1][k],Form("%d-%d %s    x 10^{%d}",(int)(centBins_i[k]/2),(int)(centBins_f[k]/2),"%",k),"plf");
-        else if(k==3) leg_dndpt->AddEntry(h1D_nominal[1][k],Form("%d-%d %s  x 10^{%d}",(int)(centBins_i[k]/2),(int)(centBins_f[k]/2),"%",k),"plf");
+        else if(k==3) leg_dndpt->AddEntry(h1D_nominal[1][k],Form("%d-%d %s    x 10^{%d}",(int)(centBins_i[k]/2),(int)(centBins_f[k]/2),"%",k),"plf");
+        else if(k==4) leg_dndpt->AddEntry(h1D_nominal[1][k],Form("%d-%d %s  x 10^{%d}",(int)(centBins_i[k]/2),(int)(centBins_f[k]/2),"%",k),"plf");
         else leg_dndpt->AddEntry(h1D_nominal[1][k],Form("%d-%d %s \t x 10^{%d}",(int)(centBins_i[k]/2),(int)(centBins_f[k]/2),"%",k),"plf");
     }
     leg_dndpt->AddEntry(h1D_nominal[2][0],Form("pp%s",""),"plf");

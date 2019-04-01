@@ -38,25 +38,31 @@ void compare_AllQCD_EmEnr(TString coll="pbpb"){
     t2->AddFriend(t2_hlt);
 
     TString cap = "";
+    //cap += coll;
     TCut cut1 = "(1==1)";
     TCut cut2 = "(1==1)";
+    //TCut cut1 = mcIsolation;
+    //TCut cut2 = mcBkgIsolation;
+
 
     int nBins = 50;
-    TCut etaCut = Form("(abs(phoEta)>=%f)&&(abs(phoEta)<%f)", etaBins[0], etaBins[1]);
+    TCut etaCut = Form("(abs(phoEta)>=%f)&&(abs(phoEta)<%f)", 0.0, 1.44);
+    //TCut etaCut = Form("(abs(phoEta)>=%f)&&(abs(phoEta)<%f)", etaBins[0], etaBins[1]);
     TCut commonCut = "(1==1)";
-    if(coll=="pbpb") commonCut = etaCut && trigCut_mc_pbpb;
-    else commonCut = etaCut && trigCut_mc_pp;
-    compareTwo(t1, t2, "pthat",nBins, 100, 300.0,cut1,cut2,cap);
-    compareTwo(t1, t2, "phoEt",nBins, 40, 300.0,cut1 && commonCut,cut2 && commonCut,cap);
-    compareTwo(t1, t2, "hiBin",nBins, 0, 200.0,cut1 && commonCut,cut2 && commonCut,cap);
+    if(coll=="pbpb") commonCut = etaCut && hoeCut;
+    else commonCut = etaCut && hoeCut_pp;
+    //compareTwo(t1, t2, "pthat",nBins, 0, 300.0,cut1,cut2,cap);
+    //compareTwo(t1, t2, "phoEt",nBins, 20, 300.0,cut1 && commonCut,cut2 && commonCut,cap);
+    //compareTwo(t1, t2, "hiBin",nBins, 0, 200.0,cut1 && commonCut,cut2 && commonCut,cap);
 
-    for(Int_t ipt = 0; ipt < nPtBinIF; ++ipt){
+    for(Int_t ipt = 4; ipt < nPtBinIF; ++ipt){
         TCut ptCut = Form("(phoEt>=%f)&&(phoEt<%f)", ptBins_i[ipt], ptBins_f[ipt]);
         for(Int_t jcent = 0; jcent < nCentBinIF; ++jcent){
             TCut centCut = Form("(hiBin>=%d)&&(hiBin<%d)",centBins_i[jcent],centBins_f[jcent]);
             TCut totComCut = commonCut && ptCut && centCut;
 
             cap = Form("%s_pt%dto%d_cent%dto%d",coll.Data(),(int)ptBins_i[ipt],(int)ptBins_f[ipt],centBins_i[jcent]/2,centBins_f[jcent]/2);
+            cap += "_noGenCut";
             //cout << totComCut.GetTitle() << endl;
 /*            compareTwo(t1, t2, "phoEta",nBins, -1.44, 1.44,cut1 && totComCut,cut2 && totComCut,cap);
             compareTwo(t1, t2, "phoPhi",nBins, -TMath::Pi(), TMath::Pi(),cut1 && totComCut,cut2 && totComCut,cap);
@@ -79,37 +85,37 @@ void compare_AllQCD_EmEnr(TString coll="pbpb"){
             compareTwo(t1, t2, "phoSigmaIEtaIEta_2012",nBins, 0.005, 0.025,cut1 && totComCut,cut2 && totComCut,cap);
             compareTwo(t1, t2, "phoE3x3_2012",nBins, 0, 600,cut1 && totComCut,cut2 && totComCut,cap);
 */
-            compareTwo(t1, t2, "pho_ecalClusterIsoR2",nBins, -50, 200,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pho_ecalClusterIsoR3",nBins, -50, 200,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pho_ecalClusterIsoR4",nBins, -50, 200,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pho_ecalClusterIsoR5",nBins, -50, 200,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pho_hcalRechitIsoR2",nBins, -50, 400,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pho_hcalRechitIsoR3",nBins, -50, 400,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pho_hcalRechitIsoR4",nBins, -50, 400,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pho_hcalRechitIsoR5",nBins, -50, 400,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pho_trackIsoR2PtCut20",nBins, -50, 1000,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pho_trackIsoR3PtCut20",nBins, -50, 1000,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pho_trackIsoR4PtCut20",nBins, -50, 1000,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pho_trackIsoR5PtCut20",nBins, -50, 1000,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pho_ecalClusterIsoR2+pho_hcalRechitIsoR2+pho_trackIsoR2PtCut20",nBins, -50, 1000,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pho_ecalClusterIsoR3+pho_hcalRechitIsoR3+pho_trackIsoR3PtCut20",nBins, -50, 1000,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20",nBins, -50, 1000,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pho_ecalClusterIsoR5+pho_hcalRechitIsoR5+pho_trackIsoR5PtCut20",nBins, -50, 1000,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pfcIso1",nBins, 0, 300,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pfcIso2",nBins, 0, 300,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pfcIso3",nBins, 0, 300,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pfcIso4",nBins, 0, 300,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pfcIso5",nBins, 0, 300,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pfpIso1",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pfpIso2",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pfpIso3",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pfpIso4",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pfpIso5",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pfnIso1",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pfnIso2",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pfnIso3",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pfnIso4",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pfnIso5",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pho_ecalClusterIsoR2",nBins, -50, 200,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pho_ecalClusterIsoR3",nBins, -50, 200,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pho_ecalClusterIsoR4",nBins, -50, 200,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pho_ecalClusterIsoR5",nBins, -50, 200,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pho_hcalRechitIsoR2",nBins, -50, 400,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pho_hcalRechitIsoR3",nBins, -50, 400,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pho_hcalRechitIsoR4",nBins, -50, 400,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pho_hcalRechitIsoR5",nBins, -50, 400,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pho_trackIsoR2PtCut20",nBins, -50, 1000,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pho_trackIsoR3PtCut20",nBins, -50, 1000,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pho_trackIsoR4PtCut20",nBins, -50, 1000,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pho_trackIsoR5PtCut20",nBins, -50, 1000,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pho_ecalClusterIsoR2+pho_hcalRechitIsoR2+pho_trackIsoR2PtCut20",nBins, -100, 100,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pho_ecalClusterIsoR3+pho_hcalRechitIsoR3+pho_trackIsoR3PtCut20",nBins, -100, 100,cut1 && totComCut,cut2 && totComCut,cap);
+            compareTwo(t1, t2, "pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20",nBins, -100, 100,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pho_ecalClusterIsoR5+pho_hcalRechitIsoR5+pho_trackIsoR5PtCut20",nBins, -100, 100,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pfcIso1",nBins, 0, 300,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pfcIso2",nBins, 0, 300,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pfcIso3",nBins, 0, 300,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pfcIso4",nBins, 0, 300,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pfcIso5",nBins, 0, 300,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pfpIso1",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pfpIso2",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pfpIso3",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pfpIso4",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pfpIso5",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pfnIso1",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pfnIso2",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pfnIso3",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pfnIso4",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
+            //compareTwo(t1, t2, "pfnIso5",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
 
         }
     }
@@ -128,8 +134,10 @@ int compareTwo(TTree* t1, TTree* t2, TString var, int nBins, double xMin, double
     l1->SetName(Form("l1_%s_%s",var.Data(),cap));
     legStyle(l1);
 
+    TString varName = var;
+    if(var=="pho_ecalClusterIsoR5+pho_hcalRechitIsoR5+pho_trackIsoR5PtCut20") varName = "sumIso";
     TH1D* h1;
-    h1 = new TH1D(Form("h1_%s_%s",var.Data(),cap), Form(";%s;",var.Data()), nBins,xMin,xMax);
+    h1 = new TH1D(Form("h1_%s_%s",var.Data(),cap), Form(";%s;",varName.Data()), nBins,xMin,xMax);
     TH1D* h2 = (TH1D*)h1->Clone(Form("h2_%s_%s",var.Data(),cap));
 
     h1->Sumw2();
@@ -179,7 +187,7 @@ int compareTwo(TTree* t1, TTree* t2, TString var, int nBins, double xMin, double
     //TF1* f1 = new TF1("f1", "pol1",0.005,0.02);
     //h1->Fit(f1,"Q R");
     //c->GetPad(1)->SetLogy();
-    c->SaveAs(Form("figures/compare_%s_%s.pdf",var.Data(),cap));
+    c->SaveAs(Form("figures/compare_signal_bkg_%s_%s.pdf",varName.Data(),cap));
     i++;
     delete c;
     delete h1;

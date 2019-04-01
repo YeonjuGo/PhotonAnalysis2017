@@ -61,6 +61,108 @@ const int col[] = {1,2,3,4,6,7,28,46,41};
 const int ycol[] = {8,9,28,46,41};
 const int marker[] = {24,25,26,27,28,29,31,33,34};
 
+string float2string(double f)
+{
+    std::stringstream ss;
+
+    ss << std::fixed << std::setprecision(10) << f;   // 122 is LARGE, but you may find that really tiny or really large numbers still don't work out... 
+
+    std::string s = ss.str();
+
+    std::string::size_type len = s.length();
+
+    int zeros = 0;
+    while(len > 1 && s[--len] == '0')
+        zeros++;
+    if (s[len] == '.')  // remove final '.' if number ends with '.'
+        zeros++;
+    s.resize(s.length()-zeros);
+
+
+    return s;
+}
+TH1D* xShiftHist(TH1* h, double shiftVal){
+    ////////////////////////////////////////////////////////////////
+    // X-shift
+    TH1D* h_org = (TH1D*) h->Clone(Form("%s_org",h->GetName()));
+    TH1D* h_xshifted = (TH1D*) h->Clone(Form("%s_xshifted",h->GetName()));
+    int TOTNBINS = h_org->GetNbinsX();
+    for(int ibin=1; ibin<TOTNBINS; ++ibin){
+        double xVal = h_org->GetBinCenter(ibin);
+        int shiftBin = h_org->FindBin(xVal-shiftVal);
+        if(shiftBin<1) continue;
+        double tempVal = h_org->GetBinContent(shiftBin);
+        double tempErr = h_org->GetBinError(shiftBin);
+        h_xshifted->SetBinContent(ibin,tempVal);
+        h_xshifted->SetBinError(ibin,tempErr);
+        if(ibin < 100) cout << "ibin = " << ibin << ", xVal = " << xVal << ", shiftBin = " << shiftBin << ", h_org_binVal = " << h_org->GetBinContent(ibin) << ", h_xshifted_val = " << tempVal << endl;
+    }
+    return h_xshifted;
+}
+
+double chi2(TH1* h1, TH1* h2, double rMin=-1, double rMax=-1){
+    double c = 0;
+    int ndof = 0;
+    double tempBinMin = 1;
+    double tempBinMax = h1->GetNbinsX()+1;
+
+    if(rMin!=-1) tempBinMin = h1->GetXaxis()->FindBin(rMin);
+    if(rMax!=-1) tempBinMax = h1->GetXaxis()->FindBin(rMax);
+    for(int i = tempBinMin; i < tempBinMax; ++i){
+        double y1 = h1->GetBinContent(i);
+        double y2 = h2->GetBinContent(i);
+        double e1 = h1->GetBinError(i);
+        double e2 = h2->GetBinError(i);
+
+        double dy = y1-y2;
+        double de2 = e1*e1+e2*e2;
+        if(de2 > 0) {
+            c += dy*dy/de2;
+            ndof += 1;
+        }
+    }
+
+    //return c;
+    return c/ndof;
+}
+
+TH1D* getRatioErrorHist_completelyCorrelated(TH1D* hratio, TH1D* hA, TH1D* hB){
+    TH1D* htemp = (TH1D*) hA->Clone(Form("%s_error",hA->GetName())); 
+    cout << ">>>>>>>>>> Analyzing " << hA->GetName() << endl;
+    for(int ip=1; ip<=hA->GetNbinsX(); ++ip){ 
+        double EA, EB, sigA, sigB, error;
+        EA=hA->GetBinContent(ip);
+        EB=hB->GetBinContent(ip);
+        sigA=hA->GetBinError(ip);
+        sigB=hB->GetBinError(ip);
+        double a= sigA*sigA/(EA*EA);
+        double b= sigB*sigB/(EB*EB);
+        double c= 2./(EA*EB)*sigA*sigA;
+        //double sqrtPart = TMath::Sqrt(abs(a + b));
+        double sqrtPart = TMath::Sqrt(abs(a + b - c));
+        //double sqrtPart = TMath::Sqrt(sigA*sigA/(EA*EA) + sigB*sigB/(EB*EB) - 2./(EA*EB)*sigA*sigA);
+        error = EA/EB*sqrtPart;
+        cout << "ptbin = " << ip << ", sigA = " << sigA << ", sigB = " << sigB <<", a= "<< a <<", b= "<< b <<", c= "<< c<< ", sqrt part = " << sqrtPart << ", error = " << error << endl; 
+        //cout << "ptbin = " << ip << ", sigA = " << sigA << ", sigB = " << sigB <<", sqrt part = " << sqrtPart << ", error = " << error << endl; 
+        htemp->SetBinContent(ip,error);
+        
+        hratio->SetBinError(ip,error);
+    }
+    return htemp;
+}
+void removeHistLastBins(TH1D* h, int nRej){
+    int nbins = h->GetNbinsX();
+    for(int i=nbins-nRej;i<nbins;++i){
+        h->SetBinContent(i+1,0.);
+        h->SetBinError(i+1,0.);
+    }
+}
+void removeHistError(TH1D* h){
+    int nbins = h->GetNbinsX();
+    for(int i=0;i<nbins;++i){
+        h->SetBinError(i+1,0.);
+    }
+}
 void settdrStyleHist(TH1D* h, float xoffset=1.5, float yoffset=1.8){
     h->GetXaxis()->CenterTitle();
     h->GetYaxis()->CenterTitle();

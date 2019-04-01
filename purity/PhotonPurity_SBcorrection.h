@@ -127,7 +127,7 @@ PhotonPurity doFit(CutConfiguration config, TH1D* hSig=0, TH1D* hBkg=0, TH1D* hD
 
 PhotonPurity getPurity(const TString coll, CutConfiguration config, TTree *dataTree, TTree *mcTree,
 		       TCut dataCandidateCut, TCut sidebandCut,
-		       TCut mcSignalCut, TString fname_SBcorr="", TTree *bkgmcTree=0)
+		       TCut mcSignalCut, bool doPreScale=1, TString fname_SBcorr="", TTree *bkgmcTree=0)
 {
   Float_t signalShift = config.proc[CUTS::kHISTOGRAM].obj[CUTS::kPHOTON].f[CUTS::PHO::k_puritySignalShift];
   Float_t backgroundShift = config.proc[CUTS::kHISTOGRAM].obj[CUTS::kPHOTON].f[CUTS::PHO::k_purityBackgroundShift];
@@ -136,6 +136,9 @@ PhotonPurity getPurity(const TString coll, CutConfiguration config, TTree *dataT
   const std::string mcWeightLabel_s = config.proc[CUTS::kHISTOGRAM].obj[CUTS::kPHOTON].s[CUTS::PHO::k_monteCarloWeightLabel];
   TCut mcWeightLabel = mcWeightLabel_s.c_str();
     cout << "Weight is applied : " << mcWeightLabel << endl;
+  TCut dataWeightLabel = "phoPreScale";
+  if(coll=="pbpb") 
+    cout << "DATA Weight is applied : " << dataWeightLabel << endl;
   TH1D* hCand = new TH1D("cand","",nSIGMABINS,0,maxSIGMA);
   TH1D* hBkg = (TH1D*)hCand->Clone("bkg");
   TH1D* hSig = (TH1D*)hCand->Clone("sig");
@@ -150,7 +153,14 @@ PhotonPurity getPurity(const TString coll, CutConfiguration config, TTree *dataT
   else if(coll=="pbpb") varHere=purityVar;
   else cout << "There's no '" << coll << "' type of collision" << endl;
 
-  dataTree->Project(hCand->GetName(), varHere, dataCandidateCut, "");
+
+
+  if(doPreScale){
+      dataTree->Project(hCand->GetName(), varHere, dataWeightLabel*dataCandidateCut, "");
+  } else{
+      dataTree->Project(hCand->GetName(), varHere, dataCandidateCut, "");
+  }
+
   if(bkgmcTree==0){
     dataTree->Project(hBkg->GetName(), varHere+bkgshift, sidebandCut, "");
   } else {

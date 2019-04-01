@@ -7,7 +7,7 @@ bool doEmEnrSample = false;
 bool isDrum = false;
 void compareTwo(TTree* t1=0 ,TTree* t2=0,TString var="pt", int nBins=10, double xMin=0, double xMax=10, TCut cut1="(1)", TCut cut2="(1)", const string cap = "");
 void comparePthat(TTree* t1=0, TString var="pthat", int nBins=100, double xMin=10, double xMax=300, TCut cut1="(1)", const string cap=""); 
-void check_reweight(TString coll="pp"){
+void check_reweight(TString coll="pbpb"){
     TH1::SetDefaultSumw2();
     gStyle->SetOptStat(0);
     SetyjPadStyle();
@@ -61,13 +61,15 @@ void check_reweight(TString coll="pp"){
     if(coll=="pp") nCENTBINS=1;
 
     // Cuts   
-    TCut dataCut_ = phoSignalCut; 
-    TCut mcCut_ =  trigCut_mc && evtSelFilterCut && noiseCut && hoeCut && isoCut && sigmaCut && electronCut; 
+    TCut dataCut_ = phoSignalCut_woTrig && trigCut_low ; 
+    TCut mcCut_ = hoeCut && isoCut && sigmaCut && electronCut; 
+    //TCut mcCut_ =  trigCut_mc && evtSelFilterCut && noiseCut && hoeCut && isoCut && sigmaCut && electronCut; 
     //TCut dataCut_ =  trigCut && evtSelFilterCut && noiseCut;
     //TCut mcCut_ = trigCut_mc && evtSelFilterCut && noiseCut;
     if(coll=="pp"){
-        dataCut_ = phoSignalCut_pp;
-        mcCut_ = trigCut_mc_pp && evtSelFilterCut_pp && noiseCut && hoeCut && isoCut && sigmaCut && electronCut;
+        dataCut_ = phoSignalCut_woTrig_pp && trigCut_pp_low ;
+        mcCut_ = hoeCut_pp && isoCut_pp && sigmaCut_pp && electronCut;
+        //mcCut_ = trigCut_mc_pp && evtSelFilterCut_pp && noiseCut && hoeCut_pp && isoCut_pp && sigmaCut_pp && electronCut;
        // dataCut_ =  trigCut && evtSelFilterCut_pp && noiseCut;
        // mcCut_ = trigCut_mc_pp && evtSelFilterCut_pp && noiseCut;
     } 

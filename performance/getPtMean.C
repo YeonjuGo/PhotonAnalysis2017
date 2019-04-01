@@ -1,7 +1,7 @@
 #include "../phoRaaCuts/yjUtility.h"
 #include "../phoRaaCuts/phoRaaCuts_temp.h"
 
-void getPtMean(TString coll="pp", TString ver="temp"){
+void getPtMean(TString coll="pbpb", TString ver="temp"){
     gStyle -> SetOptStat(0);
 
     TFile *f1 = 0; 

@@ -28,29 +28,35 @@
 #include "../ElectroWeak-Jet-Track-Analyses/Utilities/interface/InputConfigurationParser.h"
 #include "../ElectroWeak-Jet-Track-Analyses/Plotting/commonUtility.h"
 
-int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="phoRaaCuts_purity_forPaper", bool useSBcorr=0, bool noCentDepCorr=0, bool useMCSB=0){
+int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="test", bool doSplitPD=true, bool doPreScale=0, bool useSBcorr=0, bool noCentDepCorr=0, bool useMCSB=0){
     gStyle->SetOptStat(0);
     TH1::SetDefaultSumw2();
 
     TString configFile=""; 
     TString inputData=""; 
+    TString inputData_high=""; 
     TString inputMC=""; 
     TString inputBkgMC ="";
     TString outputName=Form("purity_%s_%s",coll.Data(),ver.Data());
+    if(doPreScale) outputName+="_preScaled";
+    if(doSplitPD) outputName+="_splitPD";
     if(coll=="pbpb"){
         configFile = pbpbData_config;
         inputData = pbpbDatafname;
+        inputData_high = pbpbDatafname_high;
         inputMC = pbpbMCfname;
         inputBkgMC = pbpbMCEmEnrfname; 
     } else if(coll=="pp"){
         configFile = ppData_config;
         inputData = ppDatafname;
+        inputData_high = ppDatafname_high;
         inputMC = ppMCfname;
         inputBkgMC = ppMCEmEnrfname; 
     } else {
         std::cout << "Invaild collision type : " << coll << std::endl;
         return 1;
     }
+ 
     
     const InputConfiguration configInput = InputConfigurationParser::Parse(configFile.Data());
     CutConfiguration configCuts = CutConfigurationParser::Parse(configFile.Data());
@@ -60,22 +66,29 @@ int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="phoRaaCut
     }
 
     //0:HI 1:HIMC 2:PP 3:PPMC
-    const int collisionType = configInput.proc[INPUT::kSKIM].i[INPUT::k_collisionType];
-    const TString collisionTypeName = getCollisionTypeName((COLL::TYPE)collisionType).c_str();
+   // const int collisionType = configInput.proc[INPUT::kSKIM].i[INPUT::k_collisionType];
+   // const TString collisionTypeName = getCollisionTypeName((COLL::TYPE)collisionType).c_str();
     TString LABEL = "PbPb Data";
-    if(collisionType==2) LABEL = "pp Data";
+    if(coll=="pp") LABEL = "pp Data";
     
-    cout << "collisionType = " << collisionType << ", collisionTypeName = " << collisionTypeName << endl;
+    cout << "collisionTypeName = " << coll << endl;
+    //cout << "collisionType = " << collisionType << ", collisionTypeName = " << collisionTypeName << endl;
 
     Int_t nCENTBINS = nCentBinIF;
-    if(collisionType==2) nCENTBINS=1;
+    if(coll=="pp") nCENTBINS=1;
 
-    std::string trigger = configCuts.proc[CUTS::kHISTOGRAM].obj[CUTS::kPHOTON].s[CUTS::PHO::k_trigger_gammaJet].c_str();
+   // std::string trigger = configCuts.proc[CUTS::kHISTOGRAM].obj[CUTS::kPHOTON].s[CUTS::PHO::k_trigger_gammaJet].c_str();
     TFile* input = TFile::Open(inputData);
     TTree* tHlt = (TTree*)input->Get("hltTree");
     TTree* tPho = (TTree*)input->Get("EventTree");    // photons
     TTree* tHiEvt = (TTree*)input->Get("HiEvt");       // HiEvt tree will be placed in PP forest as well.
     TTree* tSkim = (TTree*)input->Get("skim");       // HiEvt tree will be placed in PP forest as well.
+    
+    TFile* input_high = TFile::Open(inputData_high);
+    TTree* tHlt_high = (TTree*)input_high->Get("hltTree");
+    TTree* tPho_high = (TTree*)input_high->Get("EventTree");    // photons
+    TTree* tHiEvt_high = (TTree*)input_high->Get("HiEvt");       // HiEvt tree will be placed in PP forest as well.
+    TTree* tSkim_high = (TTree*)input_high->Get("skim");       // HiEvt tree will be placed in PP forest as well.
 
     TFile* inputMCFile = TFile::Open(inputMC);
     TTree* tmcHlt = (TTree*)inputMCFile->Get("hltTree");
@@ -88,6 +101,11 @@ int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="phoRaaCut
     tPho->AddFriend(tHiEvt, "HiEvt");
     tPho->AddFriend(tSkim, "skim");
 
+    tPho_high->AddFriend(tHlt_high, "Hlt");
+    tPho_high->AddFriend(tPho_high, "Pho");
+    tPho_high->AddFriend(tHiEvt_high, "HiEvt");
+    tPho_high->AddFriend(tSkim_high, "skim");
+    
     tmcPho->AddFriend(tmcHlt, "Hlt");
     tmcPho->AddFriend(tmcPho, "Pho");
     tmcPho->AddFriend(tmcHiEvt, "HiEvt");
@@ -107,34 +125,36 @@ int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="phoRaaCut
     TFile* outFile = new TFile(Form("%soutput/%s.root",dir.Data(), outputName.Data()), "RECREATE");
     TH1D* h1D_pur[nCENTBINS];
     for (Int_t j = 0; j < nCENTBINS; j++) {
-        if(collisionType==2) h1D_pur[j] = new TH1D("h1D_purity_pp",";p_{T}^#gamma (GeV);",nPtBin,ptBins_draw);
+        if(coll=="pp") h1D_pur[j] = new TH1D("h1D_purity_pp",";p_{T}^#gamma (GeV);",nPtBin,ptBins_draw);
         else h1D_pur[j] = new TH1D(Form("h1D_purity_cent%d",j),";p_{T}^#gamma (GeV);",nPtBin,ptBins_draw);
     }
+
     cout << "nPtBin = " << nPtBin << " , nCentBins = " << nCENTBINS << endl;
     TCanvas* cPurity = new TCanvas("c1", "c1", 400*nPtBin, 400*nCENTBINS);
     makeMultiPanelCanvas(cPurity, nPtBin, nCENTBINS, 0.0, 0.0 , 0.2, 0.15, 0.005);
     for (Int_t i = 0; i < nPtBin; ++i) {
         for (Int_t j = 0; j < nCENTBINS; ++j) {
             for (Int_t k = 0; k < 1; ++k) {
-                TString ptCut = Form("(%s>= %f) && (%s< %f)",
+                TString ptCut_ = Form("(%s>= %f) && (%s< %f)",
                         phoEtVar.Data(), ptBins[i], phoEtVar.Data(), ptBins[i+1]);
                 TString centCut = Form("(hiBin>=%i) && (hiBin<%i)",
                         centBins_i[j], centBins_f[j]);
-                if(collisionType==2) centCut = "hiBin<10000";
-
+                if(coll=="pp") centCut = "hiBin<10000";
+                cout << " Range ::: " << ptCut_ << ", " << centCut << endl; 
                 //TCut sampleIsolation = "(pho_sumIsoCorrected < (16.7202-0.154349*hiBin+0.00040613*hiBin*hiBin)) && phoHoverE<0.1"; //for PbPb
-                TCut dataCandidateCut = sampleIsolation && etaCut && ptCut && centCut;
-                if(collisionType==2) dataCandidateCut = sampleIsolation_pp && etaCut && ptCut;
+                //TCut trigCut_ = 
+                TCut dataCandidateCut = sampleIsolation && etaCut && ptCut_ && centCut;
+                if(coll=="pp") dataCandidateCut = sampleIsolation_pp && etaCut && ptCut_;
 
                 TCut sidebandCut = ""; 
-                if(useMCSB==0 && collisionType==0) sidebandCut = sidebandIsolation && etaCut && ptCut && centCut;
-                else if(useMCSB==0 && collisionType==2) sidebandCut = sidebandIsolation_pp && etaCut && ptCut;
-                else if(useMCSB==1 && collisionType==0) sidebandCut = mcBkgIsolation && mcCut && hoeCut && isoCut && etaCut && ptCut && centCut;
-                else if(useMCSB==1 && collisionType==2) sidebandCut = mcBkgIsolation && mcCut_pp && hoeCut_pp && isoCut_pp && etaCut && ptCut;
+                if(useMCSB==0 && coll=="pbpb") sidebandCut = sidebandIsolation && etaCut && ptCut_ && centCut;
+                else if(useMCSB==0 && coll=="pp") sidebandCut = sidebandIsolation_pp && etaCut && ptCut_;
+                else if(useMCSB==1 && coll=="pbpb") sidebandCut = mcBkgIsolation && mcCut && hoeCut && isoCut && etaCut && ptCut_ && centCut;
+                else if(useMCSB==1 && coll=="pp") sidebandCut = mcBkgIsolation && mcCut_pp && hoeCut_pp && isoCut_pp && etaCut && ptCut_;
                 else cout << "something's wrong" << endl; 
 
-                TCut mcSignalCut = mcSignalCut_woKine && etaCut && ptCut && centCut;
-                if(collisionType==2) mcSignalCut = mcSignalCut_woKine_pp && etaCut && ptCut;
+                TCut mcSignalCut = mcSignalCut_woKine && etaCut && ptCut_ && centCut;
+                if(coll=="pp") mcSignalCut = mcSignalCut_woKine_pp && etaCut && ptCut_;
 
                 TString fname_SBcorr = "";
                 if(useSBcorr==1 && coll=="pbpb" && noCentDepCorr==1) fname_SBcorr=Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/performance/output/BKG_Iso_nonIso_%s_%s_pt%dto%d_cent0to100.root",ver.Data(),coll.Data(),(int)ptBins[i],(int)ptBins[i+1]);
@@ -143,22 +163,43 @@ int yj_quickPhotonPurity(const TString coll="pbpb", const TString ver="phoRaaCut
 
                 PhotonPurity fitr;
                 //Purity* fitr;
-                if(useMCSB==0 && useSBcorr==0){
-                    fitr = getPurity(coll, configCuts, tPho, tmcPho,
-                            dataCandidateCut, sidebandCut,
-                            mcSignalCut);
-                } else if(useMCSB==0 && useSBcorr==1){
-                    fitr = getPurity(coll, configCuts, tPho, tmcPho,
-                            dataCandidateCut, sidebandCut,
-                            mcSignalCut, fname_SBcorr);
-                } else if(useMCSB==1 && useSBcorr==0){
-                    fitr = getPurity(coll, configCuts, tPho, tmcPho,
-                            dataCandidateCut, sidebandCut,
-                            mcSignalCut, "",tmcBkgPho);
-                } else if(useMCSB==1 && useSBcorr==1){
-                    std::cout << "ERROR ::: Can't correct isolated Bkg distribution from MC :::" << std::endl;
-                    return 1;
+
+                if(doSplitPD && ptBins[i]>=40){
+                    if(useMCSB==0 && useSBcorr==0){
+                        fitr = getPurity(coll, configCuts, tPho_high, tmcPho,
+                                dataCandidateCut, sidebandCut,
+                                mcSignalCut, doPreScale);
+                    } else if(useMCSB==0 && useSBcorr==1){
+                        fitr = getPurity(coll, configCuts, tPho_high, tmcPho,
+                                dataCandidateCut, sidebandCut,
+                                mcSignalCut, doPreScale, fname_SBcorr);
+                    } else if(useMCSB==1 && useSBcorr==0){
+                        fitr = getPurity(coll, configCuts, tPho_high, tmcPho,
+                                dataCandidateCut, sidebandCut,
+                                mcSignalCut, doPreScale, "",tmcBkgPho);
+                    } else if(useMCSB==1 && useSBcorr==1){
+                        std::cout << "ERROR ::: Can't correct isolated Bkg distribution from MC :::" << std::endl;
+                        return 1;
+                    }
+                } else{
+                    if(useMCSB==0 && useSBcorr==0){
+                        fitr = getPurity(coll, configCuts, tPho, tmcPho,
+                                dataCandidateCut, sidebandCut,
+                                mcSignalCut, doPreScale);
+                    } else if(useMCSB==0 && useSBcorr==1){
+                        fitr = getPurity(coll, configCuts, tPho, tmcPho,
+                                dataCandidateCut, sidebandCut,
+                                mcSignalCut, doPreScale, fname_SBcorr);
+                    } else if(useMCSB==1 && useSBcorr==0){
+                        fitr = getPurity(coll, configCuts, tPho, tmcPho,
+                                dataCandidateCut, sidebandCut,
+                                mcSignalCut, doPreScale, "",tmcBkgPho);
+                    } else if(useMCSB==1 && useSBcorr==1){
+                        std::cout << "ERROR ::: Can't correct isolated Bkg distribution from MC :::" << std::endl;
+                        return 1;
+                    }
                 }
+
                 cPurity->cd((k+j)*nPtBin+i+1);
 
                // TH1D* hSigPdf = fitr->htotal_fit;

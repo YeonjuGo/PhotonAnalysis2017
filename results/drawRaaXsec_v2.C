@@ -51,14 +51,8 @@ void drawRaaXsec_v2(TString ver="180628_temp_v18_nominal", bool purityTest = fal
 
     TFile* f_eff_reco;
     TFile* f_eff_recopp; 
-    if(nCentBinIF==5){
-        f_eff_reco = new TFile("/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pbpb_reco_efficiency_Cymbal_noFlt30_in4cent.root");
-        f_eff_recopp = new TFile("/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pp_reco_efficiency_noFlt30_in4cent.root");
-    } else if(nCentBinIF==4){
-        f_eff_reco = new TFile("/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pbpb_reco_efficiency_180531_temp_v14.root");
-        f_eff_recopp = new TFile("/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pp_reco_efficiency_180531_temp_v14.root");
-    }
-
+    f_eff_reco = new TFile(Form("%s",pbpb_recoEfficiency.Data()));
+    f_eff_recopp = new TFile(Form("%s",pp_recoEfficiency.Data()));
 
     TH1D* h1D_eff_reco[nCentBinIF];
     TH1D* h1D_eff_recopp;
@@ -110,19 +104,19 @@ void drawRaaXsec_v2(TString ver="180628_temp_v18_nominal", bool purityTest = fal
         h1D_Raa[j] = new TH1D(Form("h1D_Raa_cent%d",j),Form(";p_{T}^{#gamma} (GeV);R_{AA}"),nPtBin,ptBins_draw);
        
         // 
-        if(j==0){
-            h1D_rawpp = (TH1D*) f_raw->Get("h1D_raw_pp");
-            cout << "pp : raw dist done" <<endl;
-            h1D_eff_recopp = (TH1D*) f_eff_recopp->Get("reco_eff_cent0");
-            cout << "pp : reco eff done" <<endl;
-            h1D_eff_isopp = (TH1D*) f_eff_isopp->Get("sig_eff_cent0_tot");
-            cout << "pp : iso eff done" <<endl;
-            h1D_effpp = (TH1D*) h1D_eff_recopp->Clone("h1D_eff_cent0_tot_pp");
-            h1D_effpp->Multiply(h1D_eff_isopp);
-            h1D_purpp = (TH1D*) f_purpp->Get("h1D_purity_pp");
-            cout << "pp : purity done" <<endl;
-        }
     }
+
+    h1D_rawpp = (TH1D*) f_raw->Get("h1D_raw_pp");
+    cout << "pp : raw dist done" <<endl;
+    h1D_eff_recopp = (TH1D*) f_eff_recopp->Get("reco_eff_cent0");
+    cout << "pp : reco eff done" <<endl;
+    h1D_eff_isopp = (TH1D*) f_eff_isopp->Get("sig_eff_cent0_tot");
+    cout << "pp : iso eff done" <<endl;
+    h1D_effpp = (TH1D*) h1D_eff_recopp->Clone("h1D_eff_cent0_tot_pp");
+    h1D_effpp->Multiply(h1D_eff_isopp);
+    h1D_purpp = (TH1D*) f_purpp->Get("h1D_purity_pp");
+    cout << "pp : purity done" <<endl;
+
     cout << "all histgorams were imported successfully" <<endl;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////

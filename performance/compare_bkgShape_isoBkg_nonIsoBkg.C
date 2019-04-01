@@ -7,7 +7,7 @@
 #include "../phoRaaCuts/phoRaaCuts_temp.h"
 
 void compareTwo(TTree* t1=0 ,TTree* t2=0,TString var="pt", int nBins=10, double xMin=0, double xMax=10, TCut cut1="",TCut cut2="", const char* cap="", const char* cap2="");
-void compare_bkgShape_isoBkg_nonIsoBkg(TString coll="pbpb", TString ver="170601_temp_v3"){
+void compare_bkgShape_isoBkg_nonIsoBkg(TString coll="pp", TString ver="180817_temp_v23"){
 
     const char* fname_1 ="";
     const char* fname_2 ="";
@@ -37,9 +37,10 @@ void compare_bkgShape_isoBkg_nonIsoBkg(TString coll="pbpb", TString ver="170601_
 
     Int_t nCENTBINS = nCentBinIF;
     if(coll=="pp") nCENTBINS=1;
+    //for(Int_t i = 0; i < nPtBinIF; ++i) 
     for(Int_t i = 0; i < nPtBinIF; ++i) 
     {
-        TCut ptCut = Form("(phoEtCorrected >= %f) && (phoEtCorrected < %f)", ptBins_i[i], ptBins_f[i]);
+        TCut ptCut_ = Form("(phoEtCorrected >= %f) && (phoEtCorrected < %f)", ptBins_i[i], ptBins_f[i]);
         for(Int_t k = 0; k < nCENTBINS; ++k){ 
             TCut centCut = Form("(hiBin >= %d) && (hiBin < %d)", centBins_i[k], centBins_f[k]);    
             if(coll=="pp") centCut = "hiBin<10000";
@@ -48,18 +49,21 @@ void compare_bkgShape_isoBkg_nonIsoBkg(TString coll="pbpb", TString ver="170601_
             TCut commonCut;
 
             if(coll=="pp") {
-                commonCut = mcBkgIsolation && trigCut_mc_pp && evtSelFilterCut_pp && hoeCut_pp && ptCut && etaCut;
+                commonCut = mcBkgIsolation && hoeCut_pp && ptCut_ && etaCut;
+                //commonCut = mcBkgIsolation && trigCut_mc_pp && evtSelFilterCut_pp && hoeCut_pp && ptCut_ && etaCut;
                 IsoBkgCut = commonCut && isoCut_pp;
                 nonIsoBkgCut = commonCut && nonIsoSBCut_pp;
             } else{//PbPb
-                commonCut = mcBkgIsolation && trigCut_mc && evtSelFilterCut && hoeCut && ptCut && etaCut && centCut;
+                commonCut = mcBkgIsolation && hoeCut && ptCut_ && etaCut && centCut;
                 IsoBkgCut = commonCut && isoCut;
                 nonIsoBkgCut = commonCut && nonIsoSBCut;
             }
 
             const char* cap = Form("%s_%s_pt%dto%d_cent%dto%d",ver.Data(),coll.Data(),(int)ptBins_i[i],(int)ptBins_f[i],(int)centBins_i[k]/2,(int)centBins_f[k]/2);
             if(coll=="pp") cap = Form("%s_%s_pt%dto%d",ver.Data(),coll.Data(),(int)ptBins_i[i],(int)ptBins_f[i]);
-            const char* cap2 = "mcTotWeighted_fitChi2";
+            const char* cap2 = "mcTotWeighted_fitChi2_shift0";
+            //const char* cap2 = "mcTotWeighted_fitChi2_shift-0.0003";
+            cout << "start" << endl;
             if(coll=="pp") compareTwo(t1, t2, purityVar_pp,50, 0., 0.030, IsoBkgCut, nonIsoBkgCut,cap,cap2);
             else compareTwo(t1, t2, purityVar,50, 0., 0.030, IsoBkgCut, nonIsoBkgCut ,cap,cap2); 
         }
@@ -81,10 +85,13 @@ void compareTwo(TTree* t1, TTree* t2, TString var, int nBins, double xMin, doubl
 
     h1->Sumw2();
     h2->Sumw2();
-    t1->Draw(Form("%s>>%s",var.Data(),h1->GetName()), cut1);
-    t2->Draw(Form("%s>>%s",var.Data(),h2->GetName()), cut2);
-    //t1->Draw(Form("%s>>%s",var.Data(),h1->GetName()), Form("(weight)*(%s)",cut1.GetTitle()));
-    //t2->Draw(Form("%s>>%s",var.Data(),h2->GetName()), Form("(weight)*(%s)",cut2.GetTitle()));
+    //t1->Draw(Form("%s>>%s",var.Data(),h1->GetName()), cut1);
+    //t2->Draw(Form("(%s)>>%s",var.Data(),h2->GetName()), cut2);
+    //t2->Draw(Form("(%s-0.0005)>>%s",var.Data(),h2->GetName()), cut2);
+    t1->Draw(Form("%s>>%s",var.Data(),h1->GetName()), Form("(weight)*(%s)",cut1.GetTitle()));
+    //t2->Draw(Form("(%s)>>%s",var.Data(),h2->GetName()), Form("(weight)*(%s)",cut2.GetTitle()));
+    t2->Draw(Form("(%s)>>%s",var.Data(),h2->GetName()), Form("(weight)*(%s)",cut2.GetTitle()));
+    //t2->Draw(Form("(%s-0.0003)>>%s",var.Data(),h2->GetName()), Form("(weight)*(%s)",cut2.GetTitle()));
     //h1->Scale( 1. / h1->Integral());
     //h2->Scale( 1. / h2->Integral());
     h1->Scale( 1. / h1->Integral(),"width");
@@ -107,11 +114,11 @@ void compareTwo(TTree* t1, TTree* t2, TString var, int nBins, double xMin, doubl
     double ratioRange = getCleverRange(h1);
     h1->SetAxisRange(0,3,"Y");
     h1->DrawCopy("le1");
-    drawText(cap,0.1,0.1);
     jumSun(xMin,1,xMax,1);
 
     //fitting 
-    TF1* f1 = new TF1("f1", "pol1",0.005,0.02);
+    TF1* f1 = new TF1("f1", "pol1",0.007,0.02);
+    f1->SetParameters(1.73284,-91.6665);
     h1->Fit(f1,"Q R");
     h1->Fit(f1,"R");
     
@@ -122,10 +129,28 @@ void compareTwo(TTree* t1, TTree* t2, TString var, int nBins, double xMin, doubl
     f2gaus->SetParameter(5,0.006);
     //h1->Fit(f2gaus,"R");
 
+   // TF1 *fratio = new TF1("fratio","[0]*TMath::Erf((x-[1])/[2])",0.005,0.025,3);//0) plateau, 1) x-intrecept, 2) x broad
+   // fratio->SetParNames("eff0","x0","m");
+   // fratio->SetParameters(0.5,0.015,0.5);
+   // //fratio->SetParLimits(0,0,1);
+   // //fratio->SetParLimits(1,0.,10.);
+   // //fratio->SetParLimits(2,0,10.);
+   // h1->Fit(fratio,"WRME");
+   // h1->Fit(fratio,"WRME");
+   // fratio->Draw("same");
+
+    //chi2 = gratio->Chisquare(fratio);
+    //dof = gratio->GetN() - fratio->GetNpar();
+    //pval = TMath::Prob(chi2,dof);
+    //tchi.SetTextColor(kBlack);
+    //tchi.SetTextSize(0.035*0.7/0.3);
+    //tchi.DrawLatex(0.6,0.8,Form("#chi^{2}/dof = %.1f/%d (p-value: %.2f)",chi2,dof,pval));
+
     TString dir = "/home/goyeonju/CMS/2017/PhotonAnalysis2017/performance/";
     c->SaveAs(Form("%sfigures/compareBKG_%s_%s_%s.pdf",dir.Data(),var.Data(),cap,cap2));
 
-
+    drawText(cap,0.2,0.2);
+    drawText(cap2,0.2,0.26);
     drawText(Form("f(x)=%.2fx+%.2f",f1->GetParameter(1),f1->GetParameter(0)),0.3,0.9);
     TFile* fout = new TFile(Form("%soutput/BKG_Iso_nonIso_%s.root",dir.Data(),cap),"RECREATE");
     f1->Write();
