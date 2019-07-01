@@ -157,6 +157,21 @@ void removeHistLastBins(TH1D* h, int nRej){
         h->SetBinError(i+1,0.);
     }
 }
+
+TH1D* removeHistFirstAndLastBins(TH1D* h){
+    int nbins = h->GetNbinsX();
+    double newBinning[nbins-2+1];
+    for(int i=0;i<nbins;++i){
+       newBinning[i] = h->GetBinLowEdge(i+2);
+    }
+
+    TH1D* htemp = new TH1D(Form("%s_removedUnderAndOverFlowBins",h->GetName()),"",nbins-2,newBinning);
+    for(int i=0;i<nbins-2;++i){
+        htemp->SetBinContent(i+1,h->GetBinContent(i+2));
+        htemp->SetBinError(i+1,h->GetBinError(i+2));
+    }
+    return htemp;
+}
 void removeHistError(TH1D* h){
     int nbins = h->GetNbinsX();
     for(int i=0;i<nbins;++i){

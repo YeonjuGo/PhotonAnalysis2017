@@ -7,15 +7,15 @@
 #include "../phoRaaCuts/yjUtility.h"
 #include "../phoRaaCuts/phoRaaCuts_temp.h"
 
-int compareTwo(TTree* t1=0 ,TTree* t2=0,TString var="pt", int nBins=10, double xMin=0, double xMax=10, TCut cut1="",TCut cut2="", const char* cap="");
-void compare_AllQCD_EmEnr(TString coll="pbpb"){
+int compareTwo(TTree* t1=0 ,TTree* t2=0,TString var="pt", int nBins=10, double xMin=0, double xMax=10, TCut cut1="",TCut cut2="", const char* cap="", TString ptTxt="", TString centTxt="", TString coll="pbpb");
+void compare_AllQCD_EmEnr_sumIso(TString coll="PbPb"){
 
     const char* fname_1="0";
     const char* fname_2="0";
     if(coll=="pp"){ 
         fname_1=Form("%s",ppMCfname.Data());
         fname_2=Form("%s",ppMCEmEnrfname.Data());
-    } else if(coll=="pbpb"){
+    } else if(coll=="PbPb"){
         fname_1=Form("%s",pbpbMCfname.Data());
         fname_2=Form("%s",pbpbMCEmEnrfname.Data());
     }
@@ -49,22 +49,35 @@ void compare_AllQCD_EmEnr(TString coll="pbpb"){
     TCut etaCut = Form("(abs(phoEta)>=%f)&&(abs(phoEta)<%f)", 0.0, 1.44);
     //TCut etaCut = Form("(abs(phoEta)>=%f)&&(abs(phoEta)<%f)", etaBins[0], etaBins[1]);
     TCut commonCut = "(1==1)";
-    if(coll=="pbpb") commonCut = ptCut && etaCut;
-    else commonCut = ptCut && etaCut;
+    if(coll=="PbPb") commonCut = etaCut;
+    else commonCut = etaCut;
     //if(coll=="pbpb") commonCut = ptCut && etaCut && hoeCut;
     //else commonCut = ptCut && etaCut && hoeCut_pp;
     //compareTwo(t1, t2, "pthat",nBins, 0, 300.0,cut1,cut2,cap);
     //compareTwo(t1, t2, "phoEt",nBins, 20, 300.0,cut1 && commonCut,cut2 && commonCut,cap);
     //compareTwo(t1, t2, "hiBin",nBins, 0, 200.0,cut1 && commonCut,cut2 && commonCut,cap);
 
-    compareTwo(t1, t2, "pho_sumIsoCorrected",100, -20, 80,mcIsolation && commonCut, mcBkgIsolation && commonCut,cap);
-    //for(Int_t ipt = 4; ipt < nPtBinIF; ++ipt){
-    //    TCut ptCut = Form("(phoEt>=%f)&&(phoEt<%f)", ptBins_i[ipt], ptBins_f[ipt]);
-    //    for(Int_t jcent = 0; jcent < nCentBinIF; ++jcent){
-    //        TCut centCut = Form("(hiBin>=%d)&&(hiBin<%d)",centBins_i[jcent],centBins_f[jcent]);
-    //        TCut totComCut = commonCut && ptCut && centCut;
-
-            //cap = Form("%s_pt%dto%d_cent%dto%d",coll.Data(),(int)ptBins_i[ipt],(int)ptBins_f[ipt],centBins_i[jcent]/2,centBins_f[jcent]/2);
+    const int centBins_i_[] = {0,0,20,60,100,0,60};
+    const int centBins_f_[] = {200,20,60,100,200,60,100};
+    int nCentBinIF_ = sizeof(centBins_i)/sizeof(int);
+    if(coll=="pp") nCentBinIF_=1;
+    const double ptBins_i_[] = {20,50,80};
+    const double ptBins_f_[] = {50,80,200};
+    //const double ptBins_i_[] = {20,20,30,40,50,60,80,100,130,20,40,60,100};
+    //const double ptBins_f_[] = {200,30,40,50,60,80,100,130,200,40,60,100,200};
+    const int nPtBinIF_ = sizeof(ptBins_i_)/sizeof(double);
+    for(Int_t ipt = 0; ipt < nPtBinIF_; ++ipt){
+        TCut ptCut_ = Form("(phoEt>=%f)&&(phoEt<%f)", ptBins_i_[ipt], ptBins_f_[ipt]);
+        for(Int_t jcent = 0; jcent < nCentBinIF_; ++jcent){
+            TCut centCut_ = Form("(hiBin>=%d)&&(hiBin<%d)",centBins_i_[jcent],centBins_f_[jcent]);
+            if(coll=="pp") centCut_ = "hiBin >-999";
+            TCut totComCut = commonCut && ptCut_ && centCut_;
+            TString ptTxt = Form("%d GeV < p_{T}^{#gamma} < %d GeV", (int)ptBins_i_[ipt], (int)ptBins_f_[ipt]); 
+            TString centTxt = Form("Centrality %d - %d %s",centBins_i_[jcent]/2,centBins_f_[jcent]/2, "%"); 
+            if(coll=="PbPb") cap = Form("%s_pt%dto%d_cent%dto%d",coll.Data(),(int)ptBins_i_[ipt],(int)ptBins_f_[ipt],centBins_i_[jcent]/2,centBins_f_[jcent]/2);
+            else cap = Form("%s_pt%dto%d",coll.Data(),(int)ptBins_i_[ipt],(int)ptBins_f_[ipt]);
+            compareTwo(t1, t2, "pho_sumIsoCorrected",100, -20, 80,mcIsolation && totComCut, mcBkgIsolation && totComCut,cap,ptTxt,centTxt, coll);
+            compareTwo(t1, t2, "phoSigmaIEtaIEta_2012",100, 0.002, 0.02,mcIsolation && totComCut, mcBkgIsolation && totComCut,cap,ptTxt,centTxt, coll);
             //cap += "_noGenCut";
             //cout << totComCut.GetTitle() << endl;
 /*            compareTwo(t1, t2, "phoEta",nBins, -1.44, 1.44,cut1 && totComCut,cut2 && totComCut,cap);
@@ -88,53 +101,23 @@ void compare_AllQCD_EmEnr(TString coll="pbpb"){
             compareTwo(t1, t2, "phoSigmaIEtaIEta_2012",nBins, 0.005, 0.025,cut1 && totComCut,cut2 && totComCut,cap);
             compareTwo(t1, t2, "phoE3x3_2012",nBins, 0, 600,cut1 && totComCut,cut2 && totComCut,cap);
 */
-            //compareTwo(t1, t2, "pho_ecalClusterIsoR2",nBins, -50, 200,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pho_ecalClusterIsoR3",nBins, -50, 200,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pho_ecalClusterIsoR4",nBins, -50, 200,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pho_ecalClusterIsoR5",nBins, -50, 200,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pho_hcalRechitIsoR2",nBins, -50, 400,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pho_hcalRechitIsoR3",nBins, -50, 400,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pho_hcalRechitIsoR4",nBins, -50, 400,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pho_hcalRechitIsoR5",nBins, -50, 400,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pho_trackIsoR2PtCut20",nBins, -50, 1000,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pho_trackIsoR3PtCut20",nBins, -50, 1000,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pho_trackIsoR4PtCut20",nBins, -50, 1000,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pho_trackIsoR5PtCut20",nBins, -50, 1000,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pho_ecalClusterIsoR2+pho_hcalRechitIsoR2+pho_trackIsoR2PtCut20",nBins, -100, 100,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pho_ecalClusterIsoR3+pho_hcalRechitIsoR3+pho_trackIsoR3PtCut20",nBins, -100, 100,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20",nBins, -100, 100,cut1 && totComCut,cut2 && totComCut,cap);
-            compareTwo(t1, t2, "pho_sumIsoCorrected",nBins, -20, 80,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pho_ecalClusterIsoR5+pho_hcalRechitIsoR5+pho_trackIsoR5PtCut20",nBins, -100, 100,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pfcIso1",nBins, 0, 300,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pfcIso2",nBins, 0, 300,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pfcIso3",nBins, 0, 300,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pfcIso4",nBins, 0, 300,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pfcIso5",nBins, 0, 300,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pfpIso1",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pfpIso2",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pfpIso3",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pfpIso4",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pfpIso5",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pfnIso1",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pfnIso2",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pfnIso3",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pfnIso4",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
-            //compareTwo(t1, t2, "pfnIso5",nBins, 0, 150,cut1 && totComCut,cut2 && totComCut,cap);
 
-        //}
-    //}
+        }
+    }
 } // main function
 
-int compareTwo(TTree* t1, TTree* t2, TString var, int nBins, double xMin, double xMax, TCut cut1, TCut cut2, const char* cap)  {
+int compareTwo(TTree* t1, TTree* t2, TString var, int nBins, double xMin, double xMax, TCut cut1, TCut cut2, const char* cap, TString ptTxt, TString centTxt, TString coll)  {
     gStyle->SetOptStat(0);
     TH1::SetDefaultSumw2();
+    SetyjPadStyle();
     int i = 1;
     //static int i = 1;
-    TCanvas* c =new TCanvas(Form("c_%s_%s",var.Data(),cap),"", 400,600);
-    ratioPanelCanvas(c);
-    c->cd(1);
-
-    TLegend* l1 = new TLegend(0.6,0.80,0.92,0.95);
+    TCanvas* c =new TCanvas(Form("c_%s_%s",var.Data(),cap),"", 500,400);
+    //TCanvas* c =new TCanvas(Form("c_%s_%s",var.Data(),cap),"", 400,600);
+    //ratioPanelCanvas(c);
+    //c->cd(1);
+    cout << "Made canvas" << endl;
+    TLegend* l1 = new TLegend(0.52,0.68,0.80,0.90);
     l1->SetName(Form("l1_%s_%s",var.Data(),cap));
     legStyle(l1);
 
@@ -151,11 +134,18 @@ int compareTwo(TTree* t1, TTree* t2, TString var, int nBins, double xMin, double
     h1=(TH1D*)gDirectory->Get(h1->GetName());
     t2->Draw(Form("%s>>%s",var.Data(),h2->GetName()), Form("(weight)*(%s)",cut2.GetTitle()));	
     h2=(TH1D*)gDirectory->Get(h2->GetName());
+    cout << "filled hist" << endl;
     h1->Scale( 1. / h1->Integral(),"width");
     h2->Scale( 1. / h2->Integral(),"width");
+    cout << "scale" << endl;
     //cout << cut1.GetTitle() << endl;	
     //////////////////////////////////
     // Cosmetics
+    //h1->GetYaxis()->SetRangeUser(0,0.05);
+    SetHistTextSize(h1);
+    SetHistTextSize(h2);
+    h1->SetTitle(";sumIso;Arbitrary normalization");
+    h2->SetTitle(";sumIso;Arbitrary normalization");
     h1->SetMarkerStyle(20);
     h1->SetMarkerSize(0.6);
     h1->SetMarkerColor(2);
@@ -165,10 +155,12 @@ int compareTwo(TTree* t1, TTree* t2, TString var, int nBins, double xMin, double
     h2->SetFillStyle(3001);
     h2->SetLineColor(9);
     double YminVal;
+    cout << "done" << endl;
     YminVal = cleverRange(h1,h2,1.2);
-    h2->SetTitle(";;Arbitrary normalization");
-    SetHistTextSize(h2);
-    if(YminVal!=0) c->GetPad(1)->SetLogy();
+    cout << "cleverRange" << endl;
+    //h2->SetTitle(";;Arbitrary normalization");
+    //SetHistTextSize(h2);
+    //if(YminVal!=0) c->GetPad(1)->SetLogy();
 
     l1->AddEntry(h1,"Signal MC","pl");
     l1->AddEntry(h2,"Background MC","F");	
@@ -178,18 +170,27 @@ int compareTwo(TTree* t1, TTree* t2, TString var, int nBins, double xMin, double
     h1->DrawCopy("hist e same");
     l1->Draw();
     //drawText("PbPb 5 TeV",0.91,0.76,1);
-    drawText("|#eta|<1.44",0.91,0.76,1);
-    drawText("p_{T}^{#gamma}>20 GeV",0.91,0.76-0.05,1);
+    float xpos = 0.85;
+    float ypos = 0.60;
+    float dy = 0.05;
+    float ddy = 0.02;
+    drawText("|#eta|<1.44",xpos,ypos,1);
+    drawText(Form("%s 5.02 TeV",coll.Data()),xpos,ypos-dy,1);
+    drawText(Form("%s",ptTxt.Data()),xpos,ypos-dy*2-ddy,1);
+    if(coll=="PbPb") drawText(Form("%s",centTxt.Data()),xpos,ypos-dy*3-ddy,1);
+    //drawText("p_{T}^{#gamma}>20 GeV",0.91,0.76-0.05,1);
+    jumSun(1,0,1,1);
+    //jumSun(1,0,1,1);
 
-    c->cd(2);
-    h1->Divide(h2);
-    h1->SetTitle(Form(";%s;Signal/Background",var.Data()));
-    //double ratioRange = getCleverRange(h1);
-    h1->SetAxisRange(0,2,"Y");
-    SetHistTextSize(h1);
-    h1->DrawCopy("le1");
-    jumSun(xMin,1,xMax,1);
-    drawText(cap,0.2,c->GetPad(2)->GetBottomMargin()+0.04);
+   // c->cd(2);
+   // h1->Divide(h2);
+   // h1->SetTitle(Form(";%s;Signal/Background",var.Data()));
+   // //double ratioRange = getCleverRange(h1);
+   // h1->SetAxisRange(0,2,"Y");
+   // SetHistTextSize(h1);
+   // h1->DrawCopy("le1");
+   // //jumSun(xMin,1,xMax,1);
+   // drawText(cap,0.2,c->GetPad(2)->GetBottomMargin()+0.04);
 
     //fitting 
     //TF1* f1 = new TF1("f1", "pol1",0.005,0.02);

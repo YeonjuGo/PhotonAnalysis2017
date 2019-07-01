@@ -34,7 +34,7 @@ const int colHere[]={1,2,4,kGreen+1,kYellow+1};
 const int markerHere[]={20,33,34,29,24,29};
 const int markerHere_closed[]={20,33,33,33,33};
 //TH1D* removeUnderOverBin(TH1D *h1);
-void drawRaaXsec_v6_makeOutput(TString ver="190303_temp_v28_nominal", bool doSplitPD = true,  bool purityTest = false)
+void drawRaaXsec_v6_afterUnfolding(TString ver="190303_temp_v28_nominal", bool doSplitPD = true,  bool purityTest = false)
 {
     TH1::SetDefaultSumw2();
     gStyle->SetOptStat(0000);

@@ -1,5 +1,5 @@
-#ifndef phoRaaCuts_190303_temp_v28_H 
-#define phoRaaCuts_190303_temp_v28_H 
+#ifndef phoRaaCuts_190625_temp_v29_purityEtaDep_H 
+#define phoRaaCuts_190625_temp_v29_purityEtaDep_H 
 // 1. pp photon selection(ID cuts) is from EGamma POG.
 // 2. pbpb MC is CYMBAL total(v1+ext) and v14 of EmEnrichedDijet
 // 3. centrality bin (0,10,30,50,100)
@@ -12,6 +12,7 @@
 // 10. unfolding bin 
 // 11. new skim with the new photon cut at 10 GeV (it was 15 GeV beforehand) 2019.02.26
 // 12. no 30 trigger for 30-40 GeV bin 
+// 29. have different pT binning for each centrality bin 
 #include <TCut.h>
 
 #define PI 3.141592653589
@@ -51,42 +52,33 @@ TString ppData_config = "/home/goyeonju/CMS/2016/PhotonAnalysis2016/ElectroWeak-
 TString ppMC_config = "/home/goyeonju/CMS/2016/PhotonAnalysis2016/ElectroWeak-Jet-Track-Analyses/CutConfigurations/photonRaa_pp_mc.conf";
 TString pbpb_forest_inputList = "/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/inputfilelist/pbpblist_v14_HydjetCymbal.txt"; 
 TString pp_forest_inputList = "/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/inputfilelist/pplist.txt"; 
-TString pbpb_recoEfficiency= "/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pbpb_reco_efficiency_Cymbal_withExt_0731_15to300GeV.root";
-TString pp_recoEfficiency = "/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pp_reco_efficiency_withExt_0731_15to300GeV.root";
+TString pbpb_recoEfficiency= "/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pbpb_reco_efficiency_Cymbal_withExt_190626_pt20to300.root";
+TString pp_recoEfficiency = "/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pp_reco_efficiency_withExt_190626_pt20to300.root";
 TString pp_trigEfficiency = "/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pp_trigger_efficiency_photon_skim_low_doIDcut1_doPreScale1_doAnalysisBin1.root";
 TString pbpb_tnp = "/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/tnp_output/correction_functions_pbpb_ISO_BWResCBExp_v9_onlyCent.txt";
 TString pp_tnp = "/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/tnp_output/correction_functions_pp_ISO_BWResCBCheb_v9_onlyPt.txt";
-//const bool centDepTnP = false;
-//const bool ptDepTnP_pp = false;
-const bool centDepTnP = false;
-const bool ptDepTnP = true;
+const bool centDepTnP = true;
 const bool ptDepTnP_pp = true;
-const double pp_tnp_pt_sec[] = {30,40,50,300};
-const double pp_tnp_pt[] = {1.05718,1.06468,1.00384,1.03484};//data 0.89, mc 0.82 ->  
-//correction_functions_pp_passISO_VoigtErfExp_recoIDPho_v29_isoEff_peakPass90_peakFail65_mass70to110_pt15to200_binsForFit30_isoEff.txt
-//const double pp_tnp_pt_sec[] = {40,300};
-//const double pp_tnp_pt[] = {1.07,1.00784};//data 0.89, mc 0.82 ->  
-//const double pp_tnp_pt[] = {1.18639,1.00784};//data 0.89, mc 0.79 ->  
+const double pp_tnp_pt_sec[] = {40,300};
+const double pp_tnp_pt[] = {1.18639,1.00784};
 const int n_pp_tnp_pt_sec  = sizeof(pp_tnp_pt_sec)/sizeof(double);
-const double pbpb_tnp_cent_sec[] = {20,200};
+const double pbpb_tnp_cent_sec[] = {40,200};
 const int n_pbpb_tnp_cent_sec  = sizeof(pbpb_tnp_cent_sec)/sizeof(double);
 const double pbpb_tnp_cent[] = {0.767002,0.963798};
-const double pbpb_tnp_pt_sec[] = {40,300};
-const int n_pbpb_tnp_pt_sec  = sizeof(pbpb_tnp_pt_sec)/sizeof(double);
-const double pbpb_tnp_pt[] = {1.03316,0.882014};
 
 /////////////// BINNING ///////////////////
-const double ptBins[] = {20,30,40,50,60,80,100,130,200};
-const double ptBins_draw[] = {20,30,40,50,60,80,100,130,200};
-const double ptBins_draw_final[] = {10,20,30,40,50,60,80,100,130,200};
-const double ptBins_unfolding[] = {15,20,30,40,50,60,80,100,130,200,300};
-const double ptBins_mean_pbpb[] = {24.9978,34.0831,44.1832,54.2284,67.949,87.9602,111.623,152.674};
-const double ptBins_mean_pp[] = {23.7754,33.8593,44.1152,54.4049,68.1255,88.3309,111.783,153.876};
+//const double ptBins[] = {20,30};
+const double ptBins[] = {20,30,40,50,60,80,200};
+const double ptBins_draw[] = {25,30,40,50,60,80,100,130,200};
+const double ptBins_draw_final[] = {15,25,30,40,50,60,80,100,130,200};
+const double ptBins_unfolding[] = {20,25,30,40,50,60,80,100,130,200,300};
+const double ptBins_mean_pbpb[] = {27.7444,34.0872,44.1777,54.243,67.977,88.0138,111.867,152.202};
+const double ptBins_mean_pp[] = {27.1233,33.7975,44.1448,54.3516,68.0108,88.7239,111.387,151.673};
 const double ptBins_mean_unfolding_pbpb[] = {22.19,27.7444,34.0872,44.1777,54.243,67.977,88.0138,111.867,152.202,227.849};
 const double ptBins_mean_unfolding_pp[] = {22.035,27.1233,33.7975,44.1448,54.3516,68.0108,88.7239,111.387,151.673,236.152};
 const int nPtBin = sizeof(ptBins)/sizeof(double) -1;
 const int nPtBin_unfolding = sizeof(ptBins_unfolding)/sizeof(double) -1;
-const double ptBins_i[] = {20,20,30,40,50,60,80,100,130};
+const double ptBins_i[] = {25,25,30,40,50,60,80,100,130};
 const double ptBins_f[] = {200,30,40,50,60,80,100,130,200};
 const int nPtBinIF = sizeof(ptBins_i)/sizeof(double);
 const int centBins[] = {0,20,60,100,200};
@@ -95,6 +87,10 @@ const int centBins_i[] = {0,0,20,60,100};
 const int centBins_f[] = {200,20,60,100,200};
 const int rejectPtBins[] = {0,0,0,1,2};
 const int nCentBinIF = sizeof(centBins_i)/sizeof(int);
+const double etaBins[] = {0.0,0.5,1.0,1.44};
+const double etaBins_i[] = {0.0,0.5,1.0};
+const double etaBins_f[] = {0.5,1.0,1.44};
+const int nEtaBin = sizeof(etaBins_i)/sizeof(double);
 const double TA[nCentBinIF] = {5.607*1000,23.22*1000,11.51*1000,3.819*1000,0.4395*1000}; 
 //const double TA[nCentBinIF] = {5.762*1000,23.651*1000,11.814*1000,4.026*1000,0.4885*1000}; //TAA up
 ////const double TA[nCentBinIF] = {5.416*1000,22.531*1000,11.122*1000,3.611*1000,0.4075*1000}; //TAA down
@@ -109,8 +105,8 @@ const double TA_down[nCentBinIF] = {5.416*1000,22.531*1000,11.122*1000,3.611*100
 /////////////// CUTS ///////////////////
 //Systematics
 const TString phoEtVar = "phoEtCorrected";
-//const TString phoEtVar = "phoEtCorrected_sys"; //E scale
-//const TString phoEtVar = "phoEtCorrected_resSys_sig"; //res up
+//const TString phoEtVar = "phoEtCorrected_sys"; //phoEscale
+//const TString phoEtVar = "phoEtCorrected_resSys_sig"; //phoEresol
 //const TString phoEtVar = "phoEtCorrected_resSys_sig2"; //res down
 //Trigger and EvtSelection Cuts
 const TCut trigCut_low = "HLT_HISinglePhoton20_Eta1p5_v1 || HLT_HISinglePhoton20_Eta1p5_v2";
@@ -119,8 +115,8 @@ const TCut trigCut_30to40= trigCut_low;
 const TCut trigCut_pp_low = "HLT_HISinglePhoton20_Eta1p5_v1";
 const TCut trigCut_pp_high = "HLT_HISinglePhoton40_Eta1p5_v1";
 const TCut trigCut_pp_30to40= trigCut_low; 
-const TCut trigCut_mc = "(HLT_HISinglePhoton15_Eta1p5_v2==1 && phoEtCorrected>=15 && phoEtCorrected<20) || (HLT_HISinglePhoton20_Eta1p5_v2==1 && phoEtCorrected>=20 && phoEtCorrected<40) || (HLT_HISinglePhoton40_Eta1p5_v2==1 && phoEtCorrected>=40) ";
-const TCut trigCut_mc_pp = "(HLT_HISinglePhoton15_Eta1p5ForPPRef_v1==1 && phoEtCorrected>=15 && phoEtCorrected<20) || (HLT_HISinglePhoton20_Eta1p5ForPPRef_v1==1 && phoEtCorrected>=20 && phoEtCorrected<40) || (HLT_HISinglePhoton40_Eta1p5ForPPRef_v1==1 && phoEtCorrected>=40)";
+const TCut trigCut_mc = "(HLT_HISinglePhoton20_Eta1p5_v2==1 && phoEtCorrected>=20 && phoEtCorrected<40) || (HLT_HISinglePhoton40_Eta1p5_v2==1 && phoEtCorrected>=40) ";
+const TCut trigCut_mc_pp = "(HLT_HISinglePhoton20_Eta1p5ForPPRef_v1==1 && phoEtCorrected>=20 && phoEtCorrected<40) || (HLT_HISinglePhoton40_Eta1p5ForPPRef_v1==1 && phoEtCorrected>=40)";
 //const TCut evtSelFilterCut = "(1==1)"; // already applied on the skim file
 const TCut evtSelFilterCut = "pcollisionEventSelection && HBHENoiseFilterResultRun2Loose"; // already applied on the skim file
 const TCut evtSelFilterCut_pp = "pBeamScrapingFilter && pPAprimaryVertexFilter && HBHENoiseFilterResultRun2Loose";// pVertexFilterCutEandG is for pPb pileup
@@ -128,7 +124,7 @@ const TCut evtSelFilterCut_pp = "pBeamScrapingFilter && pPAprimaryVertexFilter &
 const TCut spikeRejection = "(phoSigmaIEtaIEta_2012>=0.002) && (pho_swissCrx<=0.9) && (abs(pho_seedTime)<=3)";
 const TCut hotspotCut = "pho_is2015Noise==0";
 const TCut electronCut = "pho_isEle==0";
-//const TCut electronCut = "pho_isEle>=0"; //electron sys
+//const TCut electronCut = "pho_isEle>=0"; // eleCont
 const TCut noiseCut = spikeRejection && hotspotCut;
 //Kinematic Cuts
 const TCut ptCut = "phoEtCorrected>20";
@@ -137,7 +133,8 @@ const TCut etaCut = "abs(phoEta)<1.44";
 const TCut hoeCut = "phoHoverE<0.1";
 //const TCut hoeCut = "phoHoverE<0.05"; //ID down
 const TCut isoCut = "pho_sumIsoCorrected<1.0";
-//const TCut isoCut = "pho_sumIsoCorrected<3.0"; //ID up
+//const TCut isoCut = "pho_sumIsoCorrected<3.0"; //IDup
+//const TCut isoCut = "pho_sumIsoCorrected<0.5"; //IDdown
 //const TCut isoCut = "(pho_ecalClusterIsoR4+pho_hcalRechitIsoR4+pho_trackIsoR4PtCut20)<1.0";
 const TCut sigmaCut = "phoSigmaIEtaIEta_2012<0.010";
 const TCut nonIsoSBCut = "pho_sumIsoCorrected > 10.0 && pho_sumIsoCorrected < 20.0";
@@ -166,7 +163,7 @@ const TCut sigmaCut_pp = sigmaCut;
 //const TCut sigmaCut_pp = "phoSigmaIEtaIEta<0.0102";
 const TCut nonIsoSBCut_pp = nonIsoSBCut;
 
-const TCut dataCut =evtSelFilterCut && noiseCut;
+const TCut dataCut = evtSelFilterCut && noiseCut;
 const TCut dataCut_pp = evtSelFilterCut_pp && noiseCut;
 const TCut mcCut = noiseCut;
 const TCut mcCut_pp = noiseCut;

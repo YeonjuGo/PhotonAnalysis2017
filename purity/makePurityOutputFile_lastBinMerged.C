@@ -24,17 +24,20 @@
 #include "stdio.h"
 #include <iostream>
 
+#include "PhotonPurity_SBcorrection_v2.h"
+//#include "../phoRaaCuts/phoRaaCuts_purity_forPaper.h"
 #include "../phoRaaCuts/phoRaaCuts_temp.h"
 #include "../phoRaaCuts/yjUtility.h"
-Double_t effFunctionTest(Double_t *x, Double_t *par)
+
+Double_t errFunc(Double_t *x, Double_t *par)
 {
     Double_t xx = x[0];
     Double_t fitVal;
-    fitVal = par[0]*TMath::Erf((xx-par[1])/par[2]); 
+    fitVal = par[0]*TMath::Erf((xx-par[1])/par[2]);
     return fitVal;
 }
 
-void test(const TString coll="pp", const TString ver="190625_temp_v29_nominal", bool doSplitPD=true, bool doPreScale=1){
+void makePurityOutputFile_lastBinMerged(const TString coll="pp", const TString ver="190625_temp_v29_nominal", bool doSplitPD=true, bool doPreScale=1){
     cout << "Purity Calculation" << endl;
     cout << "::: version = " << ver << endl; 
     cout << "::: doSplitPD = " << doSplitPD << endl; 
@@ -230,33 +233,34 @@ void test(const TString coll="pp", const TString ver="190625_temp_v29_nominal", 
             ptBins_unfolding_centDep[iiu] = ptBins_unfolding[iiu];
         }
         if(function_number==0){
-            f_temp[j] = new TF1(Form("purity_temp_%s_cent%d",coll.Data(),j), effFunctionTest, ptBins_unfolding_centDep[0], ptBins_unfolding_centDep[nPtBin_unfolding_centDep],3); //nominal
+            f_temp[j] = new TF1(Form("purity_temp_%s_cent%d",coll.Data(),j), errFunc, ptBins_unfolding_centDep[0], ptBins_unfolding_centDep[nPtBin_unfolding_centDep],3); //nominal
+            f[j] = new TF1(Form("purity_%s_cent%d",coll.Data(),j), errFunc, ptBins_unfolding_centDep[0], ptBins_unfolding_centDep[nPtBin_unfolding_centDep],3); //nominal
             //f_temp[j] = new TF1(Form("purity_temp_%s_cent%d",coll.Data(),j), "[0]*TMath::Erf((x-[1])/[2])", ptBins_unfolding_centDep[0], ptBins_unfolding_centDep[nPtBin_unfolding_centDep]); //nominal
-            //f_temp[j] = new TF1(Form("purity_temp_%s_cent%d",coll.Data(),j), "[0]*TMath::Erf((x-[1])/[2])", ptBins_unfolding_centDep[0], ptBins_unfolding_centDep[nPtBin_unfolding_centDep-1]); //nominal
-            f[j] = new TF1(Form("purity_%s_cent%d",coll.Data(),j), "[0]*TMath::Erf((x-[1])/[2])", ptBins_unfolding_centDep[0], ptBins_unfolding_centDep[nPtBin_unfolding_centDep]); //nominal
+            //f[j] = new TF1(Form("purity_%s_cent%d",coll.Data(),j), "[0]*TMath::Erf((x-[1])/[2])", ptBins_unfolding_centDep[0], ptBins_unfolding_centDep[nPtBin_unfolding_centDep]); //nominal
             f_temp[j]->SetParameters(7.18606e-01,-1.72893e+02,1.83041e+02);
         } else if(function_number==1){
             f_temp[j] = new TF1(Form("purity_temp_%s_cent%d",coll.Data(),j), "pol1", ptBins_unfolding_centDep[0], ptBins_unfolding_centDep[nPtBin_unfolding_centDep-1]); //nominal
             f[j] = new TF1(Form("purity_%s_cent%d",coll.Data(),j), "pol1", ptBins_unfolding_centDep[0], ptBins_unfolding_centDep[nPtBin_unfolding_centDep]); //nominal
             f_temp[j]->SetParameters(6.20059e-01,2.93156e-03);
         }
-         f_temp[j]->SetNpx(1000);
-         if(drawGraph){
-             gr_pur[j]->Fit(f_temp[j]); 
-             gr_pur[j]->Fit(f_temp[j]); 
-         } else{
-             h1D_pur[j]->Fit(f_temp[j], "LL R"); 
-             h1D_pur[j]->Fit(f_temp[j], "LL R"); 
-         }
-         f_temp[j]->Draw("same");
+        f_temp[j]->SetNpx(1000);
+        f[j]->SetNpx(1000);
+        if(drawGraph){
+            gr_pur[j]->Fit(f_temp[j]); 
+            gr_pur[j]->Fit(f_temp[j]); 
+        } else{
+            h1D_pur[j]->Fit(f_temp[j], "LL R"); 
+            h1D_pur[j]->Fit(f_temp[j], "LL R"); 
+        }
+        f_temp[j]->Draw("same");
 
-        f[j]->SetParameter(0,8.47006e-01);
-        f[j]->SetParameter(1,-1.83658e+01);
-        if(function_number==0) f[j]->SetParameter(2,4.08015e+01);
-        f[j]->Draw("same");
+        f[j]->SetParameter(0,f_temp[j]->GetParameter(0));
+        f[j]->SetParameter(1,f_temp[j]->GetParameter(1));
+        if(function_number==0) f[j]->SetParameter(2,f_temp[j]->GetParameter(2));
+        //f[j]->Draw("same");
     }
     if(coll=="pbpb") f[0] = (TF1*) f[1]->Clone("purity_pbpb_cent0");
-
+    if(coll=="pbpb") f_temp[0] = (TF1*) f_temp[1]->Clone("purity_pbpb_cent0");
 
     if(coll=="pbpb") h1D_pur[0] = (TH1D*) h1D_pur[1]->Clone(Form("h1D_purity_cent%d",0));
     TString outputPdfName=Form("purity_vs_pt_%s_%s",coll.Data(),ver.Data());
@@ -272,6 +276,6 @@ void test(const TString coll="pp", const TString ver="190625_temp_v29_nominal", 
         f_temp[j]->Write();
         f[j]->Write();
     }
-    outFile->Close();
+   // outFile->Close();
 
 }

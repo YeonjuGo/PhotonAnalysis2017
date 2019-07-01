@@ -4,7 +4,7 @@
 // Modified at 2018 June 10
 
 #include "../phoRaaCuts/yjUtility.h"
-#include "../phoRaaCuts/phoRaaCuts_test.h"
+#include "../phoRaaCuts/phoRaaCuts_temp.h"
 //#include "../phoRaaCuts/temp_phoRaaCuts_temp.h"
 //#include "../phoRaaCuts/styleUtil.h"
 #include "../phoRaaCuts/tdrstyle.C"
@@ -27,6 +27,15 @@ const int colorStyle_sys[]={kYellow-7,kRed-10,kGreen-10,kBlue-10,kOrange-3};
 const int colorStyle_line[]={kYellow-4,kPink-6,kGreen+3,kBlue-3,kOrange+4};
 const double transparency[]={0.5,0.5,0.5,0.5,0.5,0.5};
 const double scale[]={0,10.,100.,1000.,10000.,100000.};
+double myFunc(double *x, double *par){
+        return par[0]+ par[1]/sqrt(x[0]) + par[2]/x[0];
+}
+Double_t fitf(Double_t *x,Double_t *par) {
+    Double_t arg = 0;
+    if (par[2]!=0) arg = (x[0] - par[1])/par[2];
+    Double_t fitval = par[0]*TMath::Exp(-0.5*arg*arg);
+    return fitval;
+}
 
 TGraphAsymmErrors* scale_graph(TGraphAsymmErrors* gr, Float_t s);
 TGraphAsymmErrors* devide_graph_by_hist(TGraphAsymmErrors* gr, TH1D* h1);
@@ -44,15 +53,16 @@ for (int p=0; p<points; ++p) {                                         \
     graph->SetPointError(p,Xerr_l,Xerr_h,Yerr_l,Yerr_h);                \
 }
 
-void test_photonRaaPlot_withJetphox(TString ver="180805_temp_v21", bool doJETPHOX = true) {
+void test_photonRaaPlot_withJetphox(TString ver="190625_temp_v29", bool doJETPHOX = true) {
     gStyle->SetOptTitle(0);
     gStyle->SetOptStat(0);
     
     TString cap = Form("%s_withJetphox_ppNLO",ver.Data());
     // input files 
     TString dir = "/home/goyeonju/CMS/2017/PhotonAnalysis2017/";
-    const std::string input_file = Form("%sresults/output/phoRaa_%s_nominal.root",dir.Data(),ver.Data());
-    const std::string sys_file = Form("%ssystematics/output/systematics_%s_cent0to100.root",dir.Data(),ver.Data());
+    const std::string input_file = Form("%sresults/output/phoRaa_afterUnfolding_%s_nominal.root",dir.Data(),ver.Data());
+    const std::string sys_file = Form("%ssystematics/output/systematics_%s.root",dir.Data(),ver.Data());
+    //const std::string sys_file = Form("%ssystematics/output/systematics_%s_cent0to100.root",dir.Data(),ver.Data());
     TFile* input = new TFile(input_file.c_str(), "read");
     TFile* sys = new TFile(sys_file.c_str(), "read");
 
@@ -75,6 +85,8 @@ void test_photonRaaPlot_withJetphox(TString ver="180805_temp_v21", bool doJETPHO
     TObject* generic[n_hist_types][nCentBinIF];
     TH1D* h1D_nominal[n_hist_types][nCentBinIF];
     TH1D* systematics[n_hist_types][nCentBinIF];            
+    TH1D* h1D_nominal_withUnderOverFlowBins[n_hist_types][nCentBinIF];
+    TH1D* systematics_withUnderOverFlowBins[n_hist_types][nCentBinIF];            
     TH1D* htemp[n_hist_types]; // for cosmetics, will draw axis and its titles
     TGraphAsymmErrors* gr_sys[n_hist_types][nCentBinIF];
     TGraphAsymmErrors* gr_nominal[n_hist_types][nCentBinIF];
@@ -102,8 +114,11 @@ void test_photonRaaPlot_withJetphox(TString ver="180805_temp_v21", bool doJETPHO
 
             // nominal value part
             generic[i][k] = input->Get(hist_name.data());
-            h1D_nominal[i][k] = (TH1D*)generic[i][k];
-            systematics[i][k] = (TH1D*)sys->Get((hist_name + "_diff_total").c_str());
+            h1D_nominal_withUnderOverFlowBins[i][k] = (TH1D*)generic[i][k];
+            systematics_withUnderOverFlowBins[i][k] = (TH1D*)sys->Get((hist_name + "_diff_total").c_str());
+            h1D_nominal[i][k] = removeHistFirstAndLastBins(h1D_nominal_withUnderOverFlowBins[i][k]); 
+            systematics[i][k] = removeHistFirstAndLastBins(systematics_withUnderOverFlowBins[i][k]); 
+            
             //systematics[i][k] = (TH1D*)sys->Get((hist_name + "_diff_sys_purUp_sys_purDown_total").c_str()); //this is only purity up and down
 
             // histogram cosmetics 
@@ -150,7 +165,10 @@ void test_photonRaaPlot_withJetphox(TString ver="180805_temp_v21", bool doJETPHO
             //cout << h1D_nominal[i][k]->GetNbinsX() << endl;
             
             //for (int ipt=1; ipt<=h1D_nominal[i][k]->GetNbinsX(); ++ipt) {
+            //ipt starting from 2 when using Unfolding underflow bin!!
+            //ipt starting from 1 when not using Unfolding underflow bin!!
             for (int ipt=1; ipt<=nPtBin-rejectPtBins[k]; ++ipt) {
+            //for (int ipt=2; ipt<=nPtBin-rejectPtBins[k]; ++ipt) {
                 //cout << 
                 //if (h1D_nominal[i][k]->GetBinError(i) == 0) continue;
                 double x = h1D_nominal[i][k]->GetBinCenter(ipt);
@@ -160,9 +178,13 @@ void test_photonRaaPlot_withJetphox(TString ver="180805_temp_v21", bool doJETPHO
                 double error = TMath::Abs(systematics[i][k]->GetBinContent(sys_bin));
                 cout << "histname : " << hist_name << ", ipt " << ipt << ", Systematic Error = " << error << endl;
                 Double_t pxtmp, pytmp;
+               // //When using unfolding underflow bin
+               // gr_sys[i][k]->SetPointError(ipt-2, (bin_width/2), (bin_width/2), error, error); 
+               // gr_sys[i][k]->SetPoint(ipt-2, x, val); 
+                //When not using unfolding underflow bin
                 gr_sys[i][k]->SetPointError(ipt-1, (bin_width/2), (bin_width/2), error, error); 
                 gr_sys[i][k]->SetPoint(ipt-1, x, val); 
-                //cout << "ipt = "<< ipt << ": " << gr_sys[i][k]->GetErrorYhigh(ipt-1) << endl;
+                cout << "ipt = "<< ipt << ": " << gr_sys[i][k]->GetErrorYhigh(ipt-1) << endl;
             } 
 
             //systematic cosmetics 
@@ -223,10 +245,8 @@ void test_photonRaaPlot_withJetphox(TString ver="180805_temp_v21", bool doJETPHO
             else if(hist_types[i] == "dNdpt_corr2_pp") htemp[i]->SetTitle(";Photon E_{T} (GeV);#frac{d^{2}#sigma^{pp}}{dp_{T}d#eta} (#frac{pb}{GeV/c})");
 
             if(hist_types[i] != "Raa") htemp[i]->GetYaxis()->SetRangeUser(0.01,1.e+5);
-            if(hist_types[i] == "dNdpt_corr2" || hist_types[i] == "dNdpt_corr2_pp"){
+            if(hist_types[i] == "dNdpt_corr2" || hist_types[i] == "dNdpt_corr2_pp")
                 gPad->SetLogy();
-                gPad->SetLogx();
-            }
 
             ////////////////////////////
             // draw graphs 
@@ -311,10 +331,7 @@ void test_photonRaaPlot_withJetphox(TString ver="180805_temp_v21", bool doJETPHO
             if(i==0) 
                 leg_raa->AddEntry(h1D_nominal[i][k],Form("%d-%d %s",(int)(centBins_i[k]/2),(int)(centBins_f[k]/2),"%"),"plf");
             if(hist_types[i] == "Raa") jumSun(ptBins_draw_final[0],1,ptBins[nPtBin],1);
-            if(hist_types[i] == "dNdpt_corr2"){ 
-                gPad->SetLogy();
-                gPad->SetLogx();
-            }
+            if(hist_types[i] == "dNdpt_corr2") gPad->SetLogy();
         }
 
         ////////////////////////////////
@@ -333,10 +350,10 @@ void test_photonRaaPlot_withJetphox(TString ver="180805_temp_v21", bool doJETPHO
     // /home/samba.old/jaebeom/ForYeonju/ggo_2test_aa_CT14lo.root
     
     cout << "DRAWING JETPHOX..." << endl; 
-    TFile* fdir_pp = TFile::Open("/home/samba.old/jaebeom/ForYeonju/ggd_2test_aa_CT14lo.root","read");
-    TFile* fonef_pp = TFile::Open("/home/samba.old/jaebeom/ForYeonju/ggo_2test_aa_CT14lo.root","read");
-    TFile* fdir_pbpb = TFile::Open("/home/samba.old/jaebeom/ForYeonju/ggd_2test_aa_CT14lo.root","read");
-    TFile* fonef_pbpb = TFile::Open("/home/samba.old/jaebeom/ForYeonju/ggo_2test_aa_CT14lo.root","read");
+    TFile* fdir_pp = TFile::Open("/home/samba.old/jaebeom/ForYeonju/ggd_2test_pp_CT14nlo_true.root","read");
+    TFile* fonef_pp = TFile::Open("/home/samba.old/jaebeom/ForYeonju/ggo_2test_pp_CT14nlo_true.root","read");
+    TFile* fdir_pbpb = TFile::Open("/home/samba.old/jaebeom/ForYeonju/ggd_2test_aa_CT14nlo_false_601.root","read");
+    TFile* fonef_pbpb = TFile::Open("/home/samba.old/jaebeom/ForYeonju/ggo_2test_aa_CT14nlo_false_601.root","read");
     //TFile* fdir_pp = TFile::Open("/home/goyeonju/CMS/2016/JETPHOX/jetphox_1.3.1_3_pp/pawres/ggd_2test_pp_0609.root","read");
     //TFile* fonef_pp = TFile::Open("/home/goyeonju/CMS/2016/JETPHOX/jetphox_1.3.1_3_pp/pawres/ggo_2test_pp_0609.root","read");
     //TFile* fdir_pbpb = TFile::Open("/home/goyeonju/CMS/2016/JETPHOX/jetphox_1.3.1_3_pbpb/pawres/ggd_PbPb5TeV_NLO_EPS09_cteq66.root","read");
@@ -344,6 +361,7 @@ void test_photonRaaPlot_withJetphox(TString ver="180805_temp_v21", bool doJETPHO
     
     cout << "Getting JETPHOX histograms..." << endl; 
     TH1D* h1D_jp[3][2][2];//[0:dir, 1:onef, 2:inclusive] [0:Leading Order, 1:Next-to-Leading Order] [0:pbpb, 1:pp]
+    TF1* fit_jp[3][2][2];//[0:dir, 1:onef, 2:inclusive] [0:Leading Order, 1:Next-to-Leading Order] [0:pbpb, 1:pp]
     // direct contribution
     h1D_jp[0][0][0] = (TH1D*) fdir_pbpb->Get("hp40");
     h1D_jp[0][0][0]->SetName("jp_dir_lo_pbpb");
@@ -375,6 +393,40 @@ void test_photonRaaPlot_withJetphox(TString ver="180805_temp_v21", bool doJETPHO
     h1D_jp[2][0][1]->Add(h1D_jp[0][0][1]);
     h1D_jp[2][1][1] = (TH1D*) h1D_jp[1][1][1]->Clone("jp_inclusive_nlo_pp");
     h1D_jp[2][1][1]->Add(h1D_jp[0][1][1]);
+   // 
+   // for(int kk=0;kk<3;++kk){
+   //     for(int jj=0;jj<2;++jj){
+   //         for(int icoll=0;icoll<2;++icoll){
+   //             //fit_jp[kk][jj][icoll] = new TF1(Form("fit_jp_prodMode%d_LO%d_coll%d",kk,jj,icoll),fitf, ptBins[0],ptBins[nPtBin-1],3);
+   //             //fit_jp[kk][jj][icoll]->SetParameters(5.35445e+10,-2.60301e+02,4.81522e+01);
+   //             //fit_jp[kk][jj][icoll] = new TF1(Form("fit_jp_prodMode%d_LO%d_coll%d",kk,jj,icoll),"TMath::Landau(x[0],[1],0)",20,120);
+   //             //fit_jp[kk][jj][icoll]->SetParameters(0.2,1.3);
+   //             fit_jp[kk][jj][icoll] = new TF1(Form("fit_jp_prodMode%d_LO%d_coll%d",kk,jj,icoll),myFunc, ptBins[0],ptBins[nPtBin-1],3);
+   //             fit_jp[kk][jj][icoll]->SetParameters(0.2,1.3);
+   //         }}}
+   // TCanvas* c222 = new TCanvas("c222test", "", 300*2, 300*2); 
+   // c222->Divide(2,2);
+   // c222->cd(1);
+   // h1D_jp[2][0][0]->Fit(fit_jp[2][0][0],"LL R");
+   // h1D_jp[2][0][0]->Fit(fit_jp[2][0][0],"LL R");
+   // fit_jp[2][0][0]->Draw();
+   // h1D_jp[2][0][0]->Draw("same");
+   // c222->cd(2);
+   // h1D_jp[2][1][0]->Fit(fit_jp[2][1][0]);
+   // h1D_jp[2][1][0]->Fit(fit_jp[2][1][0]);
+   // fit_jp[2][1][0]->Draw();
+   // h1D_jp[2][1][0]->Draw("same");
+   // c222->cd(3);
+   // h1D_jp[2][0][1]->Fit(fit_jp[2][0][1]);
+   // h1D_jp[2][0][1]->Fit(fit_jp[2][0][1]);
+   // fit_jp[2][0][1]->Draw();
+   // h1D_jp[2][0][1]->Draw("same");
+   // c222->cd(4);
+   // h1D_jp[2][1][1]->Fit(fit_jp[2][1][1]);
+   // h1D_jp[2][1][1]->Fit(fit_jp[2][1][1]);
+   // fit_jp[2][1][1]->Draw();
+   // h1D_jp[2][1][1]->Draw("same");
+    
     
 
     cout << "Set cosmetics..." << endl; 
@@ -406,9 +458,10 @@ void test_photonRaaPlot_withJetphox(TString ver="180805_temp_v21", bool doJETPHO
     //draw in cross section panel
     //if(doJETPHOX){
         c[1]->cd();
-        for(int icoll=1;icoll<2;++icoll){ // icoll = 0 is pbpb, 1 is pp
+        for(int icoll=0;icoll<2;++icoll){ // icoll = 0 is pbpb, 1 is pp
             for (int k=0; k<nCentBinIF; ++k) { //k=0 is 0-100 % 
-                    hjp_draw_dndpt[icoll][k]->Draw("hist same"); // option C is for a smooth curve
+                    if(icoll==0) hjp_draw_dndpt[icoll][k]->Draw("p same"); // option C is for a smooth curve
+                    else hjp_draw_dndpt[icoll][k]->Draw("hist same"); // option C is for a smooth curve
                // gr_sys[i][k] = scale_graph(gr_sys[i][k],1./hjp_draw_dndpt[icoll][k]);
                // gr_nominal_scaled[k] = scale_graph(gr_nominal[i][k],scale);
                // gr_sys_scaled[k]->Draw("2");
@@ -425,7 +478,7 @@ void test_photonRaaPlot_withJetphox(TString ver="180805_temp_v21", bool doJETPHO
         //hjp_draw_raa->Draw("C same");
         for (int k=0; k<nCentBinIF; ++k) { //k=0 is 0-100 % 
             c_sep[0][k]->cd();
-            //  hjp_draw_raa->Draw("C same");
+            hjp_draw_raa->Draw("same");
         }
 
        // ///////////////////////////////////////////////////////
@@ -459,8 +512,8 @@ void test_photonRaaPlot_withJetphox(TString ver="180805_temp_v21", bool doJETPHO
             else ratio_data_jp[k] = (TH1D*) h1D_nominal[1][k]->Clone(Form("ratio_data_jp_%d",k)); 
 
             ratio_data_jp[k]->Divide(hjp_draw_dndpt[1][0]);
-            ratio_data_jp[k]->GetYaxis()->SetRangeUser(0.5,1.5);
-            ratio_data_jp[k]->SetTitle(";photon E_{T} GeV;DATA/JETPHOX (pp CTEQ66 NLO) ");
+            ratio_data_jp[k]->GetYaxis()->SetRangeUser(0,2.5);
+            ratio_data_jp[k]->SetTitle(";photon E_{T} GeV;DATA / JETPHOX (pp CTEQ66 NLO) ");
             if(k==0) ratio_data_jp[k]->Draw();
             else ratio_data_jp[k]->Draw("same");
         }
@@ -503,7 +556,7 @@ void test_photonRaaPlot_withJetphox(TString ver="180805_temp_v21", bool doJETPHO
 
     c_ratio_data_jp->cd();
     leg_dndpt->Draw("same");
-    c_ratio_data_jp->SaveAs(Form("%splotting/figures/finalPlot_ratio_data_to_JEXPHOX_%s_test_total.pdf",dir.Data(),cap.Data()));
+    c_ratio_data_jp->SaveAs(Form("%splotting/figures/finalPlot_ratio_data_to_JEXPHOX_%s_total.pdf",dir.Data(),cap.Data()));
     
     
     // DRAW extra text e.g. eta on RAA  
@@ -516,10 +569,10 @@ void test_photonRaaPlot_withJetphox(TString ver="180805_temp_v21", bool doJETPHO
     cout << "Save figures..." << endl;
     for (int i=0; i<n_hist_types; ++i) {
         if(hist_types[i] != "dNdpt_corr2_pp") 
-            c[i]->SaveAs(Form("%splotting/figures/finalPlot_%s_%s_test_total.pdf",dir.Data(),hist_types[i].c_str(),cap.Data()));
+            c[i]->SaveAs(Form("%splotting/figures/finalPlot_%s_%s_total.pdf",dir.Data(),hist_types[i].c_str(),cap.Data()));
         for (int k=0; k<nCentBinIF; ++k) { //k=0 is 0-100 % 
             if(hist_types[i] == "dNdpt_corr2_pp" && k>0) continue;
-            c_sep[i][k]->SaveAs(Form("%splotting/figures/finalPlot_%s_%s_test_cent%d_%d.pdf",dir.Data(),hist_types[i].c_str(),cap.Data(),(int)centBins_i[k]/2,(int)centBins_f[k]/2));
+            c_sep[i][k]->SaveAs(Form("%splotting/figures/finalPlot_%s_%s_cent%d_%d.pdf",dir.Data(),hist_types[i].c_str(),cap.Data(),(int)centBins_i[k]/2,(int)centBins_f[k]/2));
         }
     }
 

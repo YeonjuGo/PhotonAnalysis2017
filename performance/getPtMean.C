@@ -1,7 +1,9 @@
 #include "../phoRaaCuts/yjUtility.h"
-#include "../phoRaaCuts/phoRaaCuts_temp.h"
+#include "../phoRaaCuts/phoRaaCuts_190625_temp_v29_purityEtaDep.h"
+//#include "../phoRaaCuts/phoRaaCuts_190625_temp_v29_unfoldingBinning.h"
+//#include "../phoRaaCuts/phoRaaCuts_190625_temp_v29_purityBinning.h"
 
-void getPtMean(TString coll="pbpb", TString ver="temp"){
+void getPtMean(TString coll="pbpb"){
     gStyle -> SetOptStat(0);
 
     TFile *f1 = 0; 

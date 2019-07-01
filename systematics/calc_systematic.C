@@ -13,37 +13,39 @@ void calc_systematic(TString ver="180610_temp_v15")
     gStyle->SetOptStat(0000);
     SetyjPadStyle();
 
-#define _EFF_UP   1
-#define _EFF_DOWN 2
+//#define _EFF_UP   1
+//#define _EFF_DOWN 2
+#define _ID_UP   1
+#define _ID_DOWN 2
 #define _PURITY_UP   3
 #define _PURITY_DOWN 4
-#define _RESOL_SIG_UP  5
-#define _RESOL_SIG_DOWN  6
+//#define _RESOL_SIG_UP  5
+//#define _RESOL_SIG_DOWN  6
 //#define _RESOL_RMS_UP  7
 //#define _RESOL_RMS_DOWN  8
 
     std::vector<std::string> sys_types {
         "nominal",
-        "sys_effUp",
-        "sys_effDown",
+//        "sys_effUp",
+//        "sys_effDown",
+        "sys_IDup",
+        "sys_IDdown",
         "sys_purUp",
         "sys_purDown",
-        "sys_phoEresol_sigUp",
-        "sys_phoEresol_sigDown",
-//        "sys_phoEresol_rmsUp",
-//        "sys_phoEresol_rmsDown",
+        "sys_phoEresol",
         "sys_phoEscale",
         "sys_eleCont",
-        //"sys_phoIso",                                            
-        //"sys_mc",
-        "sys_TAA"
+        "sys_unfolding_svd5"
+//        "sys_TAA"
+////        "sys_TAAdown"
+////        "sys_TAAdown"
     };
     int n_sys_types = sys_types.size();
 
     std::vector<std::string> input_list;
 
     for(int i=0; i<n_sys_types; ++i){
-        input_list.push_back(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/results/output/phoRaa_%s_%s.root",ver.Data(),sys_types.at(i).c_str()));
+        input_list.push_back(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/results/output/phoRaa_afterUnfolding_%s_%s.root",ver.Data(),sys_types.at(i).c_str()));
         cout << "input file : " << input_list.at(i) << endl;
     }
     const int n_input_files = input_list.size();
@@ -153,11 +155,20 @@ void calc_systematic(TString ver="180610_temp_v15")
             std::size_t m = 0;
             TotalSysVar* total_sys_hists = new TotalSysVar();
             //eff total
-            if (valid_input[_EFF_UP] && valid_input[_EFF_DOWN]) {
-                TotalSysVar* eff_sys_hists = new TotalSysVar(systematics[i][k][m], systematics[i][k][m+1]);
-                total_sys_hists->add_SysVar(eff_sys_hists);
+           // if (valid_input[_EFF_UP] && valid_input[_EFF_DOWN]) {
+           //     TotalSysVar* eff_sys_hists = new TotalSysVar(systematics[i][k][m], systematics[i][k][m+1]);
+           //     total_sys_hists->add_SysVar(eff_sys_hists);
+           //     ++m; ++m;
+           // } else if (valid_input[_EFF_UP] ^ valid_input[_EFF_DOWN]) {
+           //     total_sys_hists->add_SysVar(systematics[i][k][m]);
+           //     ++m;
+           // }
+            //ID total
+            if (valid_input[_ID_UP] && valid_input[_ID_DOWN]) {
+                TotalSysVar* id_sys_hists = new TotalSysVar(systematics[i][k][m], systematics[i][k][m+1]);
+                total_sys_hists->add_SysVar(id_sys_hists);
                 ++m; ++m;
-            } else if (valid_input[_EFF_UP] ^ valid_input[_EFF_DOWN]) {
+            } else if (valid_input[_ID_UP] ^ valid_input[_ID_DOWN]) {
                 total_sys_hists->add_SysVar(systematics[i][k][m]);
                 ++m;
             }
@@ -171,14 +182,14 @@ void calc_systematic(TString ver="180610_temp_v15")
                 ++m;
             }
             //resolution sig total(when there's two source)
-            if (valid_input[_RESOL_SIG_UP] && valid_input[_RESOL_SIG_DOWN]) {
-                TotalSysVar* resol_sig_sys_hists = new TotalSysVar(systematics[i][k][m], systematics[i][k][m+1]);
-                total_sys_hists->add_SysVar(resol_sig_sys_hists);
-                ++m; ++m;
-            } else if (valid_input[_RESOL_SIG_UP] ^ valid_input[_RESOL_SIG_DOWN]) {
-                total_sys_hists->add_SysVar(systematics[i][k][m]);
-                ++m;
-            }
+           // if (valid_input[_RESOL_SIG_UP] && valid_input[_RESOL_SIG_DOWN]) {
+           //     TotalSysVar* resol_sig_sys_hists = new TotalSysVar(systematics[i][k][m], systematics[i][k][m+1]);
+           //     total_sys_hists->add_SysVar(resol_sig_sys_hists);
+           //     ++m; ++m;
+           // } else if (valid_input[_RESOL_SIG_UP] ^ valid_input[_RESOL_SIG_DOWN]) {
+           //     total_sys_hists->add_SysVar(systematics[i][k][m]);
+           //     ++m;
+           // }
             //resolution rms total(when there's two source)
            // if (valid_input[_RESOL_RMS_UP] && valid_input[_RESOL_RMS_DOWN]) {
            //     TotalSysVar* resol_rms_sys_hists = new TotalSysVar(systematics[i][k][m], systematics[i][k][m+1]);

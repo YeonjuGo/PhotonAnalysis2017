@@ -8,7 +8,7 @@
 #include "../phoRaaCuts/phoRaaCuts_temp.h"
 
 int compareThree(TTree* t1=0 ,TTree* t2=0,TTree* t3=0,TString var="pt", int nBins=10, double xMin=0, double xMax=10, TCut cut1="",TCut cut2="",TCut cut3="", const char* cap="", bool doWeight=true, bool doEmEnr=false);
-void compare_Data_AllQCD_EmEnr(TString coll="pbpb", TString ver="180802_temp_v20_noSumIsoCorrected", bool doWeight=false, bool doEmEnr=false){
+void compare_Data_AllQCD_EmEnr(TString coll="pbpb", TString ver="190625_temp_v25", bool doWeight=true, bool doEmEnr=true){
 
     const char* fname_1="0";
     const char* fname_2="0";
@@ -50,7 +50,7 @@ void compare_Data_AllQCD_EmEnr(TString coll="pbpb", TString ver="180802_temp_v20
     t3->AddFriend(t3_evt);
     t3->AddFriend(t3_hlt);
     
-    TString cap = Form("%s_%s_hoe_sig_iso",ver.Data(),coll.Data());
+    TString cap = Form("%s_%s_hoe_sig_iso_ele_trig20onMC",ver.Data(),coll.Data());
     if(doWeight) cap+="_weighted";
     else cap+= "_noWeight";
     int nBins = 20;
@@ -59,16 +59,16 @@ void compare_Data_AllQCD_EmEnr(TString coll="pbpb", TString ver="180802_temp_v20
     TCut commonCutDATA = "(1==1)";
 
     if(coll=="pbpb") {
-        commonCutDATA = etaCut && trigCut_low && dataCut && hoeCut && sigmaCut && isoCut; 
-        commonCutMC = etaCut && hoeCut && sigmaCut && isoCut;
+        commonCutDATA = ptCut && etaCut && trigCut_low && dataCut && hoeCut && sigmaCut && isoCut && electronCut; 
+        commonCutMC = ptCut && etaCut && trigCut_mc_low && hoeCut && sigmaCut && isoCut && electronCut;
     } else {
-        commonCutDATA = etaCut && trigCut_pp_low && dataCut_pp && hoeCut_pp && sigmaCut_pp && isoCut_pp; 
-        commonCutMC = etaCut && hoeCut_pp && sigmaCut_pp && isoCut_pp;
+        commonCutDATA = etaCut && trigCut_pp_low && dataCut_pp && hoeCut_pp && sigmaCut_pp && isoCut_pp && electronCut; 
+        commonCutMC = etaCut && hoeCut_pp && trigCut_mc_pp_low && sigmaCut_pp && isoCut_pp && electronCut;
     }
-    compareThree(t1, t2, t3, "phoEt",nBins, 20, 180.0,commonCutMC && mcIsolation,commonCutMC && mcIsolation,commonCutDATA,cap,doWeight,doEmEnr);
+    compareThree(t1, t2, t3, "phoEtCorrected",nBins, 20, 180.0,commonCutMC && mcIsolation,commonCutMC && mcBkgIsolation,commonCutDATA,cap,doWeight,doEmEnr);
     //if(coll=="pbpb") compareThree(t1, t2, t3, "hiBin",nBins, 0, 200.0,commonCutMC && mcIsolation,commonCutMC && mcIsolation,commonCutDATA,cap,doWeight,doEmEnr);
     compareThree(t1, t2, t3, "phoEta",nBins, -1.44, 1.44,commonCutMC && mcIsolation,commonCutMC && mcIsolation,commonCutDATA,cap,doWeight,doEmEnr);
-    //compareThree(t1, t2, t3, "phoPhi",nBins, -TMath::Pi(), TMath::Pi(),commonCutMC && mcIsolation,commonCutMC && mcIsolation,commonCutDATA,cap,doWeight,doEmEnr);
+    compareThree(t1, t2, t3, "phoPhi",nBins, -TMath::Pi(), TMath::Pi(),commonCutMC && mcIsolation,commonCutMC && mcIsolation,commonCutDATA,cap,doWeight,doEmEnr);
 
    // for(Int_t ipt = 0; ipt < nPtBinIF; ++ipt){
    //     TCut ptCut = Form("(phoEt>=%f)&&(phoEt<%f)", ptBins_i[ipt], ptBins_f[ipt]);
@@ -205,19 +205,30 @@ int compareThree(TTree* t1, TTree* t2, TTree* t3, TString var, int nBins, double
 
     l1->AddEntry(h3,"DATA","pl");
     //l1->AddEntry(h3,"PbPb DATA","pl");
-    l1->AddEntry(h1,"AllQCDPhotons","F");
-    if(doEmEnr) l1->AddEntry(h2,"EmEnrichedDijet","F");	
+    l1->AddEntry(h1,"Signal MC","F");
+    if(doEmEnr) l1->AddEntry(h2,"Background MC","F");	
     h3->DrawCopy("p e");
    if(doEmEnr)  h2->DrawCopy("hist e same");
     h1->DrawCopy("hist e same");
     l1->Draw();
     //drawText("PbPb 5 TeV",0.91,0.76,1);
-    drawText("|#eta|<1.44",0.91,0.72,1);
+    float xpos = 0.91;
+    float ypos = 0.72;
+    float dy = 0.05;
+    drawText("|#eta|<1.44",xpos,ypos,1);
+    drawText("p_{T}^{#gamma}>20 GeV",xpos,ypos-dy,1);
+    drawText("H/E<0.1",xpos,ypos-dy*2,1);
+    drawText("#sigma_{i#etai#eta}<0.01",xpos,ypos-dy*3,1);
+    drawText("sumIso<1 GeV",xpos,ypos-dy*4,1);
 
     c->cd(2);
     h1->Divide(h3);
     if(doEmEnr) h2->Divide(h3);
-    h1->SetTitle(Form(";%s;MC/DATA",var.Data()));
+    TString varName = "corrected p_{T}^{#gamma}";
+    if(var=="phoEtCorrected") varName = "corrected p_{T}^{#gamma}";
+    else if(var=="phoEta") varName = "#eta^{#gamma}";
+    else if(var=="phoPhi") varName = "#phi^{#gamma}";
+    h1->SetTitle(Form(";%s;MC/DATA",varName.Data()));
     //double ratioRange = getCleverRange(h1);
     h1->SetAxisRange(0,2,"Y");
     SetHistTextSize(h1);
@@ -225,7 +236,7 @@ int compareThree(TTree* t1, TTree* t2, TTree* t3, TString var, int nBins, double
     h1->DrawCopy("le1");
     if(doEmEnr) h2->DrawCopy("le1 same");
     jumSun(xMin,1,xMax,1);
-    drawText(cap,0.2,c->GetPad(2)->GetBottomMargin()+0.04);
+    //drawText(cap,0.2,c->GetPad(2)->GetBottomMargin()+0.04);
 
     //fitting 
     //TF1* f1 = new TF1("f1", "pol1",0.005,0.02);

@@ -1,3 +1,13 @@
-#void iso_efficiency_withSkimFile_etaDep(TString coll="pbpb", TString ver="v18", bool doWeight=true, bool doBkg=false, bool doSeparation=true){
-root -l -b -q 'iso_efficiency_withSkimFile_etaDep.C++("pbpb","180718_temp_v19", 1)'
-root -l -b -q 'iso_efficiency_withSkimFile_etaDep.C++("pp","180718_temp_v19", 1)'
+#void iso_efficiency_withSkimFile_etaDep(TString coll="pp", TString ver="180802_temp_v20", int pt_i=20, int pt_f=30, bool doWeight=true, bool doBkg=false, bool doSeparation=true){
+root -l -b -q 'iso_efficiency_withSkimFile_etaDep.C++("pbpb","180802_temp_v20",20,30,1)'
+root -l -b -q 'iso_efficiency_withSkimFile_etaDep.C++("pbpb","180802_temp_v20",30,40,1)'
+root -l -b -q 'iso_efficiency_withSkimFile_etaDep.C++("pbpb","180802_temp_v20",40,50,1)'
+root -l -b -q 'iso_efficiency_withSkimFile_etaDep.C++("pbpb","180802_temp_v20",50,60,1)'
+root -l -b -q 'iso_efficiency_withSkimFile_etaDep.C++("pbpb","180802_temp_v20",60,80,1)'
+root -l -b -q 'iso_efficiency_withSkimFile_etaDep.C++("pbpb","180802_temp_v20",80,200,1)'
+root -l -b -q 'iso_efficiency_withSkimFile_etaDep.C++("pp","180802_temp_v20",20,30,1)'
+root -l -b -q 'iso_efficiency_withSkimFile_etaDep.C++("pp","180802_temp_v20",30,40,1)'
+root -l -b -q 'iso_efficiency_withSkimFile_etaDep.C++("pp","180802_temp_v20",40,50,1)'
+root -l -b -q 'iso_efficiency_withSkimFile_etaDep.C++("pp","180802_temp_v20",50,60,1)'
+root -l -b -q 'iso_efficiency_withSkimFile_etaDep.C++("pp","180802_temp_v20",60,80,1)'
+root -l -b -q 'iso_efficiency_withSkimFile_etaDep.C++("pp","180802_temp_v20",80,200,1)'

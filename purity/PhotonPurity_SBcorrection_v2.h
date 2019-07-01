@@ -6,7 +6,7 @@
 #include <TCut.h>
 #include <TF1.h>
 #include <string>
-#include "../phoRaaCuts/phoRaaCuts_temp.h"
+//#include "../phoRaaCuts/phoRaaCuts_temp.h"
 
 #include "../ElectroWeak-Jet-Track-Analyses/Utilities/interface/CutConfigurationParser.h"
 
@@ -15,6 +15,7 @@ public:
   Double_t nSig;
   Double_t nSigErr;
   Double_t purity;
+  Double_t purityErr;
   Double_t chisq;
   Double_t sigMeanShift;
   Double_t sigMeanShiftErr;
@@ -94,6 +95,7 @@ PhotonPurity doFit(CutConfiguration config, TH1D* hSig=0, TH1D* hBkg=0, TH1D* hD
   Double_t nevError = f->GetParError(0);
   Double_t ratioError = f->GetParError(1);
   Double_t shiftError = f->GetParError(2);
+  Double_t purityError = f->GetParError(2);
 
   std::cout << "nev: " << nev << " nevError: " << nevError << std::endl;
   std::cout << "ratio: " << ratio << " ratioError: " << ratioError << std::endl;
@@ -117,6 +119,7 @@ PhotonPurity doFit(CutConfiguration config, TH1D* hSig=0, TH1D* hBkg=0, TH1D* hD
   Double_t ss1 = hSigPdf->Integral(1, hSigPdf->FindBin(purityBinVal),"width");
   Double_t bb1 = hBckPdf->Integral(1, hBckPdf->FindBin(purityBinVal),"width");
   res.purity = ss1/(ss1+bb1);
+  res.purityErr = ss1/(ss1+bb1)*(TMath::Sqrt((res.nSigErr/res.nSig)*(res.nSigErr/res.nSig)+(res.ratioErr/res.ratio)*(res.ratioErr/res.ratio)));
 
   res.sigPdf = (TH1F*)hSigPdf->Clone(Form("%s_sig",hSig->GetName()));
   res.bckPdf = (TH1F*)hBckPdf->Clone(Form("%s_bck",hBkg->GetName()));
@@ -148,10 +151,10 @@ PhotonPurity getPurity(const TString coll, CutConfiguration config, TTree *dataT
   TString bkgshift = "+";
   bkgshift += backgroundShift;
  
-  TString varHere="";
-  if(coll=="pp") varHere=purityVar_pp;
-  else if(coll=="pbpb") varHere=purityVar;
-  else cout << "There's no '" << coll << "' type of collision" << endl;
+  TString varHere="phoSigmaIEtaIEta_2012";
+  //if(coll=="pp") varHere=purityVar_pp;
+  //else if(coll=="pbpb") varHere=purityVar;
+  //else cout << "There's no '" << coll << "' type of collision" << endl;
 
 
 
@@ -193,6 +196,7 @@ PhotonPurity getPurity(const TString coll, CutConfiguration config, TTree *dataT
   PhotonPurity fitr = doFit(config, hSig, hBkg, hCand);
 
   std::cout << ">>>>Purity: " << fitr.purity << std::endl;
+  std::cout << ">>>>PurityError: " << fitr.purityErr << std::endl;
   std::cout << "nSig: " << fitr.nSig << std::endl;
   std::cout << "nSigErr: " << fitr.nSigErr << std::endl;
   std::cout << "chisq: " << fitr.chisq << std::endl;

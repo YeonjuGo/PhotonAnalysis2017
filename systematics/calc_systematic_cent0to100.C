@@ -17,19 +17,17 @@ void calc_systematic_cent0to100(TString ver="180619_temp_v17")
 
     std::vector<std::string> sys_types {
         //"nominal",
-        "sys_effUp",
-        "sys_effDown",
-        "sys_purUp",
-        "sys_purDown",
-        "sys_phoEresol_sigUp",                                              
-        "sys_phoEresol_sigDown",                                              
-//        "sys_phoEresol_rmsUp",                                              
-//        "sys_phoEresol_rmsDown",                                              
-        "sys_phoEscale",
-        "sys_eleCont",
-        //"sys_phoIso",                                            
-        //"sys_mc",                                              
-        "sys_TAA"                                              
+//        "sys_effUp",
+//        "sys_effDown",
+//         "sys_IDup",
+//         "sys_IDdown",
+         "sys_purUp",
+         "sys_purDown",
+         "sys_phoEresol",
+         "sys_phoEscale",
+         "sys_eleCont",
+         "sys_unfolding_svd5",
+         "sys_TAA"        
     };
     int n_sys_types = sys_types.size();
 
@@ -48,9 +46,10 @@ void calc_systematic_cent0to100(TString ver="180619_temp_v17")
         for(int k=0; k<n_sys_types; ++k){
             list.push_back(Form("%s_abs_%s",sys_method.at(i).c_str(),sys_types.at(k).c_str()));
         }
-        list.push_back(Form("%s_sys_effUp_sys_effDown_total",sys_method.at(i).c_str()));
+        //list.push_back(Form("%s_sys_IDup_sys_IDdown_total",sys_method.at(i).c_str()));
+        //list.push_back(Form("%s_sys_effUp_sys_effDown_total",sys_method.at(i).c_str()));
         list.push_back(Form("%s_sys_purUp_sys_purDown_total",sys_method.at(i).c_str()));
-        list.push_back(Form("%s_sys_phoEresol_sigUp_sys_phoEresol_sigDown_total",sys_method.at(i).c_str()));
+        //list.push_back(Form("%s_sys_phoEresol_sigUp_sys_phoEresol_sigDown_total",sys_method.at(i).c_str()));
        // list.push_back(Form("%s_sys_phoEresol_rmsUp_sys_phoEresol_rmsDown_total",sys_method.at(i).c_str()));
         list.push_back(Form("%s_total",sys_method.at(i).c_str()));
     }
@@ -73,6 +72,7 @@ void calc_systematic_cent0to100(TString ver="180619_temp_v17")
             //if(hist_types[i] == "dNdpt_corr2_pp") continue; 
             for (int k=0; k<nCentBinIF; ++k) { //k=0 is 0-100%
         cout << "bba" << endl;
+           cout << list[j] << endl;
                 if(hist_types[i] == "dNdpt_corr2_pp" && k>0) continue;
                 if(hist_types[i] == "Raa" && (list[j] == "diff_abs_sys_TAA" || list[j] == "ratio_abs_sys_TAA") ){
                    cout << list[j] << endl;  continue;}
@@ -93,7 +93,7 @@ void calc_systematic_cent0to100(TString ver="180619_temp_v17")
     /////////////////////////////////////////////////////////
     // Calculate 0-100 % bin
     std::cout << "Calculate 0-100 \% bin" << endl;
-    TFile* f_raw = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/results/output/rawDist_%s_nominal.root",ver.Data()));
+    TFile* f_raw = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/results/output/rawDist_%s_nominal_splitPD.root",ver.Data()));
     TH1D* h1D_raw[nCentBinIF]; 
     double weight[nCentBinIF];
     double entries[nCentBinIF];

@@ -1,0 +1,13 @@
+#void makePurityOutputFile_lastBinMerged(const TString coll="pp", const TString ver="190625_temp_v29_sys_purDown", bool doSplitPD=true, bool doPreScale=1)
+root -l -b -q 'makePurityOutputFile_lastBinMerged.C++("pbpb","190625_temp_v29_nominal")'
+root -l -b -q 'makePurityOutputFile_lastBinMerged.C++("pbpb","190625_temp_v29_sys_purUp")'
+root -l -b -q 'makePurityOutputFile_lastBinMerged.C++("pbpb","190625_temp_v29_sys_purDown")'
+root -l -b -q 'makePurityOutputFile_lastBinMerged.C++("pbpb","190625_temp_v29_sys_phoEscale")'
+root -l -b -q 'makePurityOutputFile_lastBinMerged.C++("pbpb","190625_temp_v29_sys_phoEresol")'
+root -l -b -q 'makePurityOutputFile_lastBinMerged.C++("pbpb","190625_temp_v29_sys_eleCont")'
+root -l -b -q 'makePurityOutputFile_lastBinMerged.C++("pp","190625_temp_v29_nominal")'
+root -l -b -q 'makePurityOutputFile_lastBinMerged.C++("pp","190625_temp_v29_sys_purUp")'
+root -l -b -q 'makePurityOutputFile_lastBinMerged.C++("pp","190625_temp_v29_sys_purDown")'
+root -l -b -q 'makePurityOutputFile_lastBinMerged.C++("pp","190625_temp_v29_sys_phoEscale")'
+root -l -b -q 'makePurityOutputFile_lastBinMerged.C++("pp","190625_temp_v29_sys_phoEresol")'
+root -l -b -q 'makePurityOutputFile_lastBinMerged.C++("pp","190625_temp_v29_sys_eleCont")'

@@ -9,7 +9,7 @@
 const float delta2 = 0.15*0.15;
 const float delta = 0.15;
 
-void reco_efficiency_withForest(TString coll="pbpb", TString ver="Cymbal_noFlt30_in4cent")
+void reco_efficiency_withForest(TString coll="pbpb", TString ver="Cymbal_withExt_190626_pt20to300")
 {
     cout << " :::::: reco_efficiency_withForest.C :::::: " << endl;
     TH1::SetDefaultSumw2();

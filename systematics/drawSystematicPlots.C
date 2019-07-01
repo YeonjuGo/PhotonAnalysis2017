@@ -16,19 +16,17 @@ void drawSystematicPlots(TString ver="180619_temp_v17")
     setTDRStyle();
 
     std::vector<std::string> sys_types {
-        "sys_effUp",
-        "sys_effDown",
+//        "sys_effUp",
+//        "sys_effDown",
+        "sys_IDup",
+        "sys_IDdown",
         "sys_purUp",
         "sys_purDown",
-        "sys_phoEresol_sigUp",                                              
-        "sys_phoEresol_sigDown",                                              
-       // "sys_phoEresol_rmsUp",                                              
-       // "sys_phoEresol_rmsDown",                                              
+        "sys_phoEresol",
         "sys_phoEscale",
         "sys_eleCont",
-        //"sys_phoIso",                                              
-        //"sys_mc",                                              
-        "sys_TAA",                                              
+        "sys_unfolding_svd5"
+//        "sys_TAA"
     };
     int n_sys_types = sys_types.size();
 
@@ -61,7 +59,8 @@ void drawSystematicPlots(TString ver="180619_temp_v17")
     }
     const int n_list = list.size();
 
-    TFile* file = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/systematics/output/systematics_%s_cent0to100.root",ver.Data()));
+    TFile* file = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/systematics/output/systematics_%s.root",ver.Data()));
+    //TFile* file = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/systematics/output/systematics_%s_cent0to100.root",ver.Data()));
 
     TH1D* h[n_hist_types][n_list][n_sys_method][nCentBinIF]; 
     TCanvas* c[n_hist_types][n_list][n_sys_method]; 
@@ -96,6 +95,8 @@ void drawSystematicPlots(TString ver="180619_temp_v17")
                     else {
                         if(hist_types[i] == "Raa") h[i][j][l][k]->GetYaxis()->SetRangeUser(0,0.3);
                     }
+
+                    h[i][j][l][k]->GetXaxis()->SetRangeUser(ptBins_unfolding[1], ptBins_unfolding[nPtBin_unfolding-rejectPtBins[k]-1]);
                     //if(sys_method[l]=="ratio") cout << "list name including ratio = " << list.at(j).c_str() << endl;
 
                     h[i][j][l][k]->Draw();
@@ -126,6 +127,7 @@ void drawSystematicPlots(TString ver="180619_temp_v17")
                 if(hist_types[i] == "Raa" && (list[j] == "abs_sys_TAA") ) continue;
                 h[i][j][1][k]->GetYaxis()->SetTitle("|(Variation-Nominal)/Nominal|");
                 h[i][j][1][k]->GetYaxis()->SetRangeUser(0,0.5);
+                h[i][j][1][k]->GetXaxis()->SetRangeUser(ptBins_unfolding[1], ptBins_unfolding[nPtBin_unfolding-rejectPtBins[k]-1]);
                 h[i][j][1][k]->SetLineColor(colorStyle[j]);
                 if(j==0) h[i][j][1][k]->Draw("hist");
                 else h[i][j][1][k]->Draw("hist same");
@@ -133,9 +135,10 @@ void drawSystematicPlots(TString ver="180619_temp_v17")
                 //to obtaion legend
                 if(i==0 && k==0){
                     string tempSt = "";
-                    if(j==0) tempSt = "Tatal";
+                    if(j==0) tempSt = "Total";
                     else tempSt = list[j].substr(list[j].find("sys")+4);
                     if(tempSt=="purUp_sys_purDown_total") tempSt = "purUp_purDown";
+                    else if(tempSt=="IDup_sys_IDdown_total") tempSt = "IDup_IDdown";
                     else if(tempSt=="effUp_sys_effDown_total") tempSt = "effUp_effDown";
                     else if(tempSt=="phoEresol_sigUp_sys_phoEresol_sigDown_total") tempSt = "Eresol_SIG_Up_Down";
                     else if(tempSt=="phoEresol_rmsUp_sys_phoEresol_rmsDown_total") tempSt = "Eresol_RMS_Up_Down";
@@ -145,9 +148,10 @@ void drawSystematicPlots(TString ver="180619_temp_v17")
                 }
                 if(hist_types[i]=="dNdpt_corr2_pp" && k==0){
                     string tempSt = "";
-                    if(j==0) tempSt = "Tatal";
+                    if(j==0) tempSt = "Total";
                     else tempSt = list[j].substr(list[j].find("sys")+4);
                     if(tempSt=="purUp_sys_purDown_total") tempSt = "purUp_purDown";
+                    else if(tempSt=="IDup_sys_IDdown_total") tempSt = "IDup_IDdown";
                     else if(tempSt=="effUp_sys_effDown_total") tempSt = "effUp_effDown";
                     else if(tempSt=="phoEresol_sigUp_sys_phoEresol_sigDown_total") tempSt = "Eresol_SIG_Up_Down";
                     else if(tempSt=="phoEresol_rmsUp_sys_phoEresol_rmsDown_total") tempSt = "Eresol_RMS_Up_Down";
