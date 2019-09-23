@@ -26,19 +26,19 @@ void calc_systematic(TString ver="180610_temp_v15")
 
     std::vector<std::string> sys_types {
         "nominal",
-//        "sys_effUp",
+        "sys_TnP",
 //        "sys_effDown",
-        "sys_IDup",
-        "sys_IDdown",
+//        "sys_IDup",
+//        "sys_IDdown",
         "sys_purUp",
         "sys_purDown",
         "sys_phoEresol",
         "sys_phoEscale",
         "sys_eleCont",
-        "sys_unfolding_svd5"
-//        "sys_TAA"
-////        "sys_TAAdown"
-////        "sys_TAAdown"
+        "sys_unfolding_MCsize",
+        "sys_TAA"
+        //"sys_TAAup",
+        //"sys_TAAdown"
     };
     int n_sys_types = sys_types.size();
 
@@ -115,8 +115,12 @@ void calc_systematic(TString ver="180610_temp_v15")
                 if (!valid_input[m])
                     continue;
                 
-                if(hist_types[i] == "dNdpt_corr2_pp" && sys_types[m]=="sys_TAA") continue; 
-                if(hist_types[i] == "Raa" && sys_types[m]=="sys_TAA") continue; 
+                if(hist_types[i] == "dNdpt_corr2_pp"){
+                    if(sys_types[m]=="sys_TAA") continue; 
+                    if(sys_types[m]=="sys_TAAup") continue; 
+                    if(sys_types[m]=="sys_TAAdown") continue; 
+                }
+                //if(hist_types[i] == "Raa" && sys_types[m]=="sys_TAA") continue; 
                 TH1D* h1D_varied = (TH1D*)input_files[m]->Get(Form("h1D_%s", hist_name.c_str()));
 
                 SysVar* sys_hists = new SysVar(hist_name, sys_types[m]);

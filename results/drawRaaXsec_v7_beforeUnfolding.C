@@ -392,6 +392,7 @@ void drawRaaXsec_v7_beforeUnfolding(TString ver="180731_temp_v19_nominal", bool 
         h1D_raw[j]->Write();
         h1D_eff[j]->Write();
         h1D_pur[j]->Write();
+        fit_pur[j]->Write();
         h1D_Raa[j]->Write();
         for(int ii=0;ii<3;ii++){
             h1D_corr[ii][j]->Write();
@@ -402,6 +403,7 @@ void drawRaaXsec_v7_beforeUnfolding(TString ver="180731_temp_v19_nominal", bool 
     h1D_rawpp->Write();
     h1D_effpp->Write();
     h1D_purpp->Write();
+    fit_purpp->Write();
     for(int ii=0;ii<3;ii++){
         h1D_corrpp[ii]->Write();
     }

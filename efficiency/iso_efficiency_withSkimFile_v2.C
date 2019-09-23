@@ -7,7 +7,8 @@
 #include "../phoRaaCuts/yjUtility.h"
 #include "../phoRaaCuts/phoRaaCuts_temp.h"
 bool isConsBin = false;
-const int colHere[]={2,4,8,kYellow+2,kCyan+1,kOrange+7,kViolet-7};
+const int colHere[]={kBlack,kPink-6,kGreen+3,kBlue-3,kOrange+4,kBlack};
+//const int colHere[]={2,4,8,kYellow+2,kCyan+1,kOrange+7,kViolet-7};
 const int markerStyle[]={24,33,26,23,29,22,24,33};
 void iso_efficiency_withSkimFile_v2(TString coll="pbpb", TString ver="190222_temp_v27_nominal", bool doWeight=true, bool doBkg=false, bool doSeparation=true){
     
@@ -165,7 +166,7 @@ void iso_efficiency_withSkimFile_v2(TString coll="pbpb", TString ver="190222_tem
     /////////////////////////////////////////////////////////////////////
     // DRAWING : Centrality Dependence (Total Efficiency) 
     TCanvas* c1 =new TCanvas(Form("c%d",2),"", 400,400);
-    //c1->SetLogx(); 
+    c1->SetLogx(); 
     for(Int_t i=0;i<nCENTBINS;++i){
         SetHistTextSize(sig_eff_draw[i][0]);
        // if(i==0) {

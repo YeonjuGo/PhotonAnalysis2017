@@ -8,7 +8,7 @@
 bool isConsBin = false;
 const int colHere[]={2,4,8,kYellow+2,kCyan+1,kOrange+7,kViolet-7};
 const int markerStyle[]={24,33,26,23,29,22,24,33};
-void iso_efficiency_withSkimFile(TString coll="pbpb", TString ver="test", bool doWeight=true, bool doBkg=false, bool doSeparation=true){
+void iso_efficiency_withSkimFile(TString coll="pbpb", TString ver="190703_temp_v31_nominal", bool doWeight=true, bool doBkg=false, bool doSeparation=true){
     
     cout << " :::::: iso_efficiency_withSkimFile.C :::::: " << endl;
     if(doSeparation) cout << " :::::: Isolation Separation will be processed :::::: " << endl;
@@ -162,7 +162,7 @@ void iso_efficiency_withSkimFile(TString coll="pbpb", TString ver="test", bool d
     /////////////////////////////////////////////////////////////////////
     // DRAWING : Centrality Dependence (Total Efficiency) 
     TCanvas* c1 =new TCanvas(Form("c%d",2),"", 400,400);
-    //c1->SetLogx(); 
+    c1->SetLogx(); 
     for(Int_t i=0;i<nCENTBINS;++i){
         SetHistTextSize(sig_eff_draw[i][0]);
        // if(i==0) {
@@ -212,8 +212,10 @@ void iso_efficiency_withSkimFile(TString coll="pbpb", TString ver="test", bool d
             if(i==0) l2->AddEntry(sig_eff_draw[i][j], Form("%s",effSt_legend[j].Data()));
         }
         l2->Draw("same");
-        if(coll=="pbpb") drawText(Form("%s %d%s-%d%s",coll.Data(),centBins_i[i]/2,"%",centBins_f[i]/2,"%"),0.2,1.0-c1->GetBottomMargin()+0.06,0,kBlack,16);
-        else drawText(Form("%s",coll.Data()),0.2,1.0-c1->GetBottomMargin()+0.06,0,kBlack,16);
+        if(coll=="pbpb") drawText(Form("%s %d%s-%d%s",coll.Data(),centBins_i[i]/2,"%",centBins_f[i]/2,"%"),0.7,0.55,0,kBlack,16);
+        else drawText(Form("%s",coll.Data()),0.7,0.55,0,kBlack,16);
+        //if(coll=="pbpb") drawText(Form("%s %d%s-%d%s",coll.Data(),centBins_i[i]/2,"%",centBins_f[i]/2,"%"),0.2,1.0-c1->GetBottomMargin()+0.06,0,kBlack,16);
+        //else drawText(Form("%s",coll.Data()),0.2,1.0-c1->GetBottomMargin()+0.06,0,kBlack,16);
         if(coll=="pbpb") c2[i]->SaveAs(Form("%sfigures/efficiency_iso_%s_isoDep_%s_cent%d%s-%d%s.pdf",dir.Data(),coll.Data(),ver.Data(),centBins_i[i]/2,"%",centBins_f[i]/2,"%"));
         else c2[i]->SaveAs(Form("%sfigures/efficiency_iso_%s_isoDep_%s.pdf",dir.Data(),coll.Data(),ver.Data()));
     }

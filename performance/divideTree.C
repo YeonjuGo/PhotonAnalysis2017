@@ -3,18 +3,25 @@
 #include <TChain.h>
 static const long MAXTREESIZE = 10000000000;
 
-void divideTree(TString coll="pbpb")
+void divideTree(TString coll="pp")
 {
     using namespace std;
 
-    TString skimVer = "2018-08-15-nominal";
+    TString skimVer = "2019-07-02-meanEcorr";
+    //TString skimVer = "2019-06-30-nominal";
     //TString skimVer = "2019-02-25-nominal";
-    TString fname = Form("/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/%s/PbPb_MC_photonRaaSkim_Cymbal.root",skimVer.Data());
-    TString fname_out = Form("/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/%s/PbPb_MC_photonRaaSkim_Cymbal_splitMC_even_odd.root",skimVer.Data());
+    TString fname = Form("/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/%s/PbPb_MC_photonRaaSkim_Cymbal_190702_meanEcorr.root",skimVer.Data());
+    TString fname_out = Form("/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/%s/PbPb_MC_photonRaaSkim_Cymbal_190702_meanEcorr_splitMC_even_odd.root",skimVer.Data());
     if(coll=="pp"){
-        fname = Form("/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/%s/pp_MC_photonRaaSkim.root",skimVer.Data());
-        fname_out = Form("/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/%s/pp_MC_photonRaaSkim_splitMC_even_odd.root",skimVer.Data());
+        fname = Form("/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/%s/pp_MC_photonRaaSkim_190702_meanEcorr.root",skimVer.Data());
+        fname_out = Form("/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/%s/pp_MC_photonRaaSkim_190702_meanEcorr_splitMC_even_odd.root",skimVer.Data());
     }
+    //TString fname = Form("/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/%s/PbPb_MC_photonRaaSkim_Cymbal.root",skimVer.Data());
+    //TString fname_out = Form("/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/%s/PbPb_MC_photonRaaSkim_Cymbal_splitMC_even_odd.root",skimVer.Data());
+    //if(coll=="pp"){
+    //    fname = Form("/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/%s/pp_MC_photonRaaSkim.root",skimVer.Data());
+    //    fname_out = Form("/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/%s/pp_MC_photonRaaSkim_splitMC_even_odd.root",skimVer.Data());
+    //}
     //TString fname_even = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2019-02-25-nominal/PbPb_MC_photonRaaSkim_Cymbal_even.root";
     //TString fname_odd = "/home/goyeonju/CMS/Files/photon2016/GAMMAJETFILES/2019-02-25-nominal/PbPb_MC_photonRaaSkim_Cymbal_odd.root";
 

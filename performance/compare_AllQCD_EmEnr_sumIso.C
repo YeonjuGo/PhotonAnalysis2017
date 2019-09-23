@@ -71,11 +71,12 @@ void compare_AllQCD_EmEnr_sumIso(TString coll="PbPb"){
         for(Int_t jcent = 0; jcent < nCentBinIF_; ++jcent){
             TCut centCut_ = Form("(hiBin>=%d)&&(hiBin<%d)",centBins_i_[jcent],centBins_f_[jcent]);
             if(coll=="pp") centCut_ = "hiBin >-999";
-            TCut totComCut = commonCut && ptCut_ && centCut_;
+            TCut totComCut = commonCut && ptCut_ && centCut_ && hoeCut;
             TString ptTxt = Form("%d GeV < p_{T}^{#gamma} < %d GeV", (int)ptBins_i_[ipt], (int)ptBins_f_[ipt]); 
             TString centTxt = Form("Centrality %d - %d %s",centBins_i_[jcent]/2,centBins_f_[jcent]/2, "%"); 
             if(coll=="PbPb") cap = Form("%s_pt%dto%d_cent%dto%d",coll.Data(),(int)ptBins_i_[ipt],(int)ptBins_f_[ipt],centBins_i_[jcent]/2,centBins_f_[jcent]/2);
             else cap = Form("%s_pt%dto%d",coll.Data(),(int)ptBins_i_[ipt],(int)ptBins_f_[ipt]);
+            cap += "_hoe";
             compareTwo(t1, t2, "pho_sumIsoCorrected",100, -20, 80,mcIsolation && totComCut, mcBkgIsolation && totComCut,cap,ptTxt,centTxt, coll);
             compareTwo(t1, t2, "phoSigmaIEtaIEta_2012",100, 0.002, 0.02,mcIsolation && totComCut, mcBkgIsolation && totComCut,cap,ptTxt,centTxt, coll);
             //cap += "_noGenCut";

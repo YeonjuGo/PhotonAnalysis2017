@@ -36,11 +36,13 @@ const int colHere[]={1,2,4,kGreen+1,kYellow+1};
 const int markerHere[]={20,33,34,29,24,29};
 const int markerHere_closed[]={20,33,33,33,33};
 
-void drawRaaXsec_v7_afterUnfolding(TString ver="190303_temp_v28_nominal", bool doSplitPD = true,  bool usePurityFit = true)
+void drawRaaXsec_v7_afterUnfolding(TString ver="190703_temp_v31_pur_SBcorr_centDep", bool doSplitPD = true,  bool usePurityFit = true,  bool doUnfoldingSplitMC = false)
 {
     TH1::SetDefaultSumw2();
     gStyle->SetOptStat(0000);
-    TFile* f_in = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/results/output/Unfold_%s.root",ver.Data()));
+    TString fname_in = Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/results/output/Unfold_%s.root",ver.Data());
+    if(doUnfoldingSplitMC) fname_in = Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/results/output/Unfold_%s_splitMC.root",ver.Data());
+    TFile* f_in = new TFile(Form("%s",fname_in.Data()));
     TFile* f_in_2 = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/results/output/phoRaa_%s_beforeUnfolding.root",ver.Data()));
 
     TH1D* h1D_corr[nCentBinIF]; // corrected yield 1. purity, 2. efficiency 
@@ -211,9 +213,20 @@ void drawRaaXsec_v7_afterUnfolding(TString ver="190303_temp_v28_nominal", bool d
     l1->Draw("same");
     if(!usePurityFit) c1->SaveAs(Form("%sfigures/phoRaa_afterUnfolding_%s_noPurityFit.pdf",dir.Data(),ver.Data()));
     else c1->SaveAs(Form("%sfigures/phoRaa_afterUnfolding_%s.pdf",dir.Data(),ver.Data()));
+    
+    TCanvas* c1_each[nCentBinIF];
+    for(int j=0;j<nCentBinIF;j++){
+        c1_each[j] = new TCanvas(Form("craa_each_cent%d",j),"",400,400);
+        h1D_Raa[j]->Draw("pel");
+        jumSun(ptBins_unfolding[0],1,ptBins_unfolding[nPtBin_unfolding],1);
+        jumSun(ptBins_unfolding[1],0.5,ptBins_unfolding[1],1.5);
+        jumSun(ptBins_unfolding[nPtBin_unfolding-1],0.5,ptBins_unfolding[nPtBin_unfolding-1],1.5);
+        if(!usePurityFit) c1_each[j]->SaveAs(Form("%sfigures/phoRaa_afterUnfolding_%s_noPurityFit_cent%d.pdf",dir.Data(),ver.Data(),j));
+        else c1_each[j]->SaveAs(Form("%sfigures/phoRaa_afterUnfolding_%s_cent%d.pdf",dir.Data(),ver.Data(),j));
+    }
    
     /////////////////////////////////////////////////////////////////////////// 
-    /// Draw cross section
+    /// Draw cross section : all in one panel
 
     TLegend* l2 = new TLegend(0.6,0.65,0.8,0.89);
     legStyle(l2);
@@ -239,6 +252,40 @@ void drawRaaXsec_v7_afterUnfolding(TString ver="190303_temp_v28_nominal", bool d
     l2->Draw("same");
     if(!usePurityFit) c2->SaveAs(Form("%sfigures/phoXsec_afterUnfolding_%s_noPurityFit.pdf",dir.Data(),ver.Data()));
     else c2->SaveAs(Form("%sfigures/phoXsec_afterUnfolding_%s.pdf",dir.Data(),ver.Data()));
+
+    /////////////////////////////////////////////////////////////////////////// 
+    /// Draw cross section : each centrality separately
+    float ymin = 0.008;
+    float ymax = 10000;
+    TCanvas* c2_each[nCentBinIF];
+    for(int j=0;j<nCentBinIF;j++){
+        c2_each[j] = new TCanvas(Form("cXsec_each_cent%d",j),"",400,400);
+        c2_each[j]->SetLogy();
+        h1D_corr[j]->Draw("pel");
+        jumSun(ptBins_unfolding[1],ymin,ptBins_unfolding[1],ymax);
+        jumSun(ptBins_unfolding[nPtBin_unfolding-1],ymin,ptBins_unfolding[nPtBin_unfolding-1],ymax);
+        if(!usePurityFit) c2_each[j]->SaveAs(Form("%sfigures/phoXsec_afterUnfolding_%s_noPurityFit_cent%d.pdf",dir.Data(),ver.Data(),j));
+        else c2_each[j]->SaveAs(Form("%sfigures/phoXsec_afterUnfolding_%s_cent%d.pdf",dir.Data(),ver.Data(),j));
+
+        int nPtBin_unfolding_centDep = nPtBin_unfolding-rejectPtBins[j];
+        cout << "PbPb cross section values for cent " << j << endl;
+        for(int ipt=0;ipt<nPtBin_unfolding_centDep;++ipt){
+            double val = h1D_corr[j]->GetBinContent(ipt+1);
+            cout << "pt " << ptBins_unfolding[ipt] << " - " << ptBins_unfolding[ipt+1] << " : " << val << endl;
+        }
+    }
+    TCanvas* c2_pp = new TCanvas(Form("cXsec_each_%s","pp"),"",400,400);
+    c2_pp->SetLogy();
+    h1D_corrpp->Draw("pe");
+    jumSun(ptBins_unfolding[1],ymin,ptBins_unfolding[1],ymax);
+    jumSun(ptBins_unfolding[nPtBin_unfolding-1],ymin,ptBins_unfolding[nPtBin_unfolding-1],ymax);
+    if(!usePurityFit) c2_pp->SaveAs(Form("%sfigures/phoXsec_afterUnfolding_%s_noPurityFit_pp.pdf",dir.Data(),ver.Data()));
+    else c2_pp->SaveAs(Form("%sfigures/phoXsec_afterUnfolding_%s_pp.pdf",dir.Data(),ver.Data()));
+    cout << "pp cross section values " << endl;
+    for(int ipt=0;ipt<nPtBin_unfolding;++ipt){
+        double val = h1D_corrpp->GetBinContent(ipt+1);
+        cout << "pt " << ptBins_unfolding[ipt] << " - " << ptBins_unfolding[ipt+1] << " : " << val << endl;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     /// Store histograms in output file 

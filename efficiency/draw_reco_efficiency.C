@@ -5,9 +5,11 @@
 
 #include "../phoRaaCuts/yjUtility.h"
 #include "../phoRaaCuts/phoRaaCuts_temp.h"
-const int colHere[]={2,4,8,kYellow+2,kCyan+1};
-const int markerStyle[]={20,33,22,23,22,29};
-void draw_reco_efficiency(TString coll="pbpb", TString ver="Drum_v1_and_ext1", bool doSeparation=true){
+//const int colHere[]={2,4,8,kYellow+2,kCyan+1};
+//const int markerStyle[]={20,33,22,23,22,29};
+const int colHere[]={kBlack,kPink-5,kGreen+3,kBlue-3,kOrange+4,kBlack};
+const int markerStyle[]={24,33,26,34,29,22,24,33};
+void draw_reco_efficiency(TString coll="pbpb", TString ver="190625_temp_v29_Cymbal_v1_and_ext1", bool doSeparation=true){
     TH1::SetDefaultSumw2();
     gStyle->SetOptStat(0);
     SetyjPadStyle();
@@ -17,7 +19,9 @@ void draw_reco_efficiency(TString coll="pbpb", TString ver="Drum_v1_and_ext1", b
     } else if(coll=="pbpb"){
         fname = Form("./output/pbpb_reco_efficiency_%s.root",ver.Data());
     }
-    fname = "output/pbpb_reco_efficiency_HydjetDrum_v1_and_ext1.root";
+    fname = "output/pbpb_reco_efficiency_Cymbal_withExt_190626_pt20to300.root";
+    //fname = "output/pp_reco_efficiency_withExt_190626_pt20to300.root";
+    //fname = "output/pbpb_reco_efficiency_HydjetDrum_v1_and_ext1.root";
     TFile* f1 = new TFile(fname,"read");
 
     Int_t nCENTBINS = nCentBinIF;
@@ -49,7 +53,7 @@ void draw_reco_efficiency(TString coll="pbpb", TString ver="Drum_v1_and_ext1", b
     for(Int_t i=0;i<nCENTBINS;++i){
         SetHistTextSize(sig_eff_draw[i]);
         if(i==0) {
-            sig_eff_draw[i]->SetMarkerStyle(33);
+            sig_eff_draw[i]->SetMarkerStyle(24);
             sig_eff_draw[i]->SetMarkerSize(1.4);
         } else{
             sig_eff_draw[i]->SetMarkerStyle(markerStyle[i]);

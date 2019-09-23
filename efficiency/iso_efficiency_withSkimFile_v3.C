@@ -11,9 +11,10 @@
 #include "../phoRaaCuts/phoRaaCuts_temp.h"
 
 bool isConsBin = false;
-const int colHere[]={2,4,8,kYellow+2,kCyan+1,kOrange+7,kViolet-7};
-const int markerStyle[]={24,33,26,23,29,22,24,33};
-void iso_efficiency_withSkimFile_v3(TString coll="pbpb", TString ver="190222_temp_v27_nominal", bool doWeight=true, bool doBkg=false, bool doSeparation=true){
+const int colHere[]={kBlack,kPink-5,kGreen+3,kBlue-3,kOrange+4,kBlack};
+//const int colHere[]={2,4,8,kYellow+2,kCyan+1,kOrange+7,kViolet-7};
+const int markerStyle[]={24,33,26,34,29,22,24,33};
+void iso_efficiency_withSkimFile_v3(TString coll="pbpb", TString ver="190703_temp_v31_nominal", bool doWeight=true, bool doBkg=false, bool doSeparation=true){
     
     cout << " :::::: iso_efficiency_withSkimFile.C :::::: " << endl;
     if(doSeparation) cout << " :::::: Isolation Separation will be processed :::::: " << endl;
@@ -248,7 +249,7 @@ void iso_efficiency_withSkimFile_v3(TString coll="pbpb", TString ver="190222_tem
     /////////////////////////////////////////////////////////////////////
     // DRAWING : Centrality Dependence (Total Efficiency) 
     TCanvas* c1 =new TCanvas(Form("c%d",2),"", 400,400);
-    //c1->SetLogx(); 
+    TH1D* htemp_draw[nCENTBINS];
     for(Int_t i=0;i<nCENTBINS;++i){
         SetHistTextSize(sig_eff_draw[i][1]);
        // if(i==0) {
@@ -262,12 +263,15 @@ void iso_efficiency_withSkimFile_v3(TString coll="pbpb", TString ver="190222_tem
         sig_eff_draw[i][1]->GetYaxis()->SetRangeUser(0,1);
         sig_eff_draw[i][1]->GetXaxis()->CenterTitle();
         sig_eff_draw[i][1]->GetYaxis()->CenterTitle();
+        htemp_draw[i] = (TH1D*) sig_eff[i][1]->Clone(Form("htemp_draw%d",i));
         if(i==0) sig_eff_draw[i][1]->DrawCopy("p");
         else sig_eff_draw[i][1]->DrawCopy("same p");
-        if(coll=="pbpb") l1->AddEntry(sig_eff_draw[i][1], Form("%d%s-%d%s",centBins_i[i]/2,"%",centBins_f[i]/2,"%"));
+        if(coll=="pbpb") l1->AddEntry(htemp_draw[i], Form("%d%s-%d%s",centBins_i[i]/2,"%",centBins_f[i]/2,"%"));
+        //if(coll=="pbpb") l1->AddEntry(sig_eff_draw[i][1], Form("%d%s-%d%s",centBins_i[i]/2,"%",centBins_f[i]/2,"%"));
     } 
     if(coll=="pbpb") l1->Draw("same");
     drawText(Form("%s Total Isolation Efficiency",coll.Data()),0.2,1.0-c1->GetBottomMargin()+0.06,0,kBlack,16);
+    c1->SetLogx(); 
     c1->SaveAs(Form("%sfigures/efficiency_%s_totEff_centDep_%s.pdf",dir.Data(),coll.Data(),ver.Data()));
 
     /////////////////////////////////////////////////////////////////////
@@ -278,9 +282,11 @@ void iso_efficiency_withSkimFile_v3(TString coll="pbpb", TString ver="190222_tem
     TCanvas* c2[nCENTBINS];
     for(Int_t i=0;i<nCENTBINS;++i){
         c2[i] = new TCanvas(Form("c_effDep_cent%d",i),"", 400,400);
+        c2[i]->SetLogx();
 
         for(Int_t j=1;j<nEffloop;++j){
             SetHistTextSize(sig_eff_draw[i][j]);
+            sig_eff_draw[i][j]->SetLineColor(colHere[j]);
             sig_eff_draw[i][j]->SetMarkerColor(colHere[j]);
             sig_eff_draw[i][j]->SetMarkerStyle(markerStyle[j]);
             sig_eff_draw[i][j]->GetYaxis()->SetRangeUser(0,1);
@@ -293,8 +299,8 @@ void iso_efficiency_withSkimFile_v3(TString coll="pbpb", TString ver="190222_tem
             if(i==0) l2->AddEntry(sig_eff_draw[i][j], Form("%s",effSt_legend[j].Data()));
         }
         l2->Draw("same");
-        if(coll=="pbpb") drawText(Form("%s %d%s-%d%s",coll.Data(),centBins_i[i]/2,"%",centBins_f[i]/2,"%"),0.2,1.0-c1->GetBottomMargin()+0.06,0,kBlack,16);
-        else drawText(Form("%s",coll.Data()),0.2,1.0-c1->GetBottomMargin()+0.06,0,kBlack,16);
+        if(coll=="pbpb") drawText(Form("%s %d%s-%d%s",coll.Data(),centBins_i[i]/2,"%",centBins_f[i]/2,"%"),0.6,0.45);
+        else drawText(Form("%s",coll.Data()),0.6,0.45);
         if(coll=="pbpb") c2[i]->SaveAs(Form("%sfigures/efficiency_%s_effDep_%s_cent%d%s-%d%s.pdf",dir.Data(),coll.Data(),ver.Data(),centBins_i[i]/2,"%",centBins_f[i]/2,"%"));
         else c2[i]->SaveAs(Form("%sfigures/efficiency_%s_effDep_%s.pdf",dir.Data(),coll.Data(),ver.Data()));
     }
@@ -302,11 +308,13 @@ void iso_efficiency_withSkimFile_v3(TString coll="pbpb", TString ver="190222_tem
     /////////////////////////////////////////////////////////////////////
     // DRAWING : Centrality Dependence (Total Efficiency including trigger efficiency) 
     TCanvas* c3 =new TCanvas(Form("c%d",3),"", 400,400);
+    c3->SetLogx();
     for(Int_t i=0;i<nCENTBINS;++i){
         SetHistTextSize(sig_eff_draw[i][0]);
         sig_eff_draw[i][0]->SetMarkerColor(colHere[i]);
         sig_eff_draw[i][0]->SetMarkerStyle(markerStyle[i]);
         sig_eff_draw[i][0]->GetYaxis()->SetRangeUser(0,1);
+        sig_eff_draw[i][0]->SetTitle(";p_{T}^{#gamma} (GeV);Total Efficiency");
         sig_eff_draw[i][0]->GetXaxis()->CenterTitle();
         sig_eff_draw[i][0]->GetYaxis()->CenterTitle();
         if(i==0) sig_eff_draw[i][0]->DrawCopy("p");

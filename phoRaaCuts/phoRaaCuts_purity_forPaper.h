@@ -49,7 +49,8 @@ TString pbpb_recoEfficiency= "/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficie
 TString pp_recoEfficiency = "/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pp_reco_efficiency_AllQCDPhotons.root";
 
 /////////////// BINNING ///////////////////
-const double ptBins[] = {40,50,60,80,100,130};
+const double ptBins[] = {50,60};
+//const double ptBins[] = {40,50,60,80,100,130};
 const double ptBins_draw[] = {40,50,60,80,100,130};
 const double ptBins_draw_final[] = {30,40,50,60,80,100,130};
 const double ptBins_mean_pbpb[] = {44.1827,54.2862,67.7425,88.1946,111.643};

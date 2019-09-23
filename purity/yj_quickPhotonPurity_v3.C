@@ -30,11 +30,17 @@
 #include "../ElectroWeak-Jet-Track-Analyses/Utilities/interface/InputConfigurationParser.h"
 #include "../ElectroWeak-Jet-Track-Analyses/Plotting/commonUtility.h"
 
-int yj_quickPhotonPurity_v3(const TString coll="pp", const TString ver="phoRaaCuts_purity_forPaper", bool doSplitPD=true, bool doPreScale=1, bool useSBcorr=0, bool noCentDepCorr=0, bool useMCSB=0, bool use30trig=0){
+int yj_quickPhotonPurity_v3(const TString coll="pp", const TString ver="phoRaaCuts_purity_forPaper", bool doSplitPD=true, bool doPreScale=0, bool useSBcorr=0, bool centDepCorr=0, int ptDepCorrThr=0, int Nfunc=0, bool useMCSB=0, bool use30trig=0){
     cout << "Purity Calculation" << endl;
     cout << "::: version = " << ver << endl; 
     cout << "::: doSplitPD = " << doSplitPD << endl; 
     cout << "::: doPreScale = " << doPreScale << endl; 
+    cout << "::: useSBcorr = " << useSBcorr << endl; 
+    cout << "::: centDepCorr = " << centDepCorr << endl; 
+    cout << "::: ptDepCorrThr = " << ptDepCorrThr << endl; 
+    cout << "::: Nfunc = " << Nfunc << endl; 
+    cout << "::: useMCSB = " << useMCSB << endl; 
+    cout << "::: use30trig = " << use30trig << endl; 
     gStyle->SetOptStat(0);
     TH1::SetDefaultSumw2();
 
@@ -44,8 +50,11 @@ int yj_quickPhotonPurity_v3(const TString coll="pp", const TString ver="phoRaaCu
     TString inputMC=""; 
     TString inputBkgMC ="";
     TString outputName=Form("purity_%s_%s",coll.Data(),ver.Data());
-    //if(doPreScale) outputName+="_preScaled";
     if(doSplitPD) outputName+="_splitPD";
+    if(!doPreScale) outputName+="_noPreScale";
+    if(useMCSB) outputName+="_bkgMC";
+    //if(useSBcorr) outputName+="_SBcorr";
+    //if(noCentDepCorr) outputName+="_noCentDepCorr";
     if(coll=="pbpb"){
         configFile = pbpbData_config;
         inputData = pbpbDatafname;
@@ -260,13 +269,42 @@ int yj_quickPhotonPurity_v3(const TString coll="pp", const TString ver="phoRaaCu
                 else if(useMCSB==1 && coll=="pp") sidebandCut = mcBkgIsolation && mcCut_pp && hoeCut_pp && isoCut_pp && etaCut && ptCut_;
                 else cout << "something's wrong" << endl; 
 
+                cout << "Sideband Ragne :: " << sidebandCut.GetTitle() << endl;
                 TCut mcSignalCut = mcSignalCut_woKine && etaCut && ptCut_ && centCut;
                 if(coll=="pp") mcSignalCut = mcSignalCut_woKine_pp && etaCut && ptCut_;
 
+                ////////////////////////////////////////////////////////////////
+                // SB correction file part 
                 TString fname_SBcorr = "";
-                if(useSBcorr==1 && coll=="pbpb" && noCentDepCorr==1) fname_SBcorr=Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/performance/output/BKG_Iso_nonIso_%s_%s_pt%dto%d_cent0to100.root",ver.Data(),coll.Data(),(int)ptBins_unfolding[i],(int)ptBins_unfolding[i+1]);
-                if(useSBcorr==1 && coll=="pbpb" && noCentDepCorr==0) fname_SBcorr=Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/performance/output/BKG_Iso_nonIso_%s_%s_pt%dto%d_cent%dto%d.root",ver.Data(),coll.Data(),(int)ptBins_unfolding[i],(int)ptBins_unfolding[i+1],(int)centBins_i[j]/2,(int)centBins_f[j]/2);
-                if(useSBcorr==1 && coll=="pp") fname_SBcorr=Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/performance/output/BKG_Iso_nonIso_%s_%s_pt%dto%d.root",ver.Data(),coll.Data(),(int)ptBins_unfolding[i],(int)ptBins_unfolding[i+1]);
+                TString cap_Nfunc = "";
+                if(Nfunc>=1) cap_Nfunc = Form("_function%d",Nfunc);
+                TString temp_SBcorr = "";
+
+                //if(useSBcorr==1 && coll=="pbpb"){
+                //    if(centDepCorr==0){
+                //        if(ptDepCorrThr==0) temp_SBcorr=Form("SigmaIEtaIEta_Iso_nonIso_190703_temp_v31_pbpb_pt20to200_cent0to100_bkgPhotons_%s%s.root",purCap.Data(),cap_Nfunc.Data()); 
+                //        else if(ptDepCorrThr!=0 && (ptBins_unfolding[i]<ptDepCorrThr)) temp_SBcorr=Form("SigmaIEtaIEta_Iso_nonIso_190703_temp_v31_pbpb_pt20to%d_cent0to100_bkgPhotons_%s%s.root",ptDepCorrThr,purCap.Data(),cap_Nfunc.Data());
+                //        else if(ptDepCorrThr!=0 && (ptBins_unfolding[i]>=ptDepCorrThr)) temp_SBcorr=Form("SigmaIEtaIEta_Iso_nonIso_190703_temp_v31_pbpb_pt%dto200_cent0to100_bkgPhotons_%s%s.root",ptDepCorrThr,purCap.Data(),cap_Nfunc.Data());
+                //    } else{//cent dep
+                //        if(ptDepCorrThr==0) temp_SBcorr=Form("SigmaIEtaIEta_Iso_nonIso_190703_temp_v31_pbpb_pt20to200_cent%dto%d_bkgPhotons_%s%s.root",(int)centBins_i[j]/2,(int)centBins_f[j]/2,purCap.Data(),cap_Nfunc.Data()); 
+                //        else if(ptDepCorrThr!=0 && (ptBins_unfolding[i]<ptDepCorrThr)) temp_SBcorr=Form("SigmaIEtaIEta_Iso_nonIso_190703_temp_v31_pbpb_pt20to%d_cent%dto%d_bkgPhotons_%s%s.root",ptDepCorrThr,(int)centBins_i[j]/2,(int)centBins_f[j]/2,purCap.Data(),cap_Nfunc.Data());
+                //        else if(ptDepCorrThr!=0 && (ptBins_unfolding[i]>=ptDepCorrThr)) temp_SBcorr=Form("SigmaIEtaIEta_Iso_nonIso_190703_temp_v31_pbpb_pt%dto200_cent%dto%d_bkgPhotons_%s%s.root",ptDepCorrThr,(int)centBins_i[j]/2,(int)centBins_f[j]/2,purCap.Data(),cap_Nfunc.Data());
+                //    }   
+                //} 
+
+                //if(useSBcorr==1 && coll=="pp"){
+                //    if(ptDepCorrThr==0) temp_SBcorr=Form("SigmaIEtaIEta_Iso_nonIso_190703_temp_v31_pp_pt20to200_bkgPhotons_%s%s.root",purCap.Data(),cap_Nfunc.Data()); 
+                //    else if(ptDepCorrThr!=0 && (ptBins_unfolding[i]<ptDepCorrThr)) temp_SBcorr=Form("SigmaIEtaIEta_Iso_nonIso_190703_temp_v31_pp_pt20to%d_bkgPhotons_%s%s.root",ptDepCorrThr,purCap.Data(),cap_Nfunc.Data());
+                //    else if(ptDepCorrThr!=0 && (ptBins_unfolding[i]>=ptDepCorrThr)) temp_SBcorr=Form("SigmaIEtaIEta_Iso_nonIso_190703_temp_v31_pp_pt%dto200_bkgPhotons_%s%s.root",ptDepCorrThr,purCap.Data(),cap_Nfunc.Data());
+                //}
+                //if(useSBcorr==1) fname_SBcorr = Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/performance/output/%s",temp_SBcorr.Data()); 
+
+                //// && centDepCorr==0) fname_SBcorr=Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/performance/output/SigmaIEtaIEta_Iso_nonIso_190703_temp_v31_pbpb_pt20to200_cent0to100%s.root","");
+                //// if(useSBcorr==1 && coll=="pbpb" && centDepCorr==0) fname_SBcorr=Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/performance/output/SigmaIEtaIEta_Iso_nonIso_190703_temp_v31_pbpb_pt20to200_cent0to100%s.root","");
+                //// 
+                //// //if(useSBcorr==1 && coll=="pbpb" && noCentDepCorr==1) fname_SBcorr=Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/performance/output/BKG_Iso_nonIso_%s_%s_pt%dto%d_cent0to100.root",ver.Data(),coll.Data(),(int)ptBins_unfolding[i],(int)ptBins_unfolding[i+1]);
+                //// if(useSBcorr==1 && coll=="pbpb" && centDepCorr==1) fname_SBcorr=Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/performance/output/SigmaIEtaIEta_Iso_nonIso_190703_temp_v31_pbpb_pt20to200_cent%dto%d.root",(int)centBins_i[j]/2,(int)centBins_f[j]/2);
+                //// if(useSBcorr==1 && coll=="pp") fname_SBcorr=Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/performance/output/SigmaIEtaIEta_Iso_nonIso_190703_temp_v31_pp_pt20to200%s.root","");
 
                 PhotonPurity fitr;
 
@@ -306,7 +344,8 @@ int yj_quickPhotonPurity_v3(const TString coll="pp", const TString ver="phoRaaCu
                     }
                 }
 
-                if(coll=="pbpb") cPurity->cd((k+j-1)*nPtBin_unfolding+i+1);
+                //if(coll=="pbpb") cPurity->cd((k+j-1)*(nPtBin_unfolding)+i+1);
+                if(coll=="pbpb") cPurity->cd((k+j-1)*(nPtBin_unfolding-1)+i+1); //when merging the last two pt bins, you should use (nPtBin_unfolding-1)
                 else if(coll=="pp") cPurity->cd(i+1);
 
                 TH1F* hSigPdf = fitr.sigPdf;
@@ -416,8 +455,10 @@ int yj_quickPhotonPurity_v3(const TString coll="pp", const TString ver="phoRaaCu
                 xpos = 0.45;
                 drawText(LABEL, xpos, 0.60);
                 drawText(Form("%.0f - %.0f%c", centBins_i[j]/2., centBins_f[j]/2., '%'), xpos, 0.50);
-                if (i != 0 && i != nPtBin_unfolding_centDep-2) {
-                    drawText(Form("%.0f GeV/c < p_{T}^{#gamma} < %.0f GeV/c", ptBins_unfolding[i], ptBins_unfolding[i+1]), 0.15, 0.90);                } else if (i == nPtBin_unfolding_centDep-2) {
+                //if (i != 0 && i != nPtBin_unfolding_centDep-2) {
+                if (i != nPtBin_unfolding_centDep-2) {
+                    drawText(Form("%.0f GeV/c < p_{T}^{#gamma} < %.0f GeV/c", ptBins_unfolding[i], ptBins_unfolding[i+1]), 0.15, 0.90);                
+                } else if (i == nPtBin_unfolding_centDep-2) {
                     drawText(Form("%.0f GeV/c < p_{T}^{#gamma} < %.0f GeV/c", ptBins_unfolding[i], ptBins_unfolding[i+2]), 0.15, 0.90);
                 }
                 drawText(Form("Purity : %.2f", (Float_t)fitr.purity), xpos, 0.80);

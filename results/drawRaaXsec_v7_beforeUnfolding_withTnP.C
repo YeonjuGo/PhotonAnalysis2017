@@ -34,7 +34,7 @@ const TString LABEL = "PbPb #sqrt{s}_{_{NN}}=5.02 TeV";
 const int colHere[]={1,2,4,kGreen+1,kYellow+1};
 const int markerHere[]={20,33,34,29,24,29};
 const int markerHere_closed[]={20,33,33,33,33};
-void drawRaaXsec_v7_beforeUnfolding_withTnP(TString ver="180731_temp_v19_nominal", bool doSplitPD = true, bool usePurityFit = true)
+void drawRaaXsec_v7_beforeUnfolding_withTnP(TString ver="190703_temp_v31_pur_SBcorr_centDep", bool doSplitPD = true, bool doPreScale = false, bool usePurityFit = true)
 {
     TH1::SetDefaultSumw2();
     gStyle->SetOptStat(0000);
@@ -45,10 +45,14 @@ void drawRaaXsec_v7_beforeUnfolding_withTnP(TString ver="180731_temp_v19_nominal
     // nCentBin+1 : 0th array is for inclusive[0-100%]
     TString cap = "";
     if(doSplitPD) cap += "_splitPD"; 
+    TString cap_pur = "";
+    if(doSplitPD) cap_pur += "_splitPD"; 
+    if(!doPreScale) cap_pur += "_noPreScale"; 
+    
     TFile* f_eff_iso = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pbpb_iso_efficiency_%s.root",ver.Data()));
     TFile* f_eff_isopp = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/efficiency/output/pp_iso_efficiency_%s.root",ver.Data()));
-    TFile* f_pur = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/purity/output/purity_withFunc_pbpb_%s%s.root",ver.Data(),cap.Data()));
-    TFile* f_purpp = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/purity/output/purity_withFunc_pp_%s%s.root",ver.Data(),cap.Data()));
+    TFile* f_pur = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/purity/output/purity_withFunc_pbpb_%s%s.root",ver.Data(),cap_pur.Data()));
+    TFile* f_purpp = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/purity/output/purity_withFunc_pp_%s%s.root",ver.Data(),cap_pur.Data()));
     TFile* f_raw = new TFile(Form("/home/goyeonju/CMS/2017/PhotonAnalysis2017/results/output/rawDist_%s%s.root",ver.Data(),cap.Data()));
 
     TFile* f_eff_reco;
@@ -401,6 +405,17 @@ void drawRaaXsec_v7_beforeUnfolding_withTnP(TString ver="180731_temp_v19_nominal
     l1->Draw("same");
     if(!usePurityFit) c1->SaveAs(Form("%sfigures/phoRaa_beforeUnfolding_%s_noPurityFit.pdf",dir.Data(),ver.Data()));
     else c1->SaveAs(Form("%sfigures/phoRaa_beforeUnfolding_%s.pdf",dir.Data(),ver.Data()));
+    
+    TCanvas* c1_each[nCentBinIF];
+    for(int j=0;j<nCentBinIF;j++){
+        c1_each[j] = new TCanvas(Form("craa_each_cent%d",j),"",400,400);
+        h1D_Raa[j]->Draw("pel");
+        jumSun(ptBins_unfolding[0],1,ptBins_unfolding[nPtBin_unfolding],1);
+        jumSun(ptBins_unfolding[1],0.5,ptBins_unfolding[1],1.5);
+        jumSun(ptBins_unfolding[nPtBin_unfolding-1],0.5,ptBins_unfolding[nPtBin_unfolding-1],1.5);
+        if(!usePurityFit) c1_each[j]->SaveAs(Form("%sfigures/phoRaa_beforeUnfolding_%s_noPurityFit_cent%d.pdf",dir.Data(),ver.Data(),j));
+        else c1_each[j]->SaveAs(Form("%sfigures/phoRaa_beforeUnfolding_%s_cent%d.pdf",dir.Data(),ver.Data(),j));
+    }
    
     /////////////////////////////////////////////////////////////////////////// 
     /// Draw cross section
@@ -420,6 +435,9 @@ void drawRaaXsec_v7_beforeUnfolding_withTnP(TString ver="180731_temp_v19_nominal
     h1D_corrpp[2]->SetTitle(";p_{T}^{#gamma} (GeV); #frac{1}{T_{AA}} #frac{dN}{dp_{T}} (pb/GeV)");
     h1D_corrpp[2]->GetYaxis()->CenterTitle();
     h1D_corrpp[2]->GetXaxis()->CenterTitle();
+    float ymin = 0.008;
+    float ymax = 10000;
+    h1D_corrpp[2]->GetYaxis()->SetRangeUser(ymin,ymax);
     h1D_corrpp[2]->Draw("pe");
     l2->AddEntry(h1D_corrpp[2],"pp"); 
     for(int j=0;j<nCentBinIF;j++){
@@ -429,12 +447,34 @@ void drawRaaXsec_v7_beforeUnfolding_withTnP(TString ver="180731_temp_v19_nominal
         h1D_corr[2][j]->Scale(1./2.88);
         h1D_corr[2][j]->SetMarkerStyle(markerHere[j]);
         h1D_corr[2][j]->SetMarkerColor(colHere[j]);
+        h1D_corr[2][j]->SetTitle(";p_{T}^{#gamma} (GeV); #frac{1}{T_{AA}} #frac{dN}{dp_{T}} (pb/GeV)");
+        h1D_corr[2][j]->GetYaxis()->SetRangeUser(ymin,ymax);
         h1D_corr[2][j]->Draw("pe same");
         l2->AddEntry(h1D_corr[2][j],Form("%d%s-%d%s",centBins_i[j]/2,"%",centBins_f[j]/2,"%")); 
     }
+    jumSun(ptBins_unfolding[1],ymin,ptBins_unfolding[1],ymax);
+    jumSun(ptBins_unfolding[nPtBin_unfolding-1],ymin,ptBins_unfolding[nPtBin_unfolding-1],ymax);
     l2->Draw("same");
     if(!usePurityFit) c2->SaveAs(Form("%sfigures/phoXsec_beforeUnfolding_%s_noPurityFit.pdf",dir.Data(),ver.Data()));
     else c2->SaveAs(Form("%sfigures/phoXsec_beforeUnfolding_%s.pdf",dir.Data(),ver.Data()));
+    
+    TCanvas* c2_each[nCentBinIF];
+    for(int j=0;j<nCentBinIF;j++){
+        c2_each[j] = new TCanvas(Form("cXsec_each_cent%d",j),"",400,400);
+        c2_each[j]->SetLogy();
+        h1D_corr[2][j]->Draw("pel");
+        jumSun(ptBins_unfolding[1],ymin,ptBins_unfolding[1],ymax);
+        jumSun(ptBins_unfolding[nPtBin_unfolding-1],ymin,ptBins_unfolding[nPtBin_unfolding-1],ymax);
+        if(!usePurityFit) c2_each[j]->SaveAs(Form("%sfigures/phoXsec_beforeUnfolding_%s_noPurityFit_cent%d.pdf",dir.Data(),ver.Data(),j));
+        else c2_each[j]->SaveAs(Form("%sfigures/phoXsec_beforeUnfolding_%s_cent%d.pdf",dir.Data(),ver.Data(),j));
+    }
+    TCanvas* c2_pp = new TCanvas(Form("craa_each_%s","pp"),"",400,400);
+    c2_pp->SetLogy();
+    h1D_corrpp[2]->Draw("pe");
+    jumSun(ptBins_unfolding[1],ymin,ptBins_unfolding[1],ymax);
+    jumSun(ptBins_unfolding[nPtBin_unfolding-1],ymin,ptBins_unfolding[nPtBin_unfolding-1],ymax);
+    if(!usePurityFit) c2_pp->SaveAs(Form("%sfigures/phoXsec_beforeUnfolding_%s_noPurityFit_pp.pdf",dir.Data(),ver.Data()));
+    else c2_pp->SaveAs(Form("%sfigures/phoXsec_beforeUnfolding_%s_pp.pdf",dir.Data(),ver.Data()));
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     /// Store histograms in output file 
@@ -447,6 +487,7 @@ void drawRaaXsec_v7_beforeUnfolding_withTnP(TString ver="180731_temp_v19_nominal
         h1D_raw[j]->Write();
         h1D_eff[j]->Write();
         h1D_pur[j]->Write();
+        fit_pur[j]->Write();
         h1D_Raa[j]->Write();
         for(int ii=0;ii<3;ii++){
             h1D_corr[ii][j]->Write();
@@ -457,6 +498,7 @@ void drawRaaXsec_v7_beforeUnfolding_withTnP(TString ver="180731_temp_v19_nominal
     h1D_rawpp->Write();
     h1D_effpp->Write();
     h1D_purpp->Write();
+    fit_purpp->Write();
     for(int ii=0;ii<3;ii++){
         h1D_corrpp[ii]->Write();
     }

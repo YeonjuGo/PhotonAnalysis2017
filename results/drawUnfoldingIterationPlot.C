@@ -29,7 +29,7 @@ const int markerStyle[]={24,33,26,23,29,22,24,33,26,23,29,22,24,33,26,23,29,22,2
 //const int markerHere[]={22,28,24,28,33,26};
 //const int markerHere_closed[]={20,33,33,33,33};
 
-void drawUnfoldingIterationPlot(TString ver="190303_temp_v28", bool isSVD = true, TString sample = "splitMC", bool doHighIter= false)
+void drawUnfoldingIterationPlot(TString ver="190703_temp_v31", bool isSVD = false, TString sample = "MC", bool doHighIter= false)
 {
     TH1::SetDefaultSumw2();
     gStyle->SetOptStat(0000);
@@ -39,9 +39,9 @@ void drawUnfoldingIterationPlot(TString ver="190303_temp_v28", bool isSVD = true
     if(sample=="splitMC" || sample=="data") cap = cap+"_"+sample;
     if(doHighIter) cap +="_highIter";
 
-    const int nIter = 9;
-    const int dev = 1;
-    const int highIter = 10;
+    const int nIter = 30;
+    const int dev = 4;
+    const int highIter = 100;
     TString legst = "iter";
     if(isSVD) legst = "par";
 
@@ -135,8 +135,10 @@ void drawUnfoldingIterationPlot(TString ver="190303_temp_v28", bool isSVD = true
     /////////////////////////////////////////////////////////
     // Draw plots : PbPb 
     cout << "DRAW PbPb..." <<endl;
-    float ratiomin = 0.99; 
-    float ratiomax = 1.01; 
+    float ratiomin = 0.95; 
+    float ratiomax = 1.05; 
+    //float ratiomin = 0.99; 
+    //float ratiomax = 1.01; 
     if(sample=="splitMC"){ 
         ratiomin = 0.90; 
         ratiomax = 1.10; 
@@ -166,11 +168,19 @@ void drawUnfoldingIterationPlot(TString ver="190303_temp_v28", bool isSVD = true
     }
 
     for(int j=0;j<nCentBinIF;++j){
+        // rebin ptbins for each centrality bins since we have less bins for peripheral region
+        int nPtBin_unfolding_centDep = nPtBin_unfolding-rejectPtBins[j];
+        double ptBins_unfolding_centDep[nPtBin_unfolding_centDep];
+        for(int iiu=0; iiu<=nPtBin_unfolding_centDep;++iiu){
+            ptBins_unfolding_centDep[iiu] = ptBins_unfolding[iiu];
+        }
         ctot[j] = new TCanvas(Form("ctot%d",j),"",400,600);
         ratioPanelCanvas(ctot[j]);
 
         ctot[j]->cd(1); // Dist 
         gPad->SetLogy();
+        //gPad->SetLogx();
+        SetHistTextSize(h1D_den[j]);
         h1D_den[j]->SetMarkerStyle(24);
         h1D_den[j]->SetMarkerColor(1);
         h1D_den[j]->SetLineColor(1);
@@ -185,12 +195,14 @@ void drawUnfoldingIterationPlot(TString ver="190303_temp_v28", bool isSVD = true
         l1[j]->Draw("same");
         drawText(Form("%s PbPb",sample.Data()),0.2,0.2+0.05);
         drawText(Form("%d%s-%d%s",centBins_i[j]/2,"%",centBins_f[j]/2,"%"),0.2,0.2);
-        drawText(Form("%s",ver.Data()),0.2,0.2-0.05);
-        jumSun(ptBins_unfolding[1],ratiomin,ptBins_unfolding[1],ratiomax);
-        jumSun(ptBins_unfolding[nPtBin_unfolding-1],ratiomin,ptBins_unfolding[nPtBin_unfolding-1],ratiomax);
+        //drawText(Form("%s",ver.Data()),0.2,0.2-0.05);
+        jumSun(ptBins_unfolding_centDep[1],ratiomin,ptBins_unfolding_centDep[1],ratiomax);
+        jumSun(ptBins_unfolding_centDep[nPtBin_unfolding_centDep-1],ratiomin,ptBins_unfolding_centDep[nPtBin_unfolding_centDep-1],ratiomax);
 
         ctot[j]->cd(2); // Ratio
+        //gPad->SetLogx();
         for(int i=0;i<nIter;i+=dev){
+            SetHistTextSize(h1D_ratio_reco_unfolded_gen[j][i]);
             h1D_ratio_reco_unfolded_gen[j][i]->SetMarkerStyle(markerStyle[i/dev]);
             h1D_ratio_reco_unfolded_gen[j][i]->SetMarkerColor(colHere[i/dev]);
             h1D_ratio_reco_unfolded_gen[j][i]->SetLineColor(colHere[i/dev]);
@@ -204,9 +216,9 @@ void drawUnfoldingIterationPlot(TString ver="190303_temp_v28", bool isSVD = true
                 h1D_ratio_reco_unfolded_gen[j][i]->DrawCopy("p");
             } else{ h1D_ratio_reco_unfolded_gen[j][i]->DrawCopy("same p");}
         }
-        jumSun(ptBins_unfolding[0],1,ptBins_unfolding[nPtBin_unfolding],1);
-        jumSun(ptBins_unfolding[1],ratiomin,ptBins_unfolding[1],ratiomax);
-        jumSun(ptBins_unfolding[nPtBin_unfolding-1],ratiomin,ptBins_unfolding[nPtBin_unfolding-1],ratiomax);
+        jumSun(ptBins_unfolding_centDep[0],1,ptBins_unfolding_centDep[nPtBin_unfolding_centDep],1);
+        jumSun(ptBins_unfolding_centDep[1],ratiomin,ptBins_unfolding_centDep[1],ratiomax);
+        jumSun(ptBins_unfolding_centDep[nPtBin_unfolding_centDep-1],ratiomin,ptBins_unfolding_centDep[nPtBin_unfolding_centDep-1],ratiomax);
 
         ctot[j]->SaveAs(Form("%sfigures/unfoldingIterationFigures_%s_cent%dto%d%s.pdf",dir.Data(),ver.Data(),centBins_i[j]/2,centBins_f[j]/2,cap.Data()));
     }
@@ -229,6 +241,8 @@ void drawUnfoldingIterationPlot(TString ver="190303_temp_v28", bool isSVD = true
     }
     ctot_pp->cd(1); // Dist 
     gPad->SetLogy();
+    //gPad->SetLogx();
+    SetHistTextSize(h1D_den_pp);
     h1D_den_pp->SetTitle(";p_{T}^{#gamma} (GeV); Entires");
     h1D_den_pp->SetMarkerStyle(24);
     h1D_den_pp->SetMarkerColor(1);
@@ -243,12 +257,14 @@ void drawUnfoldingIterationPlot(TString ver="190303_temp_v28", bool isSVD = true
     }
     l1_pp->Draw("same");
     drawText(Form("%s pp",sample.Data()),0.2,0.2+0.05);
-    drawText(Form("%s",ver.Data()),0.2,0.2-0.05);
+    //drawText(Form("%s",ver.Data()),0.2,0.2-0.05);
     jumSun(ptBins_unfolding[1],ratiomin,ptBins_unfolding[1],ratiomax);
     jumSun(ptBins_unfolding[nPtBin_unfolding-1],ratiomin,ptBins_unfolding[nPtBin_unfolding-1],ratiomax);
 
     ctot_pp->cd(2); // Ratio
+    //gPad->SetLogx();
     for(int i=0;i<nIter;i+=dev){
+        SetHistTextSize(h1D_ratio_reco_unfolded_gen_pp[i]);
         h1D_ratio_reco_unfolded_gen_pp[i]->SetMarkerStyle(markerStyle[i/dev]);
         h1D_ratio_reco_unfolded_gen_pp[i]->SetMarkerColor(colHere[i/dev]);
         h1D_ratio_reco_unfolded_gen_pp[i]->SetLineColor(colHere[i/dev]);

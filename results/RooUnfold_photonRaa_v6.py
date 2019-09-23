@@ -95,15 +95,23 @@ u_binbybin = False
 if type_ == "bin":
   u_binbybin = True
   u_svd = False
+  u_inv = False 
   print "binBybin method"
 elif type_ == "svd":
   u_binbybin = False
   u_svd = True
+  u_inv = False 
   svdK = int(sys.argv[3])
   print "SVD method"
+elif type_ == "inv":
+  u_binbybin = False
+  u_svd = False 
+  u_inv = True 
+  print "Matrix inversion method"
 else:
   u_binbybin = False
   u_svd = False
+  u_inv = False 
   iter_ = int(sys.argv[2])
   print "D'Agostini method"
 
@@ -227,6 +235,11 @@ for i,res in enumerate(RooUnfold_res):
     RooUnfold_mc_nm.append(ROOT.RooUnfoldSvd(res, reco_nm_list[i], svdK))
     RooUnfold_rd.append(ROOT.RooUnfoldSvd(res, rd_list[i], svdK))
 
+  elif u_inv:
+    RooUnfold_mc.append(ROOT.RooUnfoldInvert(res, reco_list[i]))
+    RooUnfold_mc_nm.append(ROOT.RooUnfoldInvert(res, reco_nm_list[i]))
+    RooUnfold_rd.append(ROOT.RooUnfoldInvert(res, rd_list[i]))
+
   else:
     RooUnfold_mc.append(ROOT.RooUnfoldBayes(res, reco_list[i], iter_))
     RooUnfold_mc_nm.append(ROOT.RooUnfoldBayes(res, reco_nm_list[i], iter_))
@@ -242,6 +255,11 @@ for i,respp in enumerate(RooUnfold_res_pp):
     RooUnfold_mc_pp.append(ROOT.RooUnfoldSvd(respp, reco_list_pp[i], svdK))
     RooUnfold_mc_nm_pp.append(ROOT.RooUnfoldSvd(respp, reco_nm_list_pp[i], svdK))
     RooUnfold_rd_pp.append(ROOT.RooUnfoldSvd(respp, rd_list_pp[i], svdK))
+
+  elif u_inv:
+    RooUnfold_mc_pp.append(ROOT.RooUnfoldInvert(respp, reco_list_pp[i]))
+    RooUnfold_mc_nm_pp.append(ROOT.RooUnfoldInvert(respp, reco_nm_list_pp[i]))
+    RooUnfold_rd_pp.append(ROOT.RooUnfoldInvert(respp, rd_list_pp[i]))
 
   else:
     RooUnfold_mc_pp.append(ROOT.RooUnfoldBayes(respp, reco_list_pp[i], iter_))

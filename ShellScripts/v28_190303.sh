@@ -23,7 +23,7 @@ do
 #    root -l -b -q 'performance/correlation_genPt_recoPt.C++("pp","'${verName_a[$i]}'",1)' >& log/correlation_pp_${verName_a[$i]}_splitMC.log & sleep 10
 #    root -l -b -q 'results/getRawDist_v6.C++("'${verName_a[$i]}'",1,1)' >& log/getRawDist_v6_${verName_a[$i]}.log & sleep 10 
 #    wait $(jobs -p)
-#    root -l -b -q 'results/drawRaaXsec_v6.C++("'${verName_a[$i]}'",1)' >& log/drawRaaXsec_v6_${verName_a[$i]}.log
+    root -l -b -q 'results/drawRaaXsec_v6.C++("'${verName_a[$i]}'",1)' >& log/drawRaaXsec_v6_${verName_a[$i]}.log
     source /data/ROOT-v5.34.21/bin/thisroot.sh
     python results/RooUnfold_photonRaa_v6.py ${verName_a[$i]} bin 0 noSplitMC >& log/RooUnfold_photonRaa_v6_${verName_a[$i]}.log
     source /home/goyeonju/root/builddir/bin/thisroot.sh
@@ -32,75 +32,113 @@ do
     source /data/ROOT-v5.34.21/bin/thisroot.sh
     python results/RooUnfold_photonRaa_v6.py ${verName_a[$i]} bin 0 splitMC >& log/RooUnfold_photonRaa_v6_${verName_a[$i]}_splitMC.log
     source /home/goyeonju/root/builddir/bin/thisroot.sh
-    root -l -b -q 'results/drawUnfoldingFigures_v2.C++("'${verName_a[$i]}'",1)' >& log/drawUnfoldingFigures_${verName_a[$i]}_splitMC.log
-    root -l -b -q 'results/drawRaaXsec_v6_makeOutput.C++("'${verName_a[$i]}'",1)' >& log/drawRaaXsec_v6_makeOutput_${verName_a[$i]}.log
+#    root -l -b -q 'results/drawUnfoldingFigures_v2.C++("'${verName_a[$i]}'",1)' >& log/drawUnfoldingFigures_${verName_a[$i]}_splitMC.log
+    root -l -b -q 'results/drawRaaXsec_v6_afterUnfolding.C++("'${verName_a[$i]}'",1)' >& log/drawRaaXsec_v6_afterUnfolding_${verName_a[$i]}.log
 #    
 #     cp ./results/output/phoRaa_${preverName_a[$i]}_beforeUnfolding.root ./results/output/phoRaa_${verName_a[$i]}_beforeUnfolding.root
 #    root -l -b -q 'performance/compare_unfolding.C++("pbpb","'${verName_a[$i]}'")' >& log/compare_unfolding_pbpb_${verName_a[$i]}.log
 #    root -l -b -q 'performance/compare_unfolding.C++("pp","'${verName_a[$i]}'")' >& log/compare_unfolding_pp_${verName_a[$i]}.log
 done
 #
-#for j in 1 2 3 4 5 6 7 8 9 10
-#for j in 100 1 2 3 4 5 6 7 8 9 10
-for j in {1..10} 
-do
-    verFileCopy_l=('190303_temp_v28')
-    verName_l=('190303_temp_v28_sys_unfolding_svd'$j)
-    for ((i=0; i< ${#verName_l[@]};i++))
-    do
-        cp ./phoRaaCuts/phoRaaCuts_${verFileCopy_l[$i]}.h ./phoRaaCuts/phoRaaCuts_temp.h
-        cp ./results/output/rawDist_${verName_a[$i]}_splitPD.root ./results/output/rawDist_${verName_l[$i]}_splitPD.root
-        cp ./performance/output/correlation_genPt_recoPt_${verName_a[$i]}_pbpb.root ./performance/output/correlation_genPt_recoPt_${verName_l[$i]}_pbpb.root 
-        cp ./performance/output/correlation_genPt_recoPt_${verName_a[$i]}_pp.root ./performance/output/correlation_genPt_recoPt_${verName_l[$i]}_pp.root 
-        cp ./results/output/phoRaa_${verName_a[$i]}_beforeUnfolding.root ./results/output/phoRaa_${verName_l[$i]}_beforeUnfolding.root
-        source /data/ROOT-v5.34.21/bin/thisroot.sh
-        python results/RooUnfold_photonRaa_v6.py ${verName_l[$i]} svd $j noSplitMC  >& log/RooUnfold_photonRaa_v6_${verName_l[$i]}.log
-        source /home/goyeonju/root/builddir/bin/thisroot.sh
-        root -l -b -q 'results/drawUnfoldingFigures_v2.C++("'${verName_l[$i]}'")' >& log/drawUnfoldingFigures_${verName_l[$i]}.log
-        cp ./performance/output/correlation_genPt_recoPt_${verName_a[$i]}_pbpb_splitMC.root ./performance/output/correlation_genPt_recoPt_${verName_l[$i]}_pbpb_splitMC.root 
-        cp ./performance/output/correlation_genPt_recoPt_${verName_a[$i]}_pp_splitMC.root ./performance/output/correlation_genPt_recoPt_${verName_l[$i]}_pp_splitMC.root 
-        source /data/ROOT-v5.34.21/bin/thisroot.sh
-        python results/RooUnfold_photonRaa_v6.py ${verName_l[$i]} svd $j splitMC >& log/RooUnfold_photonRaa_v6_${verName_l[$i]}_splitMC.log
-        source /home/goyeonju/root/builddir/bin/thisroot.sh
-        root -l -b -q 'results/drawUnfoldingFigures_v2.C++("'${verName_l[$i]}'",1)' >& log/drawUnfoldingFigures_${verName_l[$i]}_splitMC.log
-        root -l -b -q 'results/drawRaaXsec_v6_makeOutput.C++("'${verName_l[$i]}'",1)' >& log/drawRaaXsec_v6_makeOutput_${verName_l[$i]}.log
-    done
-done
-
-#for j in 1 2 3 4 5 6 7 8 9 10
-#for j in {100..105}
-for j in {1..30}
-do
-    verFileCopy_m=('190303_temp_v28')
-    verName_m=('190303_temp_v28_sys_unfolding_iterative'$j)
-    for ((i=0; i< ${#verName_m[@]};i++))
-    do
-        cp ./phoRaaCuts/phoRaaCuts_${verFileCopy_m[$i]}.h ./phoRaaCuts/phoRaaCuts_temp.h
-        cp ./results/output/rawDist_${verName_a[$i]}_splitPD.root ./results/output/rawDist_${verName_m[$i]}_splitPD.root
-        cp ./performance/output/correlation_genPt_recoPt_${verName_a[$i]}_pbpb.root ./performance/output/correlation_genPt_recoPt_${verName_m[$i]}_pbpb.root 
-        cp ./performance/output/correlation_genPt_recoPt_${verName_a[$i]}_pp.root ./performance/output/correlation_genPt_recoPt_${verName_m[$i]}_pp.root 
-        cp ./results/output/phoRaa_${verName_a[$i]}_beforeUnfolding.root ./results/output/phoRaa_${verName_m[$i]}_beforeUnfolding.root
-        source /data/ROOT-v5.34.21/bin/thisroot.sh
-        python results/RooUnfold_photonRaa_v6.py ${verName_m[$i]} $j 0 noSplitMC  >& log/RooUnfold_photonRaa_v6_${verName_m[$i]}.log
-        source /home/goyeonju/root/builddir/bin/thisroot.sh
-        root -l -b -q 'results/drawUnfoldingFigures_v2.C++("'${verName_m[$i]}'")' >& log/drawUnfoldingFigures_${verName_m[$i]}.log
-        cp ./performance/output/correlation_genPt_recoPt_${verName_a[$i]}_pbpb_splitMC.root ./performance/output/correlation_genPt_recoPt_${verName_m[$i]}_pbpb_splitMC.root 
-        cp ./performance/output/correlation_genPt_recoPt_${verName_a[$i]}_pp_splitMC.root ./performance/output/correlation_genPt_recoPt_${verName_m[$i]}_pp_splitMC.root 
-        source /data/ROOT-v5.34.21/bin/thisroot.sh
-        python results/RooUnfold_photonRaa_v6.py ${verName_m[$i]} $j 0 splitMC >& log/RooUnfold_photonRaa_v6_${verName_m[$i]}_splitMC.log
-        source /home/goyeonju/root/builddir/bin/thisroot.sh
-        root -l -b -q 'results/drawUnfoldingFigures_v2.C++("'${verName_m[$i]}'",1)' >& log/drawUnfoldingFigures_${verName_m[$i]}.log
-        root -l -b -q 'results/drawRaaXsec_v6_makeOutput.C++("'${verName_m[$i]}'",1)' >& log/drawRaaXsec_v6_makeOutput_${verName_m[$i]}.log
-    done
-done
-
-#
-#verFileCopy_c=('190303_temp_v28_sys_purUp')
-#verName_c=('190303_temp_v28_sys_purUp')
-#preverName_c=('180822_temp_v24_sys_purUp')
-#for ((i=0; i< ${#verName_c[@]};i++))
+#verFileCopy_an=('190303_temp_v28')
+#verName_an=('190303_temp_v28_noUnfolding')
+#preverName_an=('190220_temp_v26_noUnfolding')
+##
+#for ((i=0; i< ${#verName_a[@]};i++))
 #do
-#    cp ./phoRaaCuts/phoRaaCuts_${verFileCopy_c[$i]}.h ./phoRaaCuts/phoRaaCuts_temp.h
+#    cp ./phoRaaCuts/phoRaaCuts_${verFileCopy_a[$i]}.h ./phoRaaCuts/phoRaaCuts_temp.h
+##    cp ./efficiency/output/pbpb_iso_efficiency_${preverName_a[$i]}.root ./efficiency/output/pbpb_iso_efficiency_${verName_a[$i]}.root
+##    cp ./efficiency/output/pp_iso_efficiency_${preverName_a[$i]}.root ./efficiency/output/pp_iso_efficiency_${verName_a[$i]}.root
+##    cp ./purity/output/purity_pbpb_${preverName_a[$i]}_splitPD.root ./purity/output/purity_pbpb_${verName_a[$i]}_splitPD.root
+##    cp ./purity/output/purity_pp_${preverName_a[$i]}_splitPD.root ./purity/output/purity_pp_${verName_a[$i]}_splitPD.root
+##    root -l -b -q 'efficiency/iso_efficiency_withSkimFile_v2.C++("pbpb","'${verName_a[$i]}'")' >& log/iso_efficiency_withSkimFile_v2_pbpb_${verName_a[$i]}.log & sleep 10 
+##    root -l -b -q 'purity/yj_quickPhotonPurity_v2.C++("pbpb","'${verName_a[$i]}'",1,1)' >& log/yj_quickPhotonPurity_v2_pbpb_${verName_a[$i]}.log & sleep 10
+##    root -l -b -q 'performance/correlation_genPt_recoPt.C++("pbpb","'${verName_a[$i]}'")' >& log/correlation_pbpb_${verName_a[$i]}.log & sleep 10
+##    root -l -b -q 'efficiency/iso_efficiency_withSkimFile_v2.C++("pp","'${verName_a[$i]}'")' >& log/iso_efficiency_withSkimFile_v2_pp_${verName_a[$i]}.log & sleep 10
+##    root -l -b -q 'purity/yj_quickPhotonPurity_v2.C++("pp","'${verName_a[$i]}'",1,1)' >& log/yj_quickPhotonPurity_v2_pp_${verName_a[$i]}.log & sleep 10
+##    root -l -b -q 'performance/correlation_genPt_recoPt.C++("pp","'${verName_a[$i]}'")' >& log/correlation_pp_${verName_a[$i]}.log & sleep 10 
+##    root -l -b -q 'performance/correlation_genPt_recoPt.C++("pbpb","'${verName_a[$i]}'",1)' >& log/correlation_pbpb_${verName_a[$i]}_splitMC.log & sleep 10 
+##    root -l -b -q 'performance/correlation_genPt_recoPt.C++("pp","'${verName_a[$i]}'",1)' >& log/correlation_pp_${verName_a[$i]}_splitMC.log & sleep 10
+##    root -l -b -q 'results/getRawDist_v6.C++("'${verName_a[$i]}'",1,1)' >& log/getRawDist_v6_${verName_a[$i]}.log & sleep 10 
+##    wait $(jobs -p)
+##    root -l -b -q 'results/drawRaaXsec_v6.C++("'${verName_a[$i]}'",1)' >& log/drawRaaXsec_v6_${verName_a[$i]}.log
+#    source /data/ROOT-v5.34.21/bin/thisroot.sh
+#    python results/RooUnfold_photonRaa_v6.py ${verName_a[$i]} bin 0 noSplitMC >& log/RooUnfold_photonRaa_v6_${verName_a[$i]}.log
+#    source /home/goyeonju/root/builddir/bin/thisroot.sh
+#    root -l -b -q 'results/drawUnfoldingFigures_v2.C++("'${verName_a[$i]}'")' >& log/drawUnfoldingFigures_${verName_a[$i]}.log
+##    root -l -b -q 'performance/divideTree.C++' >& log/divideTree_pbpb_20180815skim.log
+#    source /data/ROOT-v5.34.21/bin/thisroot.sh
+#    python results/RooUnfold_photonRaa_v6.py ${verName_a[$i]} bin 0 splitMC >& log/RooUnfold_photonRaa_v6_${verName_a[$i]}_splitMC.log
+#    source /home/goyeonju/root/builddir/bin/thisroot.sh
+#    root -l -b -q 'results/drawUnfoldingFigures_v2.C++("'${verName_a[$i]}'",1)' >& log/drawUnfoldingFigures_${verName_a[$i]}_splitMC.log
+#    root -l -b -q 'results/drawRaaXsec_v6_afterUnfolding.C++("'${verName_a[$i]}'",1)' >& log/drawRaaXsec_v6_afterUnfolding_${verName_a[$i]}.log
+##    
+##     cp ./results/output/phoRaa_${preverName_a[$i]}_beforeUnfolding.root ./results/output/phoRaa_${verName_a[$i]}_beforeUnfolding.root
+##    root -l -b -q 'performance/compare_unfolding.C++("pbpb","'${verName_a[$i]}'")' >& log/compare_unfolding_pbpb_${verName_a[$i]}.log
+##    root -l -b -q 'performance/compare_unfolding.C++("pp","'${verName_a[$i]}'")' >& log/compare_unfolding_pp_${verName_a[$i]}.log
+#done
+##
+##for j in 1 2 3 4 5 6 7 8 9 10
+##for j in 100 1 2 3 4 5 6 7 8 9 10
+#for j in {1..10} 
+#do
+#    verFileCopy_l=('190303_temp_v28')
+#    verName_l=('190303_temp_v28_sys_unfolding_svd'$j)
+#    for ((i=0; i< ${#verName_l[@]};i++))
+#    do
+#        cp ./phoRaaCuts/phoRaaCuts_${verFileCopy_l[$i]}.h ./phoRaaCuts/phoRaaCuts_temp.h
+#        cp ./results/output/rawDist_${verName_a[$i]}_splitPD.root ./results/output/rawDist_${verName_l[$i]}_splitPD.root
+#        cp ./performance/output/correlation_genPt_recoPt_${verName_a[$i]}_pbpb.root ./performance/output/correlation_genPt_recoPt_${verName_l[$i]}_pbpb.root 
+#        cp ./performance/output/correlation_genPt_recoPt_${verName_a[$i]}_pp.root ./performance/output/correlation_genPt_recoPt_${verName_l[$i]}_pp.root 
+#        cp ./results/output/phoRaa_${verName_a[$i]}_beforeUnfolding.root ./results/output/phoRaa_${verName_l[$i]}_beforeUnfolding.root
+#        source /data/ROOT-v5.34.21/bin/thisroot.sh
+#        python results/RooUnfold_photonRaa_v6.py ${verName_l[$i]} svd $j noSplitMC  >& log/RooUnfold_photonRaa_v6_${verName_l[$i]}.log
+#        source /home/goyeonju/root/builddir/bin/thisroot.sh
+#        root -l -b -q 'results/drawUnfoldingFigures_v2.C++("'${verName_l[$i]}'")' >& log/drawUnfoldingFigures_${verName_l[$i]}.log
+#        cp ./performance/output/correlation_genPt_recoPt_${verName_a[$i]}_pbpb_splitMC.root ./performance/output/correlation_genPt_recoPt_${verName_l[$i]}_pbpb_splitMC.root 
+#        cp ./performance/output/correlation_genPt_recoPt_${verName_a[$i]}_pp_splitMC.root ./performance/output/correlation_genPt_recoPt_${verName_l[$i]}_pp_splitMC.root 
+#        source /data/ROOT-v5.34.21/bin/thisroot.sh
+#        python results/RooUnfold_photonRaa_v6.py ${verName_l[$i]} svd $j splitMC >& log/RooUnfold_photonRaa_v6_${verName_l[$i]}_splitMC.log
+#        source /home/goyeonju/root/builddir/bin/thisroot.sh
+#        root -l -b -q 'results/drawUnfoldingFigures_v2.C++("'${verName_l[$i]}'",1)' >& log/drawUnfoldingFigures_${verName_l[$i]}_splitMC.log
+#        root -l -b -q 'results/drawRaaXsec_v6_afterUnfolding.C++("'${verName_l[$i]}'",1)' >& log/drawRaaXsec_v6_afterUnfolding_${verName_l[$i]}.log
+#    done
+#done
+#
+##for j in 1 2 3 4 5 6 7 8 9 10
+##for j in {100..105}
+#for j in {1..30}
+#do
+#    verFileCopy_m=('190303_temp_v28')
+#    verName_m=('190303_temp_v28_sys_unfolding_iterative'$j)
+#    for ((i=0; i< ${#verName_m[@]};i++))
+#    do
+#        cp ./phoRaaCuts/phoRaaCuts_${verFileCopy_m[$i]}.h ./phoRaaCuts/phoRaaCuts_temp.h
+#        cp ./results/output/rawDist_${verName_a[$i]}_splitPD.root ./results/output/rawDist_${verName_m[$i]}_splitPD.root
+#        cp ./performance/output/correlation_genPt_recoPt_${verName_a[$i]}_pbpb.root ./performance/output/correlation_genPt_recoPt_${verName_m[$i]}_pbpb.root 
+#        cp ./performance/output/correlation_genPt_recoPt_${verName_a[$i]}_pp.root ./performance/output/correlation_genPt_recoPt_${verName_m[$i]}_pp.root 
+#        cp ./results/output/phoRaa_${verName_a[$i]}_beforeUnfolding.root ./results/output/phoRaa_${verName_m[$i]}_beforeUnfolding.root
+#        source /data/ROOT-v5.34.21/bin/thisroot.sh
+#        python results/RooUnfold_photonRaa_v6.py ${verName_m[$i]} $j 0 noSplitMC  >& log/RooUnfold_photonRaa_v6_${verName_m[$i]}.log
+#        source /home/goyeonju/root/builddir/bin/thisroot.sh
+#        root -l -b -q 'results/drawUnfoldingFigures_v2.C++("'${verName_m[$i]}'")' >& log/drawUnfoldingFigures_${verName_m[$i]}.log
+#        cp ./performance/output/correlation_genPt_recoPt_${verName_a[$i]}_pbpb_splitMC.root ./performance/output/correlation_genPt_recoPt_${verName_m[$i]}_pbpb_splitMC.root 
+#        cp ./performance/output/correlation_genPt_recoPt_${verName_a[$i]}_pp_splitMC.root ./performance/output/correlation_genPt_recoPt_${verName_m[$i]}_pp_splitMC.root 
+#        source /data/ROOT-v5.34.21/bin/thisroot.sh
+#        python results/RooUnfold_photonRaa_v6.py ${verName_m[$i]} $j 0 splitMC >& log/RooUnfold_photonRaa_v6_${verName_m[$i]}_splitMC.log
+#        source /home/goyeonju/root/builddir/bin/thisroot.sh
+#        root -l -b -q 'results/drawUnfoldingFigures_v2.C++("'${verName_m[$i]}'",1)' >& log/drawUnfoldingFigures_${verName_m[$i]}.log
+#        root -l -b -q 'results/drawRaaXsec_v6_afterUnfolding.C++("'${verName_m[$i]}'",1)' >& log/drawRaaXsec_v6_afterUnfolding_${verName_m[$i]}.log
+#    done
+#done
+#
+
+verFileCopy_c=('190303_temp_v28_sys_purUp')
+verName_c=('190303_temp_v28_sys_purUp')
+preverName_c=('180822_temp_v24_sys_purUp')
+for ((i=0; i< ${#verName_c[@]};i++))
+do
+    cp ./phoRaaCuts/phoRaaCuts_${verFileCopy_c[$i]}.h ./phoRaaCuts/phoRaaCuts_temp.h
 #    cp ./efficiency/output/pbpb_iso_efficiency_${verName_a[$i]}.root ./efficiency/output/pbpb_iso_efficiency_${verName_c[$i]}.root
 #    cp ./efficiency/output/pp_iso_efficiency_${verName_a[$i]}.root ./efficiency/output/pp_iso_efficiency_${verName_c[$i]}.root
 ##    cp ./purity/output/purity_pbpb_${preverName_c[$i]}_splitPD.root ./purity/output/purity_pbpb_${verName_c[$i]}_splitPD.root
@@ -116,7 +154,31 @@ done
 #    python results/RooUnfold_photonRaa_v6.py ${verName_c[$i]} 6 0 noSplitMC  >& log/RooUnfold_photonRaa_v6_${verName_c[$i]}.log
 #    source /home/goyeonju/root/builddir/bin/thisroot.sh
 #    root -l -b -q 'results/drawUnfoldingFigures_v2.C++("'${verName_c[$i]}'")' >& log/drawUnfoldingFigures_${verName_c[$i]}.log
-#    root -l -b -q 'results/drawRaaXsec_v6_makeOutput.C++("'${verName_c[$i]}'",1)' >& log/drawRaaXsec_v6_makeOutput_${verName_c[$i]}.log
+#    root -l -b -q 'results/drawRaaXsec_v6_afterUnfolding.C++("'${verName_c[$i]}'",1)' >& log/drawRaaXsec_v6_afterUnfolding_${verName_c[$i]}.log
+done
+#
+#verFileCopy_d=('190303_temp_v28_sys_purDown')
+#verName_d=('190303_temp_v28_sys_purDown')
+#preverName_d=('180822_temp_v24_sys_purDown')
+#for ((i=0; i< ${#verName_d[@]};i++))
+#do
+#    cp ./phoRaaCuts/phoRaaCuts_${verFileCopy_d[$i]}.h ./phoRaaCuts/phoRaaCuts_temp.h
+##    cp ./efficiency/output/pbpb_iso_efficiency_${verName_a[$i]}.root ./efficiency/output/pbpb_iso_efficiency_${verName_d[$i]}.root
+##    cp ./efficiency/output/pp_iso_efficiency_${verName_a[$i]}.root ./efficiency/output/pp_iso_efficiency_${verName_d[$i]}.root
+###    cp ./purity/output/purity_pbpb_${preverName_d[$i]}_splitPD.root ./purity/output/purity_pbpb_${verName_d[$i]}_splitPD.root
+###    cp ./purity/output/purity_pp_${preverName_d[$i]}_splitPD.root ./purity/output/purity_pp_${verName_d[$i]}.root
+###    root -l -b -q 'purity/yj_quickPhotonPurity_v2.C++("pbpb","'${verName_d[$i]}'",1,1)' >& log/yj_quickPhotonPurity_v2_pbpb_${verName_d[$i]}.log & sleep 20
+###    root -l -b -q 'purity/yj_quickPhotonPurity_v2.C++("pp","'${verName_d[$i]}'",1,1)' >& log/yj_quickPhotonPurity_v2_pp_${verName_d[$i]}.log
+##    wait $(jobs -p)
+##    cp ./performance/output/correlation_genPt_recoPt_${verName_a[$i]}_pbpb.root ./performance/output/correlation_genPt_recoPt_${verName_d[$i]}_pbpb.root 
+##    cp ./performance/output/correlation_genPt_recoPt_${verName_a[$i]}_pp.root ./performance/output/correlation_genPt_recoPt_${verName_d[$i]}_pp.root 
+##    cp ./results/output/rawDist_${verName_a[$i]}_splitPD.root ./results/output/rawDist_${verName_d[$i]}_splitPD.root
+#    root -l -b -q 'results/drawRaaXsec_v6.C++("'${verName_d[$i]}'",1)' >& log/drawRaaXsec_v6_${verName_d[$i]}.log
+#    source /data/ROOT-v5.34.21/bin/thisroot.sh
+#    python results/RooUnfold_photonRaa_v6.py ${verName_d[$i]} 6 0 noSplitMC  >& log/RooUnfold_photonRaa_v6_${verName_d[$i]}.log
+#    source /home/goyeonju/root/builddir/bin/thisroot.sh
+#    root -l -b -q 'results/drawUnfoldingFigures_v2.C++("'${verName_d[$i]}'")' >& log/drawUnfoldingFigures_${verName_d[$i]}.log
+#    root -l -b -q 'results/drawRaaXsec_v6_afterUnfolding.C++("'${verName_d[$i]}'",1)' >& log/drawRaaXsec_v6_afterUnfolding_${verName_d[$i]}.log
 #done
 #
 #verFileCopy_hhh=('190303_temp_v28')
@@ -136,31 +198,7 @@ done
 #    python results/RooUnfold_photonRaa_v6.py ${verName_hhh[$i]} 6 0 noSplitMC  >& log/RooUnfold_photonRaa_v6_${verName_hhh[$i]}.log
 #    source /home/goyeonju/root/builddir/bin/thisroot.sh
 #    root -l -b -q 'results/drawUnfoldingFigures_v2.C++("'${verName_hhh[$i]}'")' >& log/drawUnfoldingFigures_${verName_hhh[$i]}.log
-#    root -l -b -q 'results/drawRaaXsec_v6_makeOutput.C++("'${verName_hhh[$i]}'",1)' >& log/drawRaaXsec_v6_makeOutput_${verName_hhh[$i]}.log
-#done
-#
-#verFileCopy_d=('190303_temp_v28_sys_purDown')
-#verName_d=('190303_temp_v28_sys_purDown')
-#preverName_d=('180822_temp_v24_sys_purDown')
-#for ((i=0; i< ${#verName_d[@]};i++))
-#do
-#    cp ./phoRaaCuts/phoRaaCuts_${verFileCopy_d[$i]}.h ./phoRaaCuts/phoRaaCuts_temp.h
-#    cp ./efficiency/output/pbpb_iso_efficiency_${verName_a[$i]}.root ./efficiency/output/pbpb_iso_efficiency_${verName_d[$i]}.root
-#    cp ./efficiency/output/pp_iso_efficiency_${verName_a[$i]}.root ./efficiency/output/pp_iso_efficiency_${verName_d[$i]}.root
-##    cp ./purity/output/purity_pbpb_${preverName_d[$i]}_splitPD.root ./purity/output/purity_pbpb_${verName_d[$i]}_splitPD.root
-##    cp ./purity/output/purity_pp_${preverName_d[$i]}_splitPD.root ./purity/output/purity_pp_${verName_d[$i]}.root
-##    root -l -b -q 'purity/yj_quickPhotonPurity_v2.C++("pbpb","'${verName_d[$i]}'",1,1)' >& log/yj_quickPhotonPurity_v2_pbpb_${verName_d[$i]}.log & sleep 20
-##    root -l -b -q 'purity/yj_quickPhotonPurity_v2.C++("pp","'${verName_d[$i]}'",1,1)' >& log/yj_quickPhotonPurity_v2_pp_${verName_d[$i]}.log
-#    wait $(jobs -p)
-#    cp ./performance/output/correlation_genPt_recoPt_${verName_a[$i]}_pbpb.root ./performance/output/correlation_genPt_recoPt_${verName_d[$i]}_pbpb.root 
-#    cp ./performance/output/correlation_genPt_recoPt_${verName_a[$i]}_pp.root ./performance/output/correlation_genPt_recoPt_${verName_d[$i]}_pp.root 
-#    cp ./results/output/rawDist_${verName_a[$i]}_splitPD.root ./results/output/rawDist_${verName_d[$i]}_splitPD.root
-#    root -l -b -q 'results/drawRaaXsec_v6.C++("'${verName_d[$i]}'",1)' >& log/drawRaaXsec_v6_${verName_d[$i]}.log
-#    source /data/ROOT-v5.34.21/bin/thisroot.sh
-#    python results/RooUnfold_photonRaa_v6.py ${verName_d[$i]} 6 0 noSplitMC  >& log/RooUnfold_photonRaa_v6_${verName_d[$i]}.log
-#    source /home/goyeonju/root/builddir/bin/thisroot.sh
-#    root -l -b -q 'results/drawUnfoldingFigures_v2.C++("'${verName_d[$i]}'")' >& log/drawUnfoldingFigures_${verName_d[$i]}.log
-#    root -l -b -q 'results/drawRaaXsec_v6_makeOutput.C++("'${verName_d[$i]}'",1)' >& log/drawRaaXsec_v6_makeOutput_${verName_d[$i]}.log
+#    root -l -b -q 'results/drawRaaXsec_v6_afterUnfolding.C++("'${verName_hhh[$i]}'",1)' >& log/drawRaaXsec_v6_afterUnfolding_${verName_hhh[$i]}.log
 #done
 #
 #verFileCopy_f=('190303_temp_v28_sys_IDup')
@@ -186,7 +224,7 @@ done
 #    python results/RooUnfold_photonRaa_v6.py ${verName_f[$i]} 6 0 noSplitMC  >& log/RooUnfold_photonRaa_v6_${verName_f[$i]}.log
 #    source /home/goyeonju/root/builddir/bin/thisroot.sh
 #    root -l -b -q 'results/drawUnfoldingFigures_v2.C++("'${verName_f[$i]}'")' >& log/drawUnfoldingFigures_${verName_f[$i]}.log
-#    root -l -b -q 'results/drawRaaXsec_v6_makeOutput.C++("'${verName_f[$i]}'",1)' >& log/drawRaaXsec_v6_makeOutput_${verName_f[$i]}.log
+#    root -l -b -q 'results/drawRaaXsec_v6_afterUnfolding.C++("'${verName_f[$i]}'",1)' >& log/drawRaaXsec_v6_afterUnfolding_${verName_f[$i]}.log
 #done
 #
 #verFileCopy_fa=('190303_temp_v28_sys_IDdown')
@@ -212,7 +250,7 @@ done
 #    python results/RooUnfold_photonRaa_v6.py ${verName_fa[$i]} 6 0 noSplitMC  >& log/RooUnfold_photonRaa_v6_${verName_fa[$i]}.log
 #    source /home/goyeonju/root/builddir/bin/thisroot.sh
 #    root -l -b -q 'results/drawUnfoldingFigures_v2.C++("'${verName_fa[$i]}'")' >& log/drawUnfoldingFigures_${verName_fa[$i]}.log
-#    root -l -b -q 'results/drawRaaXsec_v6_makeOutput.C++("'${verName_fa[$i]}'",1)' >& log/drawRaaXsec_v6_makeOutput_${verName_fa[$i]}.log
+#    root -l -b -q 'results/drawRaaXsec_v6_afterUnfolding.C++("'${verName_fa[$i]}'",1)' >& log/drawRaaXsec_v6_afterUnfolding_${verName_fa[$i]}.log
 #done
 #
 #verFileCopy_b=('190303_temp_v28_sys_phoEscale')
@@ -238,7 +276,7 @@ done
 #    python results/RooUnfold_photonRaa_v6.py ${verName_b[$i]} 6 0 noSplitMC  >& log/RooUnfold_photonRaa_v6_${verName_b[$i]}.log
 #    source /home/goyeonju/root/builddir/bin/thisroot.sh
 #    root -l -b -q 'results/drawUnfoldingFigures_v2.C++("'${verName_b[$i]}'")' >& log/drawUnfoldingFigures_${verName_b[$i]}.log
-#    root -l -b -q 'results/drawRaaXsec_v6_makeOutput.C++("'${verName_b[$i]}'",1)' >& log/drawRaaXsec_v6_makeOutput_${verName_b[$i]}.log
+#    root -l -b -q 'results/drawRaaXsec_v6_afterUnfolding.C++("'${verName_b[$i]}'",1)' >& log/drawRaaXsec_v6_afterUnfolding_${verName_b[$i]}.log
 #done
 #
 #verFileCopy_j=('190303_temp_v28_sys_phoEresol')
@@ -259,7 +297,7 @@ done
 #    python results/RooUnfold_photonRaa_v6.py ${verName_j[$i]} 6 0 noSplitMC  >& log/RooUnfold_photonRaa_v6_${verName_j[$i]}.log
 #    source /home/goyeonju/root/builddir/bin/thisroot.sh
 #    root -l -b -q 'results/drawUnfoldingFigures_v2.C++("'${verName_j[$i]}'")' >& log/drawUnfoldingFigures_${verName_j[$i]}.log
-#    root -l -b -q 'results/drawRaaXsec_v6_makeOutput.C++("'${verName_j[$i]}'",1)' >& log/drawRaaXsec_v6_makeOutput_${verName_j[$i]}.log
+#    root -l -b -q 'results/drawRaaXsec_v6_afterUnfolding.C++("'${verName_j[$i]}'",1)' >& log/drawRaaXsec_v6_afterUnfolding_${verName_j[$i]}.log
 #done
 #
 #verFileCopy_e=('190303_temp_v28_sys_eleCont')
@@ -285,7 +323,7 @@ done
 #    python results/RooUnfold_photonRaa_v6.py ${verName_e[$i]} 6 0 noSplitMC  >& log/RooUnfold_photonRaa_v6_${verName_e[$i]}.log
 #    source /home/goyeonju/root/builddir/bin/thisroot.sh
 #    root -l -b -q 'results/drawUnfoldingFigures_v2.C++("'${verName_e[$i]}'")' >& log/drawUnfoldingFigures_${verName_e[$i]}.log
-#    root -l -b -q 'results/drawRaaXsec_v6_makeOutput.C++("'${verName_e[$i]}'",1)' >& log/drawRaaXsec_v6_makeOutput_${verName_e[$i]}.log
+#    root -l -b -q 'results/drawRaaXsec_v6_afterUnfolding.C++("'${verName_e[$i]}'",1)' >& log/drawRaaXsec_v6_afterUnfolding_${verName_e[$i]}.log
 #done
 #
 #verFileCopy_h=('190303_temp_v28_sys_TAAup')
@@ -301,7 +339,7 @@ done
 #    cp ./performance/output/correlation_genPt_recoPt_${verName_a[$i]}_pp.root ./performance/output/correlation_genPt_recoPt_${verName_h[$i]}_pp.root 
 #    cp ./results/output/rawDist_${verName_a[$i]}_splitPD.root ./results/output/rawDist_${verName_h[$i]}_splitPD.root
 #    cp ./results/output/Unfold_${verName_a[$i]}.root ./results/output/Unfold_${verName_h[$i]}.root
-#    root -l -b -q 'results/drawRaaXsec_v6_makeOutput.C++("'${verName_h[$i]}'",1)' >& log/drawRaaXsec_v6_makeOutput_${verName_h[$i]}.log
+#    root -l -b -q 'results/drawRaaXsec_v6_afterUnfolding.C++("'${verName_h[$i]}'",1)' >& log/drawRaaXsec_v6_afterUnfolding_${verName_h[$i]}.log
 #done
 #
 #verFileCopy_ha=('190303_temp_v28_sys_TAAdown')
@@ -317,13 +355,13 @@ done
 #    cp ./performance/output/correlation_genPt_recoPt_${verName_a[$i]}_pp.root ./performance/output/correlation_genPt_recoPt_${verName_ha[$i]}_pp.root 
 #    cp ./results/output/rawDist_${verName_a[$i]}_splitPD.root ./results/output/rawDist_${verName_ha[$i]}_splitPD.root
 #    cp ./results/output/Unfold_${verName_a[$i]}.root ./results/output/Unfold_${verName_ha[$i]}.root
-#    root -l -b -q 'results/drawRaaXsec_v6_makeOutput.C++("'${verName_h[$i]}'",1)' >& log/drawRaaXsec_v6_makeOutput_${verName_ha[$i]}.log
+#    root -l -b -q 'results/drawRaaXsec_v6_afterUnfolding.C++("'${verName_h[$i]}'",1)' >& log/drawRaaXsec_v6_afterUnfolding_${verName_ha[$i]}.log
 #done
 #
-#cp ./phoRaaCuts/phoRaaCuts_${verFileCopy_a}.h ./phoRaaCuts/phoRaaCuts_temp.h
+cp ./phoRaaCuts/phoRaaCuts_${verFileCopy_a}.h ./phoRaaCuts/phoRaaCuts_temp.h
 #root -l -b -q 'systematics/calc_systematic.C++("'${verFileCopy_a}'")' >& log/systematics_${verFileCopy_a}.log
 #root -l -b -q 'systematics/calc_systematic_cent0to100.C++("'${verFileCopy_a}'")' >& log/systematics_cent0to100_${verFileCopy_a}.log
 #root -l -b -q 'systematics/drawSystematicPlots.C++("'${verFileCopy_a}'")' >& log/drawSystematicsPlots_${verFileCopy_a}.log
-#root -l -b -q 'plotting/photonRaaPlot_temp.C++("'${verFileCopy_a}'")' >& log/plotting_${verFileCopy_a}.log
-#root -l -b -q 'plotting/photonRaaPlot_withJetphox.C++("'${verFileCopy_a}'")' >& log/plotting_${verFileCopy_a}.log
-#root -l -b -q 'plotting/photonRaaPlot.C++("'${verFileCopy_a}'")' >& log/plotting_${verFileCopy_a}.log
+##root -l -b -q 'plotting/photonRaaPlot_temp.C++("'${verFileCopy_a}'")' >& log/plotting_${verFileCopy_a}.log
+root -l -b -q 'plotting/photonRaaPlot_withJetphox.C++("'${verFileCopy_a}'")' >& log/plotting_${verFileCopy_a}.log
+##root -l -b -q 'plotting/photonRaaPlot.C++("'${verFileCopy_a}'")' >& log/plotting_${verFileCopy_a}.log

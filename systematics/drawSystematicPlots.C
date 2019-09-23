@@ -16,17 +16,20 @@ void drawSystematicPlots(TString ver="180619_temp_v17")
     setTDRStyle();
 
     std::vector<std::string> sys_types {
+        "sys_TnP",
 //        "sys_effUp",
 //        "sys_effDown",
-        "sys_IDup",
-        "sys_IDdown",
+//        "sys_IDup",
+//        "sys_IDdown",
         "sys_purUp",
         "sys_purDown",
         "sys_phoEresol",
         "sys_phoEscale",
         "sys_eleCont",
-        "sys_unfolding_svd5"
-//        "sys_TAA"
+        "sys_unfolding_MCsize",
+        "sys_TAA"
+        //"sys_TAAup",
+        //"sys_TAAdown"
     };
     int n_sys_types = sys_types.size();
 
@@ -74,10 +77,13 @@ void drawSystematicPlots(TString ver="180619_temp_v17")
         if(hist_types[i] == "dNdpt_corr2_pp") nCENTBINS = 1; 
         for(int j=0; j<n_list; ++j){// systematic sources
             for (int l=0; l<n_sys_method; ++l) { //diff, ratio
-                c[i][j][l] = new TCanvas(Form("c_%d_%d_%d",i,j,l),"",300*nCENTBINS,300);
+                c[i][j][l] = new TCanvas(Form("c_%d_%d_%d",i,j,l),"",500*nCENTBINS,500);
                 c[i][j][l]->Divide(nCENTBINS,1);
                 if(hist_types[i] == "Raa" && (list[j] == "abs_sys_TAA") ) continue;
-                //if(hist_types[i] == "Raa" && (list[j] == "abs_sys_TAA") ) continue;
+                if(hist_types[i] == "dNdpt_corr2" && (list[j] == "abs_sys_TAA") ) continue;
+                if(hist_types[i] == "dNdpt_corr2_pp" && (list[j] == "abs_sys_TAAup") ) continue;
+                if(hist_types[i] == "dNdpt_corr2_pp" && (list[j] == "abs_sys_TAAdown") ) continue;
+                //if(hist_types[i] == "dNdpt_corr2_pp" && (list[j] == "abs_sys_TAA") ) continue;
                 for (int k=0; k<nCENTBINS; ++k) { //centrality (k=0 is 0-100%)
                     c[i][j][l]->cd(k+1);
                     TString hist_name = Form("h1D_%s_cent%d_%s_%s",hist_types.at(i).c_str(),k,sys_method.at(l).c_str(),list.at(j).c_str());
@@ -90,16 +96,24 @@ void drawSystematicPlots(TString ver="180619_temp_v17")
                     }
 
                     if(sys_method[l]=="diff") h[i][j][l][k]->GetYaxis()->SetTitle("|Variation-Nominal|");
-                    else if(sys_method[l]=="ratio") h[i][j][l][k]->GetYaxis()->SetTitle("|(Variation-Nominal)/Nominal|");
-                    if(sys_method[l]=="ratio") h[i][j][l][k]->GetYaxis()->SetRangeUser(0,0.3);
+                    else if(sys_method[l]=="ratio") h[i][j][l][k]->GetYaxis()->SetTitle("| (Variation-Nominal)/Nominal |");
+                    if(sys_method[l]=="ratio") h[i][j][l][k]->GetYaxis()->SetRangeUser(0,0.1);
                     else {
-                        if(hist_types[i] == "Raa") h[i][j][l][k]->GetYaxis()->SetRangeUser(0,0.3);
+                        if(hist_types[i] == "Raa") h[i][j][l][k]->GetYaxis()->SetRangeUser(0,0.1);
                     }
-
+                    if(list.at(j)=="abs_sys_purUp") h[i][j][l][k]->GetYaxis()->SetRangeUser(0,0.2);
+                    if(list.at(j)=="abs_sys_purDown") h[i][j][l][k]->GetYaxis()->SetRangeUser(0,0.2);
+                    if(list.at(j)=="total") h[i][j][l][k]->GetYaxis()->SetRangeUser(0,0.2);
+                    if(list.at(j)=="abs_sys_unfolding_svd5") h[i][j][l][k]->GetYaxis()->SetRangeUser(0,0.2);
+                    if(list.at(j)=="abs_sys_TAAup") h[i][j][l][k]->GetYaxis()->SetRangeUser(0,0.2);
+                    if(list.at(j)=="abs_sys_TAAdown") h[i][j][l][k]->GetYaxis()->SetRangeUser(0,0.2);
                     h[i][j][l][k]->GetXaxis()->SetRangeUser(ptBins_unfolding[1], ptBins_unfolding[nPtBin_unfolding-rejectPtBins[k]-1]);
                     //if(sys_method[l]=="ratio") cout << "list name including ratio = " << list.at(j).c_str() << endl;
+                
+                    //cout << "list = " << list.at(j).c_str() << endl;
+                    SetHistTextSize(h[i][j][l][k]);
 
-                    h[i][j][l][k]->Draw();
+                    h[i][j][l][k]->Draw("hist");
                     drawText(Form("%s_%s_%s",hist_types.at(i).c_str(),sys_method.at(l).c_str(),list.at(j).c_str()),0.2,1.0-(c[i][j][l]->GetTopMargin()+0.05));
                     if(hist_types[i] != "dNdpt_corr2_pp") drawText(Form("Cent %d-%d %s",(int)centBins_i[k]/2,(int)centBins_f[k]/2,"%"),0.2,1.0-(c[i][j][l]->GetTopMargin()+0.12));
                 }
@@ -119,14 +133,18 @@ void drawSystematicPlots(TString ver="180619_temp_v17")
     for(int i=0; i<n_hist_types; ++i){
         Int_t nCENTBINS = nCentBinIF;
         if(hist_types[i] == "dNdpt_corr2_pp") nCENTBINS = 1; 
-        c_tot[i] = new TCanvas(Form("c_tot_%d",i),"",300*nCENTBINS,300);
+        c_tot[i] = new TCanvas(Form("c_tot_%d",i),"",450*nCENTBINS,450);
         c_tot[i]->Divide(nCENTBINS,1);
         for (int k=0; k<nCENTBINS; ++k) { //k=0 is 0-100%
             c_tot[i]->cd(k+1);
             for(int j=0; j<n_list; ++j){
                 if(hist_types[i] == "Raa" && (list[j] == "abs_sys_TAA") ) continue;
+                if(hist_types[i] == "dNdpt_corr2" && (list[j] == "abs_sys_TAA") ) continue;
+                SetHistTextSize(h[i][j][1][k]);
                 h[i][j][1][k]->GetYaxis()->SetTitle("|(Variation-Nominal)/Nominal|");
-                h[i][j][1][k]->GetYaxis()->SetRangeUser(0,0.5);
+                h[i][j][1][k]->GetYaxis()->SetRangeUser(0,0.4);
+                if(hist_types[i] == "Raa") 
+                    h[i][j][1][k]->GetYaxis()->SetRangeUser(0,0.25);
                 h[i][j][1][k]->GetXaxis()->SetRangeUser(ptBins_unfolding[1], ptBins_unfolding[nPtBin_unfolding-rejectPtBins[k]-1]);
                 h[i][j][1][k]->SetLineColor(colorStyle[j]);
                 if(j==0) h[i][j][1][k]->Draw("hist");
@@ -144,7 +162,8 @@ void drawSystematicPlots(TString ver="180619_temp_v17")
                     else if(tempSt=="phoEresol_rmsUp_sys_phoEresol_rmsDown_total") tempSt = "Eresol_RMS_Up_Down";
                     cout << "NOW HIST = " << list.at(j).c_str()<< endl;
                     cout << "tempSt = " << tempSt << endl;
-                    l1->AddEntry(h[i][j][1][k],Form("%s",tempSt.data()),"l"); 
+                    if(tempSt=="unfolding_svd5") l1->AddEntry(h[i][j][1][k],Form("%s","unfolding"),"l"); 
+                    else l1->AddEntry(h[i][j][1][k],Form("%s",tempSt.data()),"l"); 
                 }
                 if(hist_types[i]=="dNdpt_corr2_pp" && k==0){
                     string tempSt = "";

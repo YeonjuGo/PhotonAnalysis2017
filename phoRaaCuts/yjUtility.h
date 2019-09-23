@@ -190,13 +190,12 @@ void settdrStyleHist(TH1D* h, float xoffset=1.5, float yoffset=1.8){
     h->GetXaxis()->SetLabelSize(0.04);
 }
 
-void drawLumi(TCanvas* c, TString lumiSt,double lumiTextOffset=0.2){
+void drawLumi(TCanvas* c, TString lumiSt,double lumiTextOffset=0.2, double lumiTextSize = 0.525){
     float ll = c->GetLeftMargin();
     float tt = c->GetTopMargin();
     float rr = c->GetRightMargin();
     float bb = c->GetBottomMargin();
     //cout << ll << ", " << tt << ", " << rr << ", " << bb << endl;
-    double lumiTextSize =0.525;
     TLatex latex;
     latex.SetNDC();
     latex.SetTextAngle(0);
@@ -277,8 +276,10 @@ void SetHistTextSize(TH1* h, double divRatio=1.0, double titlesize=17, double la
     double labeloffset = 0.01;
     h->GetXaxis()->SetLabelFont(fontst);
     h->GetYaxis()->SetLabelFont(fontst);
-    h->GetXaxis()->SetTitleFont(63);
-    h->GetYaxis()->SetTitleFont(63);
+    h->GetXaxis()->SetTitleFont(fontst);
+    h->GetYaxis()->SetTitleFont(fontst);
+    //h->GetXaxis()->SetTitleFont(63);
+    //h->GetYaxis()->SetTitleFont(63);
 
     h->GetXaxis()->SetLabelSize(labelsize); h->SetTitleOffset(titleoffset/divRatio, "X");
     h->GetYaxis()->SetLabelSize(labelsize); h->SetTitleOffset(titleoffset/divRatio, "Y");
@@ -344,6 +345,9 @@ void hMarkerStyle(TH1 *h1=0, Int_t mstyle=20, Int_t mcolor=1, Double_t msize=1.0
 	h1->SetMarkerSize(msize);
 }
 void drawText(const char *text, float xp, float yp, bool isRightAlign=0, int textColor=kBlack, double textSize=0.04, int textFont = 42){
+//void drawText(const char *text, float xp, float yp, bool isRightAlign=0, int textColor=kBlack, double textSize=18, int textFont = 43){
+    // when textfont 42, textSize=0.04
+    // when textfont 43, textSize=18
 	TLatex *tex = new TLatex(xp,yp,text);
 	tex->SetTextFont(textFont);
 	//   if(bold)tex->SetTextFont(43);
@@ -410,7 +414,7 @@ void ratioPanelCanvas(TCanvas*& canv,
 	canv->cd();
     pad1->SetLeftMargin(leftMargin);
 	pad1->SetRightMargin(edge);
-	pad1->SetTopMargin(edge);
+	pad1->SetTopMargin(edge*2);
 	pad1->SetBottomMargin(edge);
     pad1->Draw();
     pad1->cd();

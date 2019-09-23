@@ -1,0 +1,821 @@
+// photonRaaPlot_withJetphox_v2.C
+// draw the final plots 
+// Author: Yeonju Go
+// Modified at 2019 July 12
+// to have jetphox PDF systematic uncertainty in the ratio plot
+
+#include "../phoRaaCuts/yjUtility.h"
+#include "../phoRaaCuts/phoRaaCuts_temp.h"
+//#include "../phoRaaCuts/temp_phoRaaCuts_temp.h"
+//#include "../phoRaaCuts/styleUtil.h"
+#include "../phoRaaCuts/tdrstyle.C"
+#include "TGraphErrors.h"
+#include "TGraphAsymmErrors.h"
+#include "TMultiGraph.h"
+#include "TAttFill.h"
+
+static const float ncoll_w_npart[4] = {43.58, 118.8, 239.9, 363.4};
+void draw_sys_unc(TGraphErrors* gr, TH1* h1, TH1* h1_sys);
+void draw_npart_sys_unc(TGraphErrors* gr, TH1* h1, TH1* h1_sys, int x_width);
+
+const int markerStyle[]={20,33,34,29,20,29};
+const int markerStyle_pp=21;//square
+const int colorStyle_marker_pp=kOrange+7;
+const int colorStyle_line_pp=kOrange+7;
+const int colorStyle_sys_pp=kOrange+6;
+const int colorStyle_marker[]={kBlack,kPink-6,kGreen+3,kBlue-3,kOrange+4};
+const int colorStyle_sys[]={kYellow-7,kRed-10,kGreen-10,kBlue-10,kOrange-3};
+const int colorStyle_line[]={kYellow-4,kPink-6,kGreen+3,kBlue-3,kOrange+4};
+const double transparency[]={0.5,0.5,0.5,0.5,0.5,0.5};
+const double scale[]={0,10.,100.,1000.,10000.,100000.};
+
+TGraphAsymmErrors* scale_graph(TGraphAsymmErrors* gr, Float_t s);
+TGraphAsymmErrors* divide_graph_by_hist(TGraphAsymmErrors* gr, TH1D* h1);
+#define TH1_TO_TGRAPH(hist, graph,points)                                      \
+    int npoints = hist->GetNbinsX();                                    \
+graph = new TGraphAsymmErrors(points);                                 \
+for (int p=0; p<points; ++p) {                                         \
+    double Xmean = ptBins_mean_pbpb[p];                                 \
+    double Ymean = hist->GetBinContent(p+1);                            \
+    double Xerr_l= Xmean-ptBins_draw[p];                                \
+    double Xerr_h= ptBins_draw[p+1]-Xmean;                              \
+    double Yerr_l= hist->GetBinError(p+1);                              \
+    double Yerr_h= hist->GetBinError(p+1);                              \
+    graph->SetPoint(p, Xmean, Ymean);                                   \
+    graph->SetPointError(p,Xerr_l,Xerr_h,Yerr_l,Yerr_h);                \
+}
+
+//void photonRaaPlot_withJetphox_v2(TString ver="190703_temp_v31", bool doJETPHOX = true) {
+void photonRaaPlot_withJetphox_v3(TString ver="190703_temp_v31", bool doJETPHOX = true) {
+    gStyle->SetOptTitle(0);
+    gStyle->SetOptStat(0);
+    
+    TString cap = Form("%s_withJetphox_NLO",ver.Data());
+    // input files 
+    TString dir = "/home/goyeonju/CMS/2017/PhotonAnalysis2017/";
+    const std::string input_file = Form("%sresults/output/phoRaa_afterUnfolding_%s_nominal.root",dir.Data(),ver.Data());
+    const std::string sys_file = Form("%ssystematics/output/systematics_%s.root",dir.Data(),ver.Data());
+    //const std::string sys_file = Form("%ssystematics/output/systematics_%s_cent0to100.root",dir.Data(),ver.Data());
+    TFile* input = new TFile(input_file.c_str(), "read");
+    TFile* sys = new TFile(sys_file.c_str(), "read");
+
+    cout << "input files done" << endl;
+    // define histogram types  
+    std::vector<std::string> hist_types {
+        "Raa", "dNdpt_corr2", "dNdpt_corr2_pp"
+    };
+    int n_hist_types = hist_types.size(); 
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+    // Global Uncertainty
+    double sys_ppLumi = 0.023; 
+    double sys_global[nCentBinIF];
+    for (int k=0; k<nCentBinIF; ++k) //k=0 is 0-100 % 
+        sys_global[k] = TMath::Sqrt(TA_err[k]*TA_err[k]+sys_ppLumi*sys_ppLumi);
+    //double sys_global = TMath::Sqrt(sys_MB*sys_MB+sys_ppLumi*sys_ppLumi); 
+
+    // define histograms, graphs, ..., etc 
+    TObject* generic[n_hist_types][nCentBinIF];
+    TH1D* h1D_nominal[n_hist_types][nCentBinIF];
+    TH1D* systematics[n_hist_types][nCentBinIF];            
+    TH1D* h1D_nominal_withUnderOverFlowBins[n_hist_types][nCentBinIF];
+    TH1D* systematics_withUnderOverFlowBins[n_hist_types][nCentBinIF];            
+    TH1D* htemp[n_hist_types]; // for cosmetics, will draw axis and its titles
+    TGraphAsymmErrors* gr_sys[n_hist_types][nCentBinIF];
+    TGraphAsymmErrors* gr_nominal[n_hist_types][nCentBinIF];
+    TGraphAsymmErrors* gr_sys_scaled[nCentBinIF]; // for dNdpt
+    TGraphAsymmErrors* gr_sys_jp_data_ratio[nCentBinIF]; // for the ratio of dNdpt and JETPHOX
+    TGraphAsymmErrors* gr_nominal_scaled[nCentBinIF]; // for dNdpt
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+    // Define graphs and histgorams  
+    cout << "define graphs and histograms..." << endl;
+    TCanvas* c_temp = new TCanvas(Form("c_%s","temp"),"",600,600);
+    for (int i=0; i<n_hist_types; ++i) {
+        c_temp->cd();
+        for (int k=0; k<nCentBinIF; ++k) { //k=0 is 0-100 % 
+            if(hist_types[i] == "dNdpt_corr2_pp" && k>0) continue; 
+
+            std::string hist_name;
+            if(hist_types[i] == "dNdpt_corr2_pp"){
+                hist_name = Form("h1D_%s", hist_types[i].c_str());
+                if(k>0) continue;
+            } else{
+                hist_name = Form("h1D_%s_cent%d", hist_types[i].c_str(), k);
+            }
+            cout << "histname : " << hist_name  << endl;
+
+            // nominal value part
+            generic[i][k] = input->Get(hist_name.data());
+            h1D_nominal_withUnderOverFlowBins[i][k] = (TH1D*)generic[i][k];
+            systematics_withUnderOverFlowBins[i][k] = (TH1D*)sys->Get((hist_name + "_diff_total").c_str());
+            h1D_nominal[i][k] = removeHistFirstAndLastBins(h1D_nominal_withUnderOverFlowBins[i][k]); 
+            systematics[i][k] = removeHistFirstAndLastBins(systematics_withUnderOverFlowBins[i][k]); 
+            
+            //systematics[i][k] = (TH1D*)sys->Get((hist_name + "_diff_sys_purUp_sys_purDown_total").c_str()); //this is only purity up and down
+
+            // histogram cosmetics 
+            if(k==0){    
+                if(hist_types[i] == "Raa") htemp[i] = new TH1D(Form("htemp_%d",i),"",nPtBin+1,ptBins_draw_final); 
+                else htemp[i] = new TH1D(Form("htemp_%d",i),"",nPtBin,ptBins_draw); 
+                if(hist_types[i] == "Raa") htemp[i]->GetYaxis()->SetRangeUser(0.0,2.0);
+            }
+            h1D_nominal[i][k]->SetMarkerColor(colorStyle_marker[k]);
+            h1D_nominal[i][k]->SetLineColor(colorStyle_marker[k]);
+            h1D_nominal[i][k]->SetMarkerStyle(markerStyle[k]);
+            h1D_nominal[i][k]->SetFillStyle(3001);
+            h1D_nominal[i][k]->SetFillColor(colorStyle_sys[k]);
+            if(markerStyle[i]==33) h1D_nominal[i][k]->SetMarkerSize(1.6);
+            else h1D_nominal[i][k]->SetMarkerSize(1);
+            if(hist_types[i] == "dNdpt_corr2_pp"){
+                h1D_nominal[i][k]->SetMarkerColor(colorStyle_marker_pp);
+                h1D_nominal[i][k]->SetLineColor(colorStyle_line_pp);
+                h1D_nominal[i][k]->SetFillColor(colorStyle_sys_pp);
+                h1D_nominal[i][k]->SetMarkerStyle(21);
+            } 
+
+            // histogram to graph for nominal value 
+            
+            TH1_TO_TGRAPH(h1D_nominal[i][k], gr_nominal[i][k],nPtBin-rejectPtBins[k]);
+                gr_nominal[i][k]->SetMarkerColor(colorStyle_marker[k]);
+            gr_nominal[i][k]->SetLineColor(colorStyle_marker[k]);
+            gr_nominal[i][k]->SetMarkerStyle(markerStyle[k]);
+            if(hist_types[i] != "Raa") gr_nominal[i][k]->SetMarkerSize(1.8);
+            if(hist_types[i] == "dNdpt_corr2_pp"){
+                gr_nominal[i][k]->SetMarkerColor(colorStyle_marker_pp);
+                gr_nominal[i][k]->SetLineColor(colorStyle_line_pp);
+                gr_nominal[i][k]->SetMarkerStyle(markerStyle_pp);
+            } 
+
+            //systematic part
+            //gr_sys[i][k] = new TGraphAsymmErrors(gr_nominal[i][k]);
+            gr_sys[i][k] = new TGraphAsymmErrors(nPtBin-rejectPtBins[k]);
+            //gr_sys[i][k] = new TGraphAsymmErrors(h1D_nominal[i][k]);
+            gr_sys[i][k]->SetName(Form("gr_sys_%d_%d",i,k));
+            gr_sys[i][k]->SetFillStyle(3001);
+            gr_sys[i][k]->SetFillColor(colorStyle_sys[k]);
+            gr_sys[i][k]->SetLineColor(colorStyle_sys[k]);
+            cout <<  h1D_nominal[i][k]->GetNbinsX()<< endl;
+            //cout << h1D_nominal[i][k]->GetNbinsX() << endl;
+            
+            //for (int ipt=1; ipt<=h1D_nominal[i][k]->GetNbinsX(); ++ipt) {
+            //ipt starting from 2 when using Unfolding underflow bin!!
+            //ipt starting from 1 when not using Unfolding underflow bin!!
+            for (int ipt=1; ipt<=nPtBin-rejectPtBins[k]; ++ipt) {
+            //for (int ipt=2; ipt<=nPtBin-rejectPtBins[k]; ++ipt) {
+                //cout << 
+                //if (h1D_nominal[i][k]->GetBinError(i) == 0) continue;
+                double x = h1D_nominal[i][k]->GetBinCenter(ipt);
+                int sys_bin = systematics[i][k]->FindBin(x);
+                double bin_width = h1D_nominal[i][k]->GetBinLowEdge(ipt+1) - h1D_nominal[i][k]->GetBinLowEdge(ipt);
+                double val = h1D_nominal[i][k]->GetBinContent(ipt);
+                double error = TMath::Abs(systematics[i][k]->GetBinContent(sys_bin));
+                cout << "histname : " << hist_name << ", ipt " << ipt << ", val = " << val << ", Systematic Error = " << error << endl;
+                Double_t pxtmp, pytmp;
+               // //When using unfolding underflow bin
+               // gr_sys[i][k]->SetPointError(ipt-2, (bin_width/2), (bin_width/2), error, error); 
+               // gr_sys[i][k]->SetPoint(ipt-2, x, val); 
+                //When not using unfolding underflow bin
+                gr_sys[i][k]->SetPointError(ipt-1, (bin_width/2), (bin_width/2), error, error); 
+                gr_sys[i][k]->SetPoint(ipt-1, x, val); 
+                cout << "ipt = "<< ipt << ": " << gr_sys[i][k]->GetErrorYhigh(ipt-1) << endl;
+            } 
+
+            //systematic cosmetics 
+            gr_sys[i][k]->SetFillStyle(1001);
+            gr_sys[i][k]->SetFillColorAlpha(colorStyle_sys[k],0.9);
+            //gr_sys[i][k]->SetFillColorAlpha(colorStyle_sys[k],0.5-0.05*k);
+            if(hist_types[i] == "dNdpt_corr2_pp")   gr_sys[i][k]->SetFillColorAlpha(colorStyle_sys[k],0.7);
+            if(hist_types[i] == "Raa") gr_sys[i][k]->GetYaxis()->SetRangeUser(0.5,1.5);
+
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+    // DRAW : Centrality seperately 
+    cout << "Draw centrality separately..." << endl;
+
+    setTDRStyle();   
+    TCanvas* c_sep[n_hist_types][nCentBinIF];
+
+    TLegend* leg_glo = new TLegend(0.53,0.67,0.94,0.77);
+    float dx = 2.5;
+    TBox *globalUncBox_pplumi = new TBox(ptBins_draw_final[0],1-sys_ppLumi,ptBins_draw_final[0]+dx,1+sys_ppLumi);
+    globalUncBox_pplumi -> SetFillColorAlpha(28,0.5);
+    globalUncBox_pplumi -> SetLineColor(kOrange+3);
+    globalUncBox_pplumi -> SetLineWidth(2);
+    TBox *globalUncBox_TAA[nCentBinIF];
+    for (int i=0; i<n_hist_types; ++i) {
+        for (int k=0; k<nCentBinIF; ++k) { //k=0 is 0-100 %
+            if(hist_types[i] == "dNdpt_corr2_pp" && k>0) continue;
+            if(i==0){
+                globalUncBox_TAA[k] = new TBox(ptBins_draw_final[0]+dx,1-TA_err_down[k],ptBins_draw_final[0]+5,1+TA_err_up[k]); // asymetrical TAA uncertainty
+                globalUncBox_TAA[k] -> SetFillColorAlpha(kGray+2,0.5);
+                globalUncBox_TAA[k] -> SetLineColor(kBlack);
+                globalUncBox_TAA[k] -> SetLineWidth(2);
+            }
+            c_sep[i][k] = new TCanvas(Form("c_%s_%d",hist_types[i].c_str(),k),"",600,600);
+            c_sep[i][k]->cd();
+            c_sep[i][k]->SetRightMargin(0.05);
+            c_sep[i][k]->SetTopMargin(0.07);
+
+            //////////////////////////////
+            // cosmetics 
+            htemp[i]->GetXaxis()->CenterTitle();
+            htemp[i]->GetYaxis()->CenterTitle();
+            htemp[i]->GetYaxis()->SetTitleOffset(1.8);
+            htemp[i]->GetXaxis()->SetTitleOffset(1.5);
+            htemp[i]->GetXaxis()->SetTitleFont(42);
+            htemp[i]->GetYaxis()->SetTitleFont(42);
+            htemp[i]->GetXaxis()->SetTitleColor(1);
+            htemp[i]->GetYaxis()->SetTitleColor(1);
+            htemp[i]->GetXaxis()->SetLabelSize(0.04);
+            if(hist_types[i] == "Raa"){
+                htemp[i]->GetYaxis()->SetTitleOffset(1.4);
+                htemp[i]->GetXaxis()->SetTitleOffset(1.2);
+            }
+            if(hist_types[i] == "Raa") htemp[i]->SetTitle(";E_{T}^{#gamma} (GeV/c);R_{AA}");
+            else if(hist_types[i] == "dNdpt_corr2") htemp[i]->SetTitle(";E_{T}^{#gamma} (GeV/c);#frac{1}{N_{evt}} #frac{1}{<T_{AA}>} #frac{d^{2}N^{PbPb}}{dp_{T}d#eta} (#frac{pb}{GeV/c})");
+            else if(hist_types[i] == "dNdpt_corr2_pp") htemp[i]->SetTitle(";E_{T}^{#gamma} (GeV);#frac{d^{2}#sigma^{pp}}{dp_{T}d#eta} (#frac{pb}{GeV/c})");
+
+            if(hist_types[i] != "Raa") htemp[i]->GetYaxis()->SetRangeUser(0.01,1.e+5);
+            if(hist_types[i] == "dNdpt_corr2" || hist_types[i] == "dNdpt_corr2_pp")
+                gPad->SetLogy();
+
+            ////////////////////////////
+            // draw graphs 
+            gr_sys[i][k]->SetFillColorAlpha(colorStyle_sys[k],0.7);
+            htemp[i]->DrawCopy("p");
+            gr_sys[i][k]->Draw("2");
+            gr_nominal[i][k]->Draw("P");
+
+            ////////////////////////////////
+            // Draw CMS latex and lumi etc. 
+            TString lumiSt= " 27.4 pb^{-1} pp + 404 #mub^{-1} PbPb (5.02 TeV)";
+            drawLumi(c_sep[i][k],lumiSt,0.2); 
+            drawCMS(c_sep[i][k],"Preliminary",0.5); 
+
+            float xpos_r = 1-c_sep[i][k]->GetRightMargin();
+            float xpos_l = c_sep[i][k]->GetLeftMargin();
+            float ypos_t = 1-c_sep[i][k]->GetTopMargin();
+            float dy = 0.05; 
+            float extraDY = 1.5; 
+            drawText(Form("%d-%d %s",(int)centBins_i[k]/2,(int)centBins_f[k]/2,"%"),xpos_r-dy,ypos_t-dy*extraDY,1,kBlack,0.04); 
+            drawText("|#eta^{#gamma}| < 1.44",xpos_r-dy,ypos_t-dy*extraDY-dy,1,kBlack,0.04); 
+            if(hist_types[i] == "Raa")  jumSun(ptBins_draw_final[0],1,ptBins[nPtBin],1);
+
+            ///////////////////////////////////////
+            // Draw global uncertainty box for Raa 
+            if(i==0){// for RAA
+                //globalUncBox = new TBox(xpos_l+sys_global_x*3,1-sys_global,xmax-sys_global_x*2,1+sys_global);
+                globalUncBox_TAA[k] -> Draw("l same");
+                globalUncBox_pplumi -> Draw("l same");
+                if(k==0){
+                    leg_glo->AddEntry(globalUncBox_TAA[k],"T_{AA} uncertainty","f");
+                    leg_glo->AddEntry(globalUncBox_pplumi,"Luminosity uncertainty","f");
+                }
+                leg_glo->Draw("same");
+            }
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // DRAW : All centrality in one panel 
+    cout << "Draw All centrality bin together in a panel..." << endl;
+    TCanvas* c[n_hist_types];
+    TLegend* leg_raa = new TLegend(0.65,0.7,0.90,0.9);
+    legStyle(leg_raa);
+    for (int i=0; i<n_hist_types; ++i) {
+        c[i] = new TCanvas(Form("c_%s",hist_types[i].c_str()),"",600,600);
+        c[i]->SetRightMargin(0.05);
+        c[i]->SetTopMargin(0.07);
+        if(hist_types[i] == "dNdpt_corr2_pp") c[i-1]->cd();
+        else c[i]->cd();
+
+        for (int k=0; k<nCentBinIF; ++k) { //k=0 is 0-100 % 
+            if(hist_types[i] == "dNdpt_corr2_pp" && k>0) continue;
+
+            ////////////////////////////
+            // Dummy hist draw 
+            if(hist_types[i] == "Raa") htemp[i]->SetTitle(";E_{T}^{#gamma} (GeV);R_{AA}");
+            else htemp[i]->SetTitle(";E_{T}^{#gamma} (GeV/c);#frac{d^{2}#sigma^{pp}}{dp_{T}d#eta} or #frac{1}{N_{evt}}#frac{1}{<T_{AA}>}#frac{d^{2}N^{PbPb}}{dp_{T}d#eta} (#frac{pb}{GeV/c})");
+            if(hist_types[i] != "Raa") htemp[i]->GetYaxis()->SetRangeUser(0.01,1e+10);
+            if(k==0 && hist_types[i] != "dNdpt_corr2_pp") htemp[i]->DrawCopy();
+
+            ////////////////////////////
+            // Scale dNdpt 
+            if(hist_types[i] == "dNdpt_corr2"){
+                float scale = 0.;
+                if(k==0) continue; 
+                else if(k==1) scale = 10.; 
+                else if(k==2) scale = 100.; 
+                else if(k==3) scale = 1000.; 
+                else if(k==4) scale = 10000.; 
+                gr_sys_scaled[k] = scale_graph(gr_sys[i][k],scale);
+                gr_nominal_scaled[k] = scale_graph(gr_nominal[i][k],scale);
+                gr_sys_scaled[k]->Draw("2");
+                gr_nominal_scaled[k]->Draw("p");
+            } else{
+                gr_sys[i][k]->Draw("2");
+                gr_nominal[i][k]->Draw("P");
+            }
+
+            ////////////////////////////
+            // legend and line etc. 
+            if(i==0) 
+                leg_raa->AddEntry(h1D_nominal[i][k],Form("%d-%d %s",(int)(centBins_i[k]/2),(int)(centBins_f[k]/2),"%"),"plf");
+            if(hist_types[i] == "Raa") jumSun(ptBins_draw_final[0],1,ptBins[nPtBin],1);
+            if(hist_types[i] == "dNdpt_corr2") gPad->SetLogy();
+        }
+
+        ////////////////////////////////
+        // Draw CMS latex and lumi etc. 
+        TString lumiSt= " 27.4 pb^{-1} pp / 404 #mub^{-1} PbPb (5.02 TeV)";
+        drawLumi(c[i],lumiSt,0.2); 
+        drawCMS(c[i],"Preliminary",0.5); 
+        if(i==0) leg_raa->Draw("same");
+    } 
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////////
+    // Draw Jetphox pp NLO
+    // direct contribution
+    // /home/samba.old/jaebeom/ForYeonju/ggd_2test_aa_CT14lo.root
+    // /home/samba.old/jaebeom/ForYeonju/ggo_2test_aa_CT14lo.root
+    
+    cout << "DRAWING JETPHOX..." << endl; 
+    TString fname[2][3][3];//[0:dir, 1:onef, 2:inclusive] [0:pbpb, 1:pp, 2:nCTEQ] [0:scale 1.0(nominal) 1:scale 0.5 2:scale 2]
+    TFile* fjp[2][3][3];//[0:dir, 1:onef, 2:inclusive] [0:pbpb, 1:pp, 2:nCTEQ] [0:scale 1.0(nominal) 1:scale 0.5 2:scale 2]
+    //nominal scale 1.0
+    fname[0][0][0] = "/home/samba.old/jaebeom/ForYeonju/Nominal1B/ggdPbPb_EPPS16nlo_CT14nlo_Pb208_nominal_scale_190716.root";
+    fname[1][0][0] = "/home/samba.old/jaebeom/ForYeonju/Nominal1B/ggoPbPb_EPPS16nlo_CT14nlo_Pb208_nominal_scale_190716.root";
+    fname[0][1][0] = "/home/samba.old/jaebeom/ForYeonju/Nominal1B/ggdpp_CT14nlo_nominal_scale1_190719.root"; 
+    fname[1][1][0] = "/home/samba.old/jaebeom/ForYeonju/Nominal1B/ggopp_CT14nlo_nominal_scale1_190719.root"; 
+    fname[0][2][0] = "/home/samba.old/jaebeom/ForYeonju/Nominal1B/ggdPbPb_nCTEQ15_208_82_1B.root";
+    fname[1][2][0] = "/home/samba.old/jaebeom/ForYeonju/Nominal1B/ggoPbPb_nCTEQ15_208_82_1B.root";
+    //scale 0.5
+    fname[0][0][1] = "/home/samba.old/jaebeom/ForYeonju/Nominal1B/ggdPbPb_EPPS16nlo_CT14nlo_Pb208_1B.root";
+    fname[1][0][1] = "/home/samba.old/jaebeom/ForYeonju/Nominal1B/ggoPbPb_EPPS16nlo_CT14nlo_Pb208_1B.root";
+    fname[0][1][1] = "/home/samba.old/jaebeom/ForYeonju/Nominal1B/ggdpp_CT14nlo_1B_cd.root";
+    fname[1][1][1] = "/home/samba.old/jaebeom/ForYeonju/Nominal1B/ggopp_CT14nlo_1B_cd.root";
+    fname[0][2][1] = "/home/samba.old/jaebeom/ForYeonju/Nominal1B/ggdPbPb_nCTEQ15_208_82_1B.root";
+    fname[1][2][1] = "/home/samba.old/jaebeom/ForYeonju/Nominal1B/ggoPbPb_nCTEQ15_208_82_1B.root";
+    //scale 2.0
+    fname[0][0][2] = "/home/samba.old/jaebeom/ForYeonju/Nominal1B/ggdPbPb_EPPS16nlo_CT14nlo_Pb208_nominal_scale2_190717.root";
+    fname[1][0][2] = "/home/samba.old/jaebeom/ForYeonju/Nominal1B/ggoPbPb_EPPS16nlo_CT14nlo_Pb208_nominal_scale2_190717.root";
+    fname[0][1][2] = "/home/samba.old/jaebeom/ForYeonju/Nominal1B/ggdpp_CT14nlo_nominal_scale2_190717.root";
+    fname[1][1][2] = "/home/samba.old/jaebeom/ForYeonju/Nominal1B/ggopp_CT14nlo_nominal_scale2_190717.root";
+    fname[0][2][2] = "/home/samba.old/jaebeom/ForYeonju/Nominal1B/ggdPbPb_nCTEQ15_208_82_1B.root";
+    fname[1][2][2] = "/home/samba.old/jaebeom/ForYeonju/Nominal1B/ggoPbPb_nCTEQ15_208_82_1B.root";
+    TFile* fsys_pp = TFile::Open("/home/samba.old/jaebeom/ForYeonju/Sys_pp_CT14nlo_relUnc.root","read");
+    TFile* fsys_pbpb = TFile::Open("/home/samba.old/jaebeom/ForYeonju/Sys_PbPb_EPPS16nlo_CT14nlo_Pb208_relUnc.root","read");
+    //TFile* fsys_pp = TFile::Open("/home/samba.old/jaebeom/ForYeonju/Sys_pp_CT14nlo.root","read");
+    //TFile* fsys_pbpb = TFile::Open("/home/samba.old/jaebeom/ForYeonju/Sys_PbPb_EPPS16nlo_CT14nlo_Pb208_merged.root","read");
+    
+    for(int itype=0; itype<2; ++itype){//dir, onef
+        for(int icoll=0; icoll<3; ++icoll){//EPPS16, CT14, (nCTEQ)
+            for(int isys=0; isys<3; ++isys){//scale 1.0, 0.5, 2.0
+                fjp[itype][icoll][isys] = TFile::Open(Form("%s",fname[itype][icoll][isys].Data()),"read");    
+            }
+        }
+    }
+
+    
+    cout << "Getting JETPHOX histograms..." << endl; 
+    TH1D* h1D_jp[3][2][3][3];//[0:dir, 1:onef, 2:inclusive] [0:Leading Order, 1:Next-to-Leading Order] [0:pbpb, 1:pp, 2:nCTEQ] [0:scale 1.0(nominal) 1:scale 0.5 2:scale 2]
+    
+    for(int itype=0; itype<2; ++itype){//dir, onef
+    for(int iord=0; iord<2; ++iord){//LO, NLO
+    for(int icoll=0; icoll<3; ++icoll){//EPPS16, CT14, (nCTEQ)
+    for(int isys=0; isys<3; ++isys){//scale 1.0, 0.5, 2.0
+        cout << "itype = " << itype<<  ", iorder  = " << iord <<  ", icoll = " << icoll<<  ", isys = " << isys << endl;
+        const char* histname = "hp40";
+        if(iord==1) histname = "hp41"; 
+        //const char* histname = iord == 0 ? "hp40" : "hp41";
+        const char* n_type = itype == 0 ? "dir" : "onef";
+        const char* n_coll = "EPPS16";
+        if(icoll==1) n_coll = "CT14";
+        //const char* n_coll = icoll == 0 ? "EPPS16" : "CT14";
+        const char* n_tot = Form("%s_%s_scale%d", n_type, n_coll, isys);
+        cout << "tot name = " << n_tot << endl;
+        h1D_jp[itype][iord][icoll][isys] = (TH1D*) fjp[itype][icoll][isys]->Get(histname);
+        h1D_jp[itype][iord][icoll][isys]->SetName(Form("jp_nlo_%s",n_tot));
+        
+        if(itype==1){
+            n_type = "inclusive"; 
+            n_tot = Form("%s_%s_scale%d", n_type, n_coll, isys);
+            h1D_jp[2][iord][icoll][isys] = (TH1D*) h1D_jp[1][iord][icoll][isys]->Clone(Form("jp_nlo_%s",n_tot));
+            h1D_jp[2][iord][icoll][isys]->Add(h1D_jp[0][iord][icoll][isys]);
+        }
+        
+    }}}}
+    
+
+    cout << "Set cosmetics..." << endl; 
+    //cosmetics
+    for(int icont=0;icont<3;++icont){
+    for(int ior=0;ior<2;++ior){
+    for(int icoll=0;icoll<3;++icoll){
+    for(int isys=0; isys<3; ++isys){//scale 1.0, 0.5, 2.0
+        h1D_jp[icont][ior][icoll][isys]->Scale(1./2.88);
+        if(icoll==0){ 
+            h1D_jp[icont][ior][0][isys]->SetLineColor(2);
+            h1D_jp[icont][ior][0][isys]->SetLineStyle(6);
+        } else{ 
+            h1D_jp[icont][ior][icoll][isys]->SetLineColor(1);
+            h1D_jp[icont][ior][icoll][isys]->SetLineStyle(2);
+        }
+        h1D_jp[icont][ior][icoll][isys]->SetLineWidth(2);
+    }}}}
+
+    cout << "Draw in cross section panel..." << endl; 
+    //final for dndpt for jetphox //scale up each centrality bin 
+    TH1D* hjp_draw_dndpt[3][nCentBinIF]; //[0:pbpb, 1:pp, 2:pbpb_nCTEQ] [centraltiy] only for inclusive, next-to-leading order 
+    for(int icoll=0;icoll<3;++icoll){
+        for (int k=0; k<nCentBinIF; ++k) { //k=0 is 0-100 % 
+            hjp_draw_dndpt[icoll][k] = (TH1D*) h1D_jp[2][1][icoll][0]->Clone(Form("hjp_draw%d_%d",k,icoll));//onef+dir
+            //hjp_draw_dndpt[icoll][k] = (TH1D*) h1D_jp[1][1][icoll]->Clone(Form("hjp_draw%d_%d",k,icoll));//only onef
+            //hjp_draw_dndpt[icoll][k] = (TH1D*) h1D_jp[0][1][icoll]->Clone(Form("hjp_draw%d_%d",k,icoll));//only dir
+            if(k==1) hjp_draw_dndpt[icoll][k]->Scale(10);
+            else if(k==2) hjp_draw_dndpt[icoll][k]->Scale(100);
+            else if(k==3) hjp_draw_dndpt[icoll][k]->Scale(1000);
+            else if(k==4) hjp_draw_dndpt[icoll][k]->Scale(10000);
+            else if(k==5) hjp_draw_dndpt[icoll][k]->Scale(100000);
+            else if(k==6) hjp_draw_dndpt[icoll][k]->Scale(1000000);
+            if(icoll==0) removeHistLastBins(hjp_draw_dndpt[icoll][k],rejectPtBins[k]);
+        }
+    }
+
+    //draw JETPHOX lines in the cross section panel
+    c[1]->cd();
+    for(int icoll=0;icoll<2;++icoll){ // icoll = 0 is pbpb, 1 is pp, 2 is nCTEQ
+        for (int k=0; k<nCentBinIF; ++k) { //k=0 is 0-100 % 
+            if(icoll==0 && k==0) continue;
+            if(icoll==1 && k>0) continue;
+            hjp_draw_dndpt[icoll][k]->Draw("C same"); // option C is for a smooth curve
+            //hjp_draw_dndpt[icoll][k]->Draw("hist same"); // option C is for a smooth curve
+            // gr_sys[i][k] = scale_graph(gr_sys[i][k],1./hjp_draw_dndpt[icoll][k]);
+            // gr_nominal_scaled[k] = scale_graph(gr_nominal[i][k],scale);
+            // gr_sys_scaled[k]->Draw("2");
+        }
+    }
+
+    cout << "Draw in Raa panel..." << endl; 
+    //final for raa
+    TH1D* hjp_draw_raa[2];
+    hjp_draw_raa[0] = (TH1D*) h1D_jp[2][1][0][0]->Clone("jp_inclusive_nlo_raa"); //only for inclusive, next-to-leading order 
+    hjp_draw_raa[1] = (TH1D*) h1D_jp[2][1][2][0]->Clone("jp_inclusive_nlo_raa_nCTEQ"); //only for inclusive, next-to-leading order 
+    hjp_draw_raa[0]->Divide(h1D_jp[2][1][1][0]);
+    hjp_draw_raa[1]->Divide(h1D_jp[2][1][1][0]);
+
+    //draw in raa panel
+    c[0]->cd();
+    for (int k=0; k<nCentBinIF; ++k) { //k=0 is 0-100 % 
+        c_sep[0][k]->cd();
+        if(k==0) hjp_draw_raa[0]->Draw("hist pe same");
+        //hjp_draw_raa[1]->Draw("C same");
+        for(int ipt=0; ipt<hjp_draw_raa[0]->GetNbinsX();++ipt)
+            cout << "ipt = " << ipt << ", bin error = " << hjp_draw_raa[0]->GetBinError(ipt+1)<< endl;;
+    }
+    cout << "PbPb EPPS16 JETPHOX error " << endl;
+    for(int ipt=0; ipt<h1D_jp[2][1][0][0]->GetNbinsX();++ipt)
+        cout << "ipt = " << ipt << ", bin val = " <<  h1D_jp[2][1][0][0]->GetBinContent(ipt+1) << ", bin error = " << h1D_jp[2][1][0][0]->GetBinError(ipt+1)<< endl;;
+    cout << "pp CT14 JETPHOX error " << endl;
+    for(int ipt=0; ipt<h1D_jp[2][1][1][0]->GetNbinsX();++ipt)
+        cout << "ipt = " << ipt  << ", bin val = " <<  h1D_jp[2][1][1][0]->GetBinContent(ipt+1) << ", bin error = " << h1D_jp[2][1][1][0]->GetBinError(ipt+1)<< endl;;
+
+
+    ////////////////////////////////////////////////////////////
+    // DATA/JETPHOX ratio 
+    cout << "data to JETPHOX ratio..." << endl; 
+    TCanvas* c_ratio_data_jp = new TCanvas("c_ratio_data_jp","",600,600); 
+    TCanvas* c_ratio_data_jp_pp = new TCanvas("c_ratio_data_jp_pp","",600,600); 
+    TCanvas* c_ratio_data_jp_pbpb[nCentBinIF];
+
+    TH1D* ratio_data_jp[nCentBinIF];//0:0-100%, 1:0-10%, 2:10-30%, 3:30-100%
+    TH1D* ratio_data_jp_pp;
+    for (int k=0; k<nCentBinIF; ++k) { //k=0 is 0-100 % 
+        ratio_data_jp[k] = (TH1D*) h1D_nominal[1][k]->Clone(Form("ratio_data_jp_%d",k)); 
+        //hjp_draw_dndpt[2][nCentBinIF]; //[0:pbpb, 1:pp] [centraltiy] only for inclusive, next-to-leading order
+        ratio_data_jp[k]->Divide(hjp_draw_dndpt[0][0]); 
+        ratio_data_jp[k]->GetYaxis()->SetRangeUser(0,2.5);
+        ratio_data_jp[k]->SetTitle(";E_{T}^{#gamma} (GeV);DATA / JETPHOX (EPPS16 CT14 nlo) ");
+    }
+    ratio_data_jp_pp = (TH1D*) h1D_nominal[2][0]->Clone(Form("ratio_data_jp_%s","pp")); 
+    ratio_data_jp_pp->Divide(hjp_draw_dndpt[1][0]); 
+
+    htemp[1]->GetYaxis()->SetRangeUser(0,2);
+    htemp[1]->SetTitle(";E_{T}^{#gamma} GeV;DATA / JETPHOX nlo");
+    htemp[1]->DrawCopy("p");
+    float xpos_r = 1-c_sep[1][0]->GetRightMargin();
+    float xpos_l = c_sep[1][0]->GetLeftMargin();
+    float ypos_t = 1-c_sep[1][0]->GetTopMargin();
+    float dy = 0.05; 
+    float extraDY = 1.5; 
+    TGraphAsymmErrors* gr_ratio[nCentBinIF];
+    TGraphAsymmErrors* gr_ratio_pp;
+    TGraphAsymmErrors* gr_sys_ratio[nCentBinIF];
+    TGraphAsymmErrors* gr_sys_ratio_pp;
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////
+    // Graph for ratio systematic uncertainty from DATA  
+    // Histogram to graph for ratios 
+    for (int k=0; k<nCentBinIF; ++k) { //k=0 is 0-100 % 
+
+        TH1_TO_TGRAPH(ratio_data_jp[k], gr_ratio[k],nPtBin-rejectPtBins[k]);
+        gr_ratio[k]->SetMarkerColor(colorStyle_marker[k]);
+        gr_ratio[k]->SetLineColor(colorStyle_marker[k]);
+        gr_ratio[k]->SetMarkerStyle(markerStyle[k]);
+        gr_ratio[k] = divide_graph_by_hist(gr_nominal[1][k],hjp_draw_dndpt[0][0]);
+        gr_sys_ratio[k] = divide_graph_by_hist(gr_sys[1][k],hjp_draw_dndpt[0][0]);
+        gr_sys_ratio[k]->SetFillStyle(1001);
+        gr_sys_ratio[k]->SetFillColorAlpha(colorStyle_sys[k],0.7);
+        
+        c_ratio_data_jp->cd();
+        if(k==0){ 
+            htemp[1]->GetYaxis()->SetRangeUser(0,2);
+            htemp[1]->SetTitle(";E_{T}^{#gamma} GeV;DATA / JETPHOX NLO");
+            htemp[1]->DrawCopy("p");
+            jumSun(ptBins[0],1,ptBins[nPtBin],1);
+            TString lumiSt= " 27.4 pb^{-1} pp + 404 #mub^{-1} PbPb (5.02 TeV)";
+            drawLumi(c_ratio_data_jp,lumiSt,0.2); 
+            drawCMS(c_ratio_data_jp,"Preliminary",0.5); 
+        }
+        gr_sys_ratio[k]->Draw("2");
+        gr_ratio[k]->Draw("Pe");
+
+        c_ratio_data_jp_pbpb[k] = new TCanvas(Form("c_ratio_data_jp_cent%d",k),"",600,600); 
+        htemp[1]->SetTitle(";E_{T}^{#gamma} (GeV/c);DATA / JETPHOX (EPPS16+CT14 NLO)");
+        htemp[1]->DrawCopy("p");
+        gr_sys_ratio[k]->Draw("2");
+        gr_ratio[k]->Draw("P");
+        jumSun(ptBins[0],1,ptBins[nPtBin],1);
+        drawText(Form("%d-%d %s",(int)centBins_i[k]/2,(int)centBins_f[k]/2,"%"),xpos_r-dy,ypos_t-dy*extraDY,1,kBlack,0.04); 
+        drawText("|#eta^{#gamma}| < 1.44",xpos_r-dy,ypos_t-dy*extraDY-dy,1,kBlack,0.04); 
+        TString lumiSt= "404 #mub^{-1} PbPb (5.02 TeV)";
+        drawLumi(c_ratio_data_jp_pbpb[k],lumiSt,0.2); 
+        drawCMS(c_ratio_data_jp_pbpb[k],"Preliminary",0.5); 
+    }
+    TH1_TO_TGRAPH(ratio_data_jp_pp, gr_ratio_pp,nPtBin);
+    gr_ratio_pp->SetMarkerColor(colorStyle_marker_pp);
+    gr_ratio_pp->SetLineColor(colorStyle_line_pp);
+    gr_ratio_pp->SetMarkerStyle(markerStyle_pp);
+    gr_ratio_pp = divide_graph_by_hist(gr_nominal[2][0],hjp_draw_dndpt[1][0]);
+    gr_sys_ratio_pp = divide_graph_by_hist(gr_sys[2][0],hjp_draw_dndpt[1][0]);
+    gr_sys_ratio_pp->SetFillColorAlpha(colorStyle_sys[0],0.7);
+
+    c_ratio_data_jp->cd();
+    gr_sys_ratio_pp->Draw("2");
+    gr_ratio_pp->Draw("P");
+
+    c_ratio_data_jp_pp->cd();
+    htemp[1]->SetTitle(";E_{T}^{#gamma} (GeV/c);DATA / JETPHOX (CT14 NLO)");
+    htemp[1]->DrawCopy("p");
+    gr_sys_ratio_pp->Draw("2");
+    gr_ratio_pp->Draw("P");
+    drawText(Form("pp%s",""),xpos_r-dy,ypos_t-dy*extraDY,1,kBlack,0.04); 
+    drawText("|#eta^{#gamma}| < 1.44",xpos_r-dy,ypos_t-dy*extraDY-dy,1,kBlack,0.04); 
+    jumSun(ptBins[0],1,ptBins[nPtBin],1);
+    TString lumiSt= " 27.4 pb^{-1} pp (5.02 TeV)";
+    drawLumi(c_ratio_data_jp_pp,lumiSt,0.2); 
+    drawCMS(c_ratio_data_jp_pp,"Preliminary",0.5); 
+
+    ////////////////////////////////////////////////////////////////////////////////////////
+    // Calculate JETPHOX scale error (systematic uncertainty)  
+    // 
+    TH1D* h1D_ratio_jetphox_sys_scale[2][2]; //[0:EPPS16, 1:CT14][0: jetphox(scale0.5)/jetphox(scale1.0), 1: jetphox(scale2.0)/jetphox(scale1.0)]
+    for(int icoll=0;icoll<2;++icoll){//EPPS16, CT14, nCTEQ15
+    for(int isys=0; isys<2; ++isys){//scale 1.0, 0.5, 2.0
+        h1D_ratio_jetphox_sys_scale[icoll][isys] = (TH1D*) h1D_jp[2][1][icoll][isys+1]->Clone(Form("h1D_ratio_jetphox_sys_icoll%d_scale%d",icoll,isys));
+        h1D_ratio_jetphox_sys_scale[icoll][isys]->Divide(h1D_jp[2][1][icoll][0]);
+        //h1D_ratio_jetphox_sys_scale[icoll][isys]->SetLineColor(kBlue+2);
+        h1D_ratio_jetphox_sys_scale[icoll][isys]->SetLineColor(2);
+        h1D_ratio_jetphox_sys_scale[icoll][isys]->SetLineWidth(2);
+        h1D_ratio_jetphox_sys_scale[icoll][isys]->SetLineStyle(8);
+        h1D_ratio_jetphox_sys_scale[icoll][isys]->SetFillColor(3);
+        h1D_ratio_jetphox_sys_scale[icoll][isys]->SetFillStyle(3004);
+   
+        if(icoll==1){//pp
+            c_ratio_data_jp_pp->cd();
+            h1D_ratio_jetphox_sys_scale[icoll][isys]->Draw("same l");
+        } else{ 
+            for (int k=0; k<nCentBinIF; ++k) { //k=0 is 0-100 % 
+                c_ratio_data_jp_pbpb[k]->cd();           
+                if(k==0) h1D_ratio_jetphox_sys_scale[icoll][isys]->Draw("same");
+            }
+        }
+    }}
+
+
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////
+    // Calculate JETPHOX PDF error (systematic uncertainty)  
+    
+    TGraphAsymmErrors* gr_sys_jetphox[nCentBinIF];
+    TGraphAsymmErrors* gr_sys_jetphox_pp;
+    TH1D* h1D_sys_jetphox_pp;
+    TH1D* h1D_sys_jetphox_pbpb; 
+    h1D_sys_jetphox_pp = (TH1D*) fsys_pp->Get("h_nlo_nom_relErr");
+    //h1D_sys_jetphox_pp = (TH1D*) fsys_pp->Get("h_nlo_nom");
+    h1D_sys_jetphox_pp -> SetName("h_nlo_nom_pp");
+    h1D_sys_jetphox_pbpb = (TH1D*) fsys_pbpb->Get("h_nlo_nom_relErr");
+    //h1D_sys_jetphox_pbpb = (TH1D*) fsys_pbpb->Get("h_nlo_nom");
+    h1D_sys_jetphox_pbpb -> SetName("h_nlo_nom_pbpb");
+
+    //pbpb
+    for (int k=0; k<nCentBinIF; ++k) { //k=0 is 0-100 % 
+        gr_sys_jetphox[k] = new TGraphAsymmErrors(nPtBin-rejectPtBins[k]);
+        gr_sys_jetphox[k]->SetName(Form("gr_sys_jetphox_%d",k));
+        gr_sys_jetphox[k]->SetFillStyle(3013);
+        gr_sys_jetphox[k]->SetFillColor(12); 
+        //gr_sys_jetphox[k]->SetFillColor(colorStyle_sys[0]);
+        //gr_sys_jetphox[k]->SetFillColor(colorStyle_sys[k]);
+        //gr_sys_jetphox[k]->SetFillColorAlpha(colorStyle_sys[k],0.2);
+
+        for (int ipt=1; ipt<=nPtBin-rejectPtBins[k]; ++ipt) {
+            double x = h1D_sys_jetphox_pbpb->GetBinCenter(ipt);
+            double val = h1D_sys_jetphox_pbpb->GetBinContent(ipt);
+            double error = h1D_sys_jetphox_pbpb->GetBinError(ipt)/val;
+            double bin_width = h1D_sys_jetphox_pbpb->GetBinLowEdge(ipt+1) - h1D_sys_jetphox_pbpb->GetBinLowEdge(ipt);
+            gr_sys_jetphox[k]->SetPointError(ipt-1, (bin_width/2), (bin_width/2), error, error);
+            gr_sys_jetphox[k]->SetPoint(ipt-1, x, 1);
+        }
+        c_ratio_data_jp_pbpb[k]->cd();           
+        if(k==0) gr_sys_jetphox[k]->Draw("2");
+
+
+    }
+    //pp
+    gr_sys_jetphox_pp = new TGraphAsymmErrors(nPtBin);
+    gr_sys_jetphox_pp->SetName(Form("gr_sys_jetphox_%s","pp"));
+    gr_sys_jetphox_pp->SetFillStyle(3013);
+    gr_sys_jetphox_pp->SetFillColor(12);
+    //gr_sys_jetphox_pp->SetFillStyle(3006);
+    //gr_sys_jetphox_pp->SetFillColorAlpha(colorStyle_sys[0],0.2);
+
+    for (int ipt=1; ipt<=nPtBin; ++ipt) {
+        double x = h1D_sys_jetphox_pp->GetBinCenter(ipt);
+        double val = h1D_sys_jetphox_pp->GetBinContent(ipt);
+        double error = h1D_sys_jetphox_pp->GetBinError(ipt)/val;
+        double bin_width = h1D_sys_jetphox_pp->GetBinLowEdge(ipt+1) - h1D_sys_jetphox_pp->GetBinLowEdge(ipt);
+        gr_sys_jetphox_pp->SetPointError(ipt-1, (bin_width/2), (bin_width/2), error, error);
+        gr_sys_jetphox_pp->SetPoint(ipt-1, x, 1);
+    }
+    c_ratio_data_jp_pp->cd();
+    gr_sys_jetphox_pp->Draw("2");
+
+    ////////////////////////////////////////////////////////////////////////////////////////
+    // Draw jetphox legend in each ratio plots for PbPb
+    TLegend* leg_ratio_jp = new TLegend(0.20,0.16,0.80,0.35);
+    //TLegend* leg_ratio_jp = new TLegend(0.20,0.18,0.80,0.33);
+    legStyle(leg_ratio_jp);
+    leg_ratio_jp->AddEntry(gr_ratio[0],"Data","pl");
+    leg_ratio_jp->AddEntry(gr_sys_ratio[0],"Systematic Uncertainty","f");
+    leg_ratio_jp->AddEntry(gr_sys_jetphox[0],"JETPHOX PDF Uncertainty","f");
+    leg_ratio_jp->AddEntry(h1D_ratio_jetphox_sys_scale[0][0],"JETPHOX Scale Uncertainty","l");
+    leg_ratio_jp->AddEntry((TObject*)0,"#font[12]{E_{T}^{#gamma}< #mu < 2E_{T}^{#gamma}}","");
+    //leg_ratio_jp->AddEntry((TObject*)0,"#it{E_{T}^{#gamma}< #mu < 2E_{T}^{#gamma}}","");
+    for (int k=0; k<nCentBinIF; ++k) { //k=0 is 0-100 % 
+        c_ratio_data_jp_pbpb[k]->cd();           
+        if(k==0) leg_ratio_jp->Draw("same");
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////
+    // Draw jetphox legend in each ratio plots for pp
+    TLegend* leg_ratio_jp_pp = new TLegend(0.20,0.16,0.80,0.35);
+    //TLegend* leg_ratio_jp_pp = new TLegend(0.20,0.18,0.80,0.33);
+    legStyle(leg_ratio_jp_pp);
+    leg_ratio_jp_pp->AddEntry(gr_ratio_pp,"Data","pl");
+    leg_ratio_jp_pp->AddEntry(gr_sys_ratio_pp,"Systematic Uncertainty","f");
+    leg_ratio_jp_pp->AddEntry(gr_sys_jetphox_pp,"JETPHOX PDF Uncertainty","f");
+    leg_ratio_jp_pp->AddEntry(h1D_ratio_jetphox_sys_scale[1][0],"JETPHOX Scale Uncertainty","l");
+    leg_ratio_jp_pp->AddEntry((TObject*)0,"#font[12]{E_{T}^{#gamma}< #mu < 2E_{T}^{#gamma}}","");
+    c_ratio_data_jp_pp->cd();           
+    leg_ratio_jp_pp->Draw("same");
+
+    ////////////////////////////////////////////////////////////////////////////////////////
+    // Draw RAA legend 
+    c_sep[0][0]->cd();
+    TLegend* leg_raa_jp = new TLegend(0.25,0.20,0.94,0.40);
+    legStyle(leg_raa_jp);
+    leg_raa_jp->AddEntry(h1D_nominal[1][0],"Data","pl");
+    leg_raa_jp->AddEntry(gr_sys[1][0],"Systematic Uncertainty","f");
+    leg_raa_jp->AddEntry(hjp_draw_raa[0],"JETPHOX PbPb(EPPS16+CT14)/pp(CT14)","l");
+    leg_raa_jp->Draw("same");
+
+    
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////
+    // Draw cross section legend 
+    
+    // DRAW extra text e.g. eta on cross section & spectra  
+    c[1]->cd();
+    TLegend* leg_dndpt = new TLegend(0.55,0.60,0.94,0.90);
+    //TLegend* leg_dndpt = new TLegend(0.55,0.64,0.90,0.90);
+    legStyle(leg_dndpt);
+    for (int k=nCentBinIF-1; k>0; --k) { //k=0 is 0-100 % 
+        if(k==1) leg_dndpt->AddEntry(h1D_nominal[1][k],Form("%d-%d %s      x 10",(int)(centBins_i[k]/2),(int)(centBins_f[k]/2),"%"),"plf");
+        else if(k==2) leg_dndpt->AddEntry(h1D_nominal[1][k],Form("%d-%d %s    x 10^{%d}",(int)(centBins_i[k]/2),(int)(centBins_f[k]/2),"%",k),"plf");
+        else if(k==3) leg_dndpt->AddEntry(h1D_nominal[1][k],Form("%d-%d %s    x 10^{%d}",(int)(centBins_i[k]/2),(int)(centBins_f[k]/2),"%",k),"plf");
+        else if(k==4) leg_dndpt->AddEntry(h1D_nominal[1][k],Form("%d-%d %s  x 10^{%d}",(int)(centBins_i[k]/2),(int)(centBins_f[k]/2),"%",k),"plf");
+        else leg_dndpt->AddEntry(h1D_nominal[1][k],Form("%d-%d %s \t x 10^{%d}",(int)(centBins_i[k]/2),(int)(centBins_f[k]/2),"%",k),"plf");
+    }
+    leg_dndpt->AddEntry(h1D_nominal[2][0],Form("pp%s",""),"plf");
+    leg_dndpt->AddEntry(hjp_draw_dndpt[1][0],"JETPHOX (CT14 NLO)","l");
+    leg_dndpt->AddEntry(hjp_draw_dndpt[0][0],"JETPHOX (EPPS16+CT14 NLO)","l");
+    leg_dndpt->Draw("same");
+       
+    double legBottom = leg_dndpt->GetX1();
+    //double legTop = leg_dndpt->GetX2();
+    //cout << "legBottom = " << legBottom << ", GetX1() = "<< legTop << endl;
+    xpos_r = 1-c[1]->GetRightMargin();
+    xpos_l = c[1]->GetLeftMargin();
+    //float dy = 0.05; 
+    //float extraDY = 1.5; 
+    //drawText(Form("%d-%d %s",(int)centBins_i[k]/2,(int)centBins_f[k]/2,"%"),xpos_r-dy,legBottom-dy*extraDY,1,kBlack,0.04); 
+    //drawText("|#eta^{#gamma}| < 1.44",xpos_r-dy,legBottom+2*dy,1,kBlack,0.04); 
+    drawText("|#eta^{#gamma}| < 1.44",xpos_l+0.19,0.75,1,kBlack,0.04); 
+    
+    // DRAW extra text e.g. eta on RAA  
+    c[0]->cd(); // RAA plot
+    drawText("|#eta^{#gamma}| < 1.44",xpos_r-dy,legBottom+2*dy,1,kBlack,0.04); 
+    //globalUncBox -> Draw("l same");
+
+    //Legend for DATA/JETPHOX ratio
+    c_ratio_data_jp->cd();
+    TLegend* leg_ratio = new TLegend(0.55,0.64,0.90,0.90);
+    legStyle(leg_ratio);
+    for (int k=nCentBinIF-1; k>0; --k) { //k=0 is 0-100 % 
+        if(k==1)     leg_ratio->AddEntry(h1D_nominal[1][k],Form("%d-%d %s      / EPPS16+CT14 nlo",(int)(centBins_i[k]/2),(int)(centBins_f[k]/2),"%"),"plf");
+        else if(k==2) leg_ratio->AddEntry(h1D_nominal[1][k],Form("%d-%d %s    / EPPS16+CT14 nlo",(int)(centBins_i[k]/2),(int)(centBins_f[k]/2),"%"),"plf");
+        else if(k==3) leg_ratio->AddEntry(h1D_nominal[1][k],Form("%d-%d %s    / EPPS16+CT14 nlo",(int)(centBins_i[k]/2),(int)(centBins_f[k]/2),"%"),"plf");
+        else if(k==4) leg_ratio->AddEntry(h1D_nominal[1][k],Form("%d-%d %s  / EPPS16+CT14 nlo",(int)(centBins_i[k]/2),(int)(centBins_f[k]/2),"%"),"plf");
+        else leg_ratio->AddEntry(h1D_nominal[1][k],Form("%d-%d %s \t / EPPS16+CT14 nlo",(int)(centBins_i[k]/2),(int)(centBins_f[k]/2),"%"),"plf");
+    }
+    leg_ratio->AddEntry(h1D_nominal[2][0],Form("pp        / CT14 nlo%s",""),"plf");
+    //if(doJETPHOX) leg_ratio->AddEntry(hjp_draw_dndpt[0][0],"JETPHOX (CT14 NLO)","l");
+    //if(doJETPHOX) leg_ratio->AddEntry(hjp_draw_dndpt[1][0],"JETPHOX (EPPS16+CT14 NLO)","l");
+    leg_ratio->Draw("same");
+    c_ratio_data_jp->SaveAs(Form("%splotting/figures/finalPlot_ratio_data_to_JEXPHOX_%s_total.pdf",dir.Data(),cap.Data()));
+    c_ratio_data_jp_pp->SaveAs(Form("%splotting/figures/finalPlot_ratio_data_to_JEXPHOX_%s_pp.pdf",dir.Data(),cap.Data()));
+    for (int k=0; k<nCentBinIF; ++k)
+        c_ratio_data_jp_pbpb[k]->SaveAs(Form("%splotting/figures/finalPlot_ratio_data_to_JEXPHOX_%s_cent%d_%d.pdf",dir.Data(),cap.Data(),(int)centBins_i[k]/2,(int)centBins_f[k]/2));
+    
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////////
+    // Store pdf files 
+    cout << "Save figures..." << endl;
+    for (int i=0; i<n_hist_types; ++i) {
+        if(hist_types[i] != "dNdpt_corr2_pp") 
+            c[i]->SaveAs(Form("%splotting/figures/finalPlot_%s_%s_total.pdf",dir.Data(),hist_types[i].c_str(),cap.Data()));
+        for (int k=0; k<nCentBinIF; ++k) { //k=0 is 0-100 % 
+            if(hist_types[i] == "dNdpt_corr2_pp" && k>0) continue;
+            c_sep[i][k]->SaveAs(Form("%splotting/figures/finalPlot_%s_%s_cent%d_%d.pdf",dir.Data(),hist_types[i].c_str(),cap.Data(),(int)centBins_i[k]/2,(int)centBins_f[k]/2));
+        }
+    }
+
+
+}
+
+TGraphAsymmErrors* scale_graph(TGraphAsymmErrors* gr=0, Float_t s=0){
+    int np = gr->GetN();                                        
+    TGraphAsymmErrors* new_gr = (TGraphAsymmErrors*) gr->Clone(Form("%s_scaled",gr->GetName()));
+    //TGraphAsymmErrors* new_gr = new TGraphAsymmErrors(np);
+    new_gr->SetName(Form("%s_scaled",gr->GetName()));
+    for (int p=0; p<np; ++p) {                                         
+        double Xmean = 0;                            
+        double Ymean = 0;                            
+        gr->GetPoint(p,Xmean,Ymean); 
+        new_gr->SetPoint(p,Xmean,Ymean*s); 
+        double Xerr_l= gr->GetErrorXlow(p); 
+        double Xerr_h= gr->GetErrorXhigh(p);
+        double Yerr_l= gr->GetErrorYlow(p);
+        double Yerr_h= gr->GetErrorYhigh(p);
+        new_gr->SetPointError(p,Xerr_l,Xerr_h,Yerr_l*s,Yerr_h*s);                
+    }
+    return new_gr;
+}
+
+TGraphAsymmErrors* divide_graph_by_hist(TGraphAsymmErrors* gr=0, TH1D* h1=0){
+    int np = gr->GetN();                                        
+    TGraphAsymmErrors* new_gr = (TGraphAsymmErrors*) gr->Clone(Form("%s_dividedBy_%s",gr->GetName(),h1->GetName()));
+    //TGraphAsymmErrors* new_gr = new TGraphAsymmErrors(np);
+    new_gr->SetName(Form("%s_dividedBy_%s",gr->GetName(),h1->GetName()));
+    for (int p=0; p<np; ++p) {                                         
+        double Xmean = 0;                            
+        double Ymean = 0;               
+        double scaleF = h1->GetBinContent(p+1);        
+        gr->GetPoint(p,Xmean,Ymean); 
+        new_gr->SetPoint(p,Xmean,Ymean/scaleF); 
+        double Xerr_l= gr->GetErrorXlow(p); 
+        double Xerr_h= gr->GetErrorXhigh(p);
+        double Yerr_l= gr->GetErrorYlow(p);
+        double Yerr_h= gr->GetErrorYhigh(p);
+        new_gr->SetPointError(p,Xerr_l,Xerr_h,Yerr_l/scaleF,Yerr_h/scaleF);                
+    }
+    return new_gr;
+}

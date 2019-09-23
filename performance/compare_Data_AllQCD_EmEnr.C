@@ -16,11 +16,11 @@ void compare_Data_AllQCD_EmEnr(TString coll="pbpb", TString ver="190625_temp_v25
     if(coll=="pp"){ 
         fname_1=Form("%s",ppMCfname.Data());
         fname_2=Form("%s",ppMCEmEnrfname.Data());
-        fname_3=Form("%s",ppDatafname.Data());
+        fname_3=Form("%s",ppDatafname_high.Data());
     } else if(coll=="pbpb"){
         fname_1=Form("%s",pbpbMCfname.Data());
         fname_2=Form("%s",pbpbMCEmEnrfname.Data());
-        fname_3=Form("%s",pbpbDatafname.Data());
+        fname_3=Form("%s",pbpbDatafname_high.Data());
     }
 
     TFile* f1 = new TFile(fname_1);//AllQCD
@@ -50,7 +50,8 @@ void compare_Data_AllQCD_EmEnr(TString coll="pbpb", TString ver="190625_temp_v25
     t3->AddFriend(t3_evt);
     t3->AddFriend(t3_hlt);
     
-    TString cap = Form("%s_%s_hoe_sig_iso_ele_trig20onMC",ver.Data(),coll.Data());
+    TString cap = Form("%s_%s_highPD",ver.Data(),coll.Data());
+    //TString cap = Form("%s_%s_hoe_sig_iso_ele_highPD",ver.Data(),coll.Data());
     if(doWeight) cap+="_weighted";
     else cap+= "_noWeight";
     int nBins = 20;
@@ -59,16 +60,24 @@ void compare_Data_AllQCD_EmEnr(TString coll="pbpb", TString ver="190625_temp_v25
     TCut commonCutDATA = "(1==1)";
 
     if(coll=="pbpb") {
-        commonCutDATA = ptCut && etaCut && trigCut_low && dataCut && hoeCut && sigmaCut && isoCut && electronCut; 
-        commonCutMC = ptCut && etaCut && trigCut_mc_low && hoeCut && sigmaCut && isoCut && electronCut;
+        commonCutDATA = ptCut && etaCut && dataCut && hoeCut && sigmaCut && isoCut && electronCut; 
+        commonCutMC = ptCut && etaCut && hoeCut && sigmaCut && isoCut && electronCut;
+        //commonCutDATA = ptCut && etaCut && trigCut_low && dataCut && hoeCut && sigmaCut && isoCut && electronCut; 
+        //commonCutMC = ptCut && etaCut && trigCut_mc_low && hoeCut && sigmaCut && isoCut && electronCut;
     } else {
-        commonCutDATA = etaCut && trigCut_pp_low && dataCut_pp && hoeCut_pp && sigmaCut_pp && isoCut_pp && electronCut; 
-        commonCutMC = etaCut && hoeCut_pp && trigCut_mc_pp_low && sigmaCut_pp && isoCut_pp && electronCut;
+        commonCutDATA = etaCut && dataCut_pp; 
+        commonCutMC = etaCut;
+        //commonCutDATA = etaCut && dataCut_pp && hoeCut_pp && sigmaCut_pp && isoCut_pp && electronCut; 
+        //commonCutMC = etaCut && hoeCut_pp && sigmaCut_pp && isoCut_pp && electronCut;
+        //commonCutDATA = etaCut && trigCut_pp_low && dataCut_pp && hoeCut_pp && sigmaCut_pp && isoCut_pp && electronCut; 
+        //commonCutMC = etaCut && hoeCut_pp && trigCut_mc_pp_low && sigmaCut_pp && isoCut_pp && electronCut;
     }
-    compareThree(t1, t2, t3, "phoEtCorrected",nBins, 20, 180.0,commonCutMC && mcIsolation,commonCutMC && mcBkgIsolation,commonCutDATA,cap,doWeight,doEmEnr);
-    //if(coll=="pbpb") compareThree(t1, t2, t3, "hiBin",nBins, 0, 200.0,commonCutMC && mcIsolation,commonCutMC && mcIsolation,commonCutDATA,cap,doWeight,doEmEnr);
+    compareThree(t1, t2, t3, "phoEtCorrected",nBins, 40, 200.0,commonCutMC && mcIsolation,commonCutMC && mcBkgIsolation,commonCutDATA,cap,doWeight,doEmEnr);
     compareThree(t1, t2, t3, "phoEta",nBins, -1.44, 1.44,commonCutMC && mcIsolation,commonCutMC && mcIsolation,commonCutDATA,cap,doWeight,doEmEnr);
-    compareThree(t1, t2, t3, "phoPhi",nBins, -TMath::Pi(), TMath::Pi(),commonCutMC && mcIsolation,commonCutMC && mcIsolation,commonCutDATA,cap,doWeight,doEmEnr);
+    //compareThree(t1, t2, t3, "phoEtCorrected",nBins, 25, 200.0,commonCutMC && mcIsolation,commonCutMC && mcBkgIsolation,commonCutDATA,cap,doWeight,doEmEnr);
+    //if(coll=="pbpb") compareThree(t1, t2, t3, "hiBin",nBins, 0, 200.0,commonCutMC && mcIsolation,commonCutMC && mcIsolation,commonCutDATA,cap,doWeight,doEmEnr);
+    //compareThree(t1, t2, t3, "phoEta",nBins, -1.44, 1.44,commonCutMC && mcIsolation,commonCutMC && mcIsolation,commonCutDATA,cap,doWeight,doEmEnr);
+   // compareThree(t1, t2, t3, "phoPhi",nBins, -TMath::Pi(), TMath::Pi(),commonCutMC && mcIsolation,commonCutMC && mcIsolation,commonCutDATA,cap,doWeight,doEmEnr);
 
    // for(Int_t ipt = 0; ipt < nPtBinIF; ++ipt){
    //     TCut ptCut = Form("(phoEt>=%f)&&(phoEt<%f)", ptBins_i[ipt], ptBins_f[ipt]);

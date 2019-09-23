@@ -20,7 +20,7 @@ void check_reweight(TString coll="pbpb"){
         if(doEmEnrSample)    fname[1]=Form("%s",ppMCEmEnrfname.Data());
         else                 fname[1]=Form("%s",ppMCfname.Data());
     } else if(coll=="pbpb"){
-        fname[0]=Form("%s",pbpbDatafname.Data());
+        fname[0]=Form("%s",pbpbDatafname_high.Data());
         if(doEmEnrSample)    fname[1]=Form("%s",pbpbMCEmEnrfname.Data());
         else                 fname[1]=Form("%s",pbpbMCfname.Data());
     }
@@ -61,6 +61,8 @@ void check_reweight(TString coll="pbpb"){
     if(coll=="pp") nCENTBINS=1;
 
     // Cuts   
+    //TCut dataCut_ = evtSelFilterCut && trigCut_low && ptCut && etaCut; 
+    //TCut mcCut_ = ptCut && etaCut; 
     TCut dataCut_ = phoSignalCut_woTrig && trigCut_low ; 
     TCut mcCut_ = hoeCut && isoCut && sigmaCut && electronCut; 
     //TCut mcCut_ =  trigCut_mc && evtSelFilterCut && noiseCut && hoeCut && isoCut && sigmaCut && electronCut; 
@@ -73,13 +75,15 @@ void check_reweight(TString coll="pbpb"){
        // dataCut_ =  trigCut && evtSelFilterCut_pp && noiseCut;
        // mcCut_ = trigCut_mc_pp && evtSelFilterCut_pp && noiseCut;
     } 
-    string cap = "trig_evtSel_noise_hoe_sig_iso_eleRej";
-    cap+=Form("_%s",coll.Data());
+    string cap = Form("%s",coll.Data());
+    //string cap = "trig_evtSel_noise_hoe_sig_iso_eleRej";
+    //cap+=Form("_%s",coll.Data());
     if(doEmEnrSample) cap+="_EmEnrchedDijet";
     else cap+="_AllQCDPhotons";
 
     if(isDrum) cap+="_Drum";
 
+    cap+="_Trig_ptEtaCut_lowPtPD_ptEtaCutOnMC";
     double hiBinMin=0;
     double hiBinMax=200;
     double vzMin=-15;
@@ -177,7 +181,7 @@ void comparePthat(TTree* t1, TString var, int nBins, double xMin, double xMax, T
 //	c->Divide(1,2);
 //	c->cd(1);
 	gPad->SetLogy();
-	TH1D* h1 = new TH1D(Form("h1_%s_%d",var.Data(),j), Form(";%s;",var.Data()), nBins,xMin,xMax);
+	TH1D* h1 = new TH1D(Form("h1_%s_%d",var.Data(),j), Form(";p_{T}hat (GeV);%s",""), nBins,xMin,xMax);
 	TH1D* h2 = (TH1D*)h1->Clone(Form("h2_%s_%d",var.Data(),j));
 	h1->Sumw2();
 	h2->Sumw2();
@@ -195,7 +199,7 @@ void comparePthat(TTree* t1, TString var, int nBins, double xMin, double xMax, T
     SetHistTextSize(h1);
     TString sampleName = "AllQCDPhotons";
     if(doEmEnrSample) sampleName = "EmEnrichedDijet";
-    TLegend* l1 = new TLegend(0.2,0.3,0.70,0.5);
+    TLegend* l1 = new TLegend(0.2,0.3,0.85,0.5);
     legStyle(l1);
     l1->AddEntry(h1, Form("%s before weight",sampleName.Data()), "p");
     l1->AddEntry(h2, Form("%s after weight",sampleName.Data()), "l");
@@ -206,6 +210,7 @@ void comparePthat(TTree* t1, TString var, int nBins, double xMin, double xMax, T
 	//h3->DrawCopy("hist same");
     l1->Draw("same");
     if(cap!="") drawText(cap.data(),0.2,0.2);
+    //if(cap!="") drawText(cap.data(),0.2,0.2);
    
     j++;
 	c-> SaveAs(Form("figures/compare_weight_%s_%s.pdf",var.Data(),cap.data()));

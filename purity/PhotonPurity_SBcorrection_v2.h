@@ -81,8 +81,8 @@ PhotonPurity doFit(CutConfiguration config, TH1D* hSig=0, TH1D* hBkg=0, TH1D* hD
   TF1 *f = new TF1("f",myFits,&histFunction2::evaluate,varLow,varHigh,3);
   f->SetParameters( hDatatmp->Integral(1,nBins+1), 0.7, 0.0);
   f->SetParLimits(1,0,1);
-  //f->SetParLimits(2,-0.0001,+0.0001);
-  f->FixParameter(2,0.0);
+  f->SetParLimits(2,-0.0001,+0.0001);
+  //f->FixParameter(2,0.0);
   hDatatmp->Fit("f","WL M 0 Q","",varLow,varHigh);
   hDatatmp->Fit("f","WL M 0 Q","",varLow,varHigh);
   hDatatmp->Fit("f","WL M 0 Q","",varLow,varHigh);
@@ -151,7 +151,7 @@ PhotonPurity getPurity(const TString coll, CutConfiguration config, TTree *dataT
   TString bkgshift = "+";
   bkgshift += backgroundShift;
  
-  TString varHere="phoSigmaIEtaIEta_2012";
+  TString varHere = "phoSigmaIEtaIEta";
   //if(coll=="pp") varHere=purityVar_pp;
   //else if(coll=="pbpb") varHere=purityVar;
   //else cout << "There's no '" << coll << "' type of collision" << endl;
@@ -159,7 +159,8 @@ PhotonPurity getPurity(const TString coll, CutConfiguration config, TTree *dataT
 
 
   //if(doPreScale){
-      dataTree->Project(hCand->GetName(), varHere, dataWeightLabel*dataCandidateCut, "");
+      dataTree->Project(hCand->GetName(), varHere, dataCandidateCut, "");
+      //dataTree->Project(hCand->GetName(), varHere, dataWeightLabel*dataCandidateCut, "");
   //} else{
   //    dataTree->Project(hCand->GetName(), varHere, dataCandidateCut, "");
   //}
@@ -188,8 +189,16 @@ PhotonPurity getPurity(const TString coll, CutConfiguration config, TTree *dataT
           double binVal = hBkg->GetBinContent(vv+1);
           double binErr = hBkg->GetBinError(vv+1);
           double binX = hBkg->GetBinLowEdge(vv+1)+(double)hBkg->GetBinWidth(vv+1)/2.;
-          hBkg->SetBinContent(vv+1,binVal*abs(f1->Eval(binX)));
-          hBkg->SetBinError(vv+1,binErr*abs(f1->Eval(binX)));
+          if(binX<=0.008){
+              hBkg->SetBinContent(vv+1,binVal*abs(f1->Eval(0.008)));
+              hBkg->SetBinError(vv+1,binErr*abs(f1->Eval(0.008)));
+          } else if(binX>=0.015){
+              hBkg->SetBinContent(vv+1,binVal*abs(f1->Eval(0.015)));
+              hBkg->SetBinError(vv+1,binErr*abs(f1->Eval(0.015)));
+          } else{
+              hBkg->SetBinContent(vv+1,binVal*abs(f1->Eval(binX)));
+              hBkg->SetBinError(vv+1,binErr*abs(f1->Eval(binX)));
+          }
       }
   }
   

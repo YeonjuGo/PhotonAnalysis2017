@@ -1,5 +1,5 @@
 // Created : 2017 April 18
-// Modified : 2019 June 24
+// Modified 1: 2019 June 24
 // Author : Yeonju Go
 // to have centrality dependenct matrix binning 
 // ex) matrix in 30-50% has pt binning up to 200 GeV while some others have up to 300 GeV 
@@ -9,7 +9,7 @@
 bool isConsBin = false;
 const int colHere[]={2,4,8,kYellow+2,kCyan+1};
 const int markerStyle[]={20,33,22,23,22,29};
-void correlation_genPt_recoPt_v3(TString coll="pp", TString ver="190625_temp_v29_nominal", bool splitMC=false, bool isFineBinning=false, bool doWeight=true){
+void correlation_genPt_recoPt_v3(TString coll="pp", TString ver="190703_temp_v31_nominal", bool splitMC=false, bool isFineBinning=false, bool doWeight=true){
     cout << " :::::: correlation_genPt_recoPt.C :::::: " << endl;
     TH1::SetDefaultSumw2();
     gStyle->SetOptStat(0);
@@ -129,13 +129,13 @@ void correlation_genPt_recoPt_v3(TString coll="pp", TString ver="190625_temp_v29
             // if(doWeight)    t1->Draw(Form("%s>>%s","phoEt",h1D_pt[1][i]->GetName()), Form("(%s)*((%s) && (%s))","weight",mcIsolation.GetTitle(),commonCut.GetTitle()));
             // else            t1->Draw(Form("%s>>%s","phoEt",h1D_pt[1][i]->GetName()), mcIsolation && commonCut);
             //reco (matched)
-            if(doWeight)    t1->Draw(Form("%s>>%s","phoEtCorrected",h1D_pt[1][i]->GetName()), Form("(%s)*((%s) && (%s))","weight",mcIsolation.GetTitle(),commonCut.GetTitle()));
-            else            t1->Draw(Form("%s>>%s","phoEtCorrected",h1D_pt[1][i]->GetName()), mcIsolation && commonCut);
+            if(doWeight)    t1->Draw(Form("%s>>%s",phoEtVar.Data(),h1D_pt[1][i]->GetName()), Form("(%s)*((%s) && (%s))","weight",mcIsolation.GetTitle(),commonCut.GetTitle()));
+            else            t1->Draw(Form("%s>>%s",phoEtVar.Data(),h1D_pt[1][i]->GetName()), mcIsolation && commonCut);
             h1D_pt[1][i]=(TH1D*)gDirectory->Get(h1D_pt[1][i]->GetName());
 
             //reco (total, non-matched)
-            if(doWeight)    t1->Draw(Form("%s>>%s","phoEtCorrected",h1D_pt[2][i]->GetName()), Form("(%s)*((%s))","weight",commonCut.GetTitle()));
-            else            t1->Draw(Form("%s>>%s","phoEtCorrected",h1D_pt[2][i]->GetName()), commonCut);
+            if(doWeight)    t1->Draw(Form("%s>>%s",phoEtVar.Data(),h1D_pt[2][i]->GetName()), Form("(%s)*((%s))","weight",commonCut.GetTitle()));
+            else            t1->Draw(Form("%s>>%s",phoEtVar.Data(),h1D_pt[2][i]->GetName()), commonCut);
             h1D_pt[2][i]=(TH1D*)gDirectory->Get(h1D_pt[2][i]->GetName());
 
             //gen (total, non-matched)
@@ -144,8 +144,8 @@ void correlation_genPt_recoPt_v3(TString coll="pp", TString ver="190625_temp_v29
             h1D_pt[3][i]=(TH1D*)gDirectory->Get(h1D_pt[3][i]->GetName());
 
             //h2D fineBinning
-            if(doWeight)    t1->Draw(Form("%s:%s>>%s","pho_genEt","phoEtCorrected",h2D_gen_reco[i]->GetName()), Form("(%s)*((%s) && (%s))","weight",mcIsolation.GetTitle(),commonCut.GetTitle()));
-            else            t1->Draw(Form("%s:%s>>%s","pho_genEt","phoEtCorrected",h2D_gen_reco[i]->GetName()), mcIsolation && commonCut);
+            if(doWeight)    t1->Draw(Form("%s:%s>>%s","pho_genEt",phoEtVar.Data(),h2D_gen_reco[i]->GetName()), Form("(%s)*((%s) && (%s))","weight",mcIsolation.GetTitle(),commonCut.GetTitle()));
+            else            t1->Draw(Form("%s:%s>>%s","pho_genEt",phoEtVar.Data(),h2D_gen_reco[i]->GetName()), mcIsolation && commonCut);
             //if(doWeight)    t1->Draw(Form("%s:%s>>%s","phoEtCorrected","pho_genEt",h2D_gen_reco[i]->GetName()), Form("(%s)*((%s) && (%s))","weight",mcIsolation.GetTitle(),commonCut.GetTitle()));
             //else            t1->Draw(Form("%s:%s>>%s","phoEtCorrected","pho_genEt",h2D_gen_reco[i]->GetName()), mcIsolation && commonCut);
             h2D_gen_reco[i]=(TH2D*)gDirectory->Get(h2D_gen_reco[i]->GetName());
@@ -174,26 +174,26 @@ void correlation_genPt_recoPt_v3(TString coll="pp", TString ver="190625_temp_v29
             h1D_pt[0][i]=(TH1D*)gDirectory->Get(h1D_pt[0][i]->GetName());
             //reco (matched)
             cout << "Draw reco dist (matched), only even entries" << endl;
-            if(doWeight)    t1_even->Draw(Form("%s>>%s","phoEtCorrected",h1D_pt[1][i]->GetName()), Form("(%s)*((%s) && (%s))","weight",mcIsolation.GetTitle(),commonCut.GetTitle()));
-            else            t1_even->Draw(Form("%s>>%s","phoEtCorrected",h1D_pt[1][i]->GetName()), mcIsolation && commonCut);
+            if(doWeight)    t1_even->Draw(Form("%s>>%s",phoEtVar.Data(),h1D_pt[1][i]->GetName()), Form("(%s)*((%s) && (%s))","weight",mcIsolation.GetTitle(),commonCut.GetTitle()));
+            else            t1_even->Draw(Form("%s>>%s",phoEtVar.Data(),h1D_pt[1][i]->GetName()), mcIsolation && commonCut);
             h1D_pt[1][i]=(TH1D*)gDirectory->Get(h1D_pt[1][i]->GetName());
 
             //reco (total, non-matched)
-            cout << "Draw total reco dist (matched)" << endl;
-            if(doWeight)    t1->Draw(Form("%s>>%s","phoEtCorrected",h1D_pt[2][i]->GetName()), Form("(%s)*((%s))","weight",commonCut.GetTitle()));
-            else            t1->Draw(Form("%s>>%s","phoEtCorrected",h1D_pt[2][i]->GetName()), commonCut);
+            cout << "Draw total reco dist (non-matched)" << endl;
+            if(doWeight)    t1->Draw(Form("%s>>%s",phoEtVar.Data(),h1D_pt[2][i]->GetName()), Form("(%s)*((%s))","weight",commonCut.GetTitle()));
+            else            t1->Draw(Form("%s>>%s",phoEtVar.Data(),h1D_pt[2][i]->GetName()), commonCut);
             h1D_pt[2][i]=(TH1D*)gDirectory->Get(h1D_pt[2][i]->GetName());
 
             //gen (total, non-matched)
-            cout << "Draw total gen dist (matched)" << endl;
+            cout << "Draw total gen dist (non-matched)" << endl;
             if(doWeight)    t1->Draw(Form("%s>>%s","mcEt",h1D_pt[3][i]->GetName()), Form("(%s)*((%s)*(%s))","weight",mcIsolation_nm.GetTitle(),centCut.GetTitle()));
             else            t1->Draw(Form("%s>>%s","mcEt",h1D_pt[3][i]->GetName()), mcIsolation_nm && centCut);
             h1D_pt[3][i]=(TH1D*)gDirectory->Get(h1D_pt[3][i]->GetName());
 
             //h2D fineBinning
             cout << "Draw response matrix (matched), only odd entries" << endl;
-            if(doWeight)    t1_odd->Draw(Form("%s:%s>>%s","pho_genEt","phoEtCorrected",h2D_gen_reco[i]->GetName()), Form("(%s)*((%s) && (%s))","weight",mcIsolation.GetTitle(),commonCut.GetTitle()));
-            else            t1_odd->Draw(Form("%s:%s>>%s","pho_genEt","phoEtCorrected",h2D_gen_reco[i]->GetName()), mcIsolation && commonCut);
+            if(doWeight)    t1_odd->Draw(Form("%s:%s>>%s","pho_genEt",phoEtVar.Data(),h2D_gen_reco[i]->GetName()), Form("(%s)*((%s) && (%s))","weight",mcIsolation.GetTitle(),commonCut.GetTitle()));
+            else            t1_odd->Draw(Form("%s:%s>>%s","pho_genEt",phoEtVar.Data(),h2D_gen_reco[i]->GetName()), mcIsolation && commonCut);
             h2D_gen_reco[i]=(TH2D*)gDirectory->Get(h2D_gen_reco[i]->GetName());
             h1D_pt_ratio[i]->Divide(h1D_pt[1][i],h1D_pt[0][i]);
             //h1D_pt_ratio_error[i] = getRatioErrorHist_completelyCorrelated(h1D_pt_ratio[i],h1D_pt[1][i],h1D_pt[0][i]); 
@@ -229,8 +229,9 @@ void correlation_genPt_recoPt_v3(TString coll="pp", TString ver="190625_temp_v29
    if(coll=="pp") c2 =new TCanvas(Form("c%d",2),"", 400+150,400*2);
    else c2 =new TCanvas(Form("c%d",2),"", 400*nCENTBINS,400*2);
 //    c2->Divide(nCENTBINS,2);
-//    if(coll=="pp") 
-        makeMultiPanelCanvas(c2,nCENTBINS,2);
+    //if(coll=="pp") c2->Divide(1,2); 
+    //else  makeMultiPanelCanvas(c2,nCENTBINS,2);
+    makeMultiPanelCanvas(c2,nCENTBINS,2);
     TLegend* l1 = new TLegend(0.6,0.7,0.9,0.9);
     legStyle(l1);
     for(Int_t i=0;i<nCENTBINS;++i){
@@ -252,15 +253,17 @@ void correlation_genPt_recoPt_v3(TString coll="pp", TString ver="190625_temp_v29
         ////////////////////////////////////////////////
        // h1D_pt[1][i]->Scale(100.);
        // h1D_pt[0][i]->Scale(100.);
-        h1D_pt[0][i]->SetLineColor(4);
+        h1D_pt[1][i]->SetLineColor(4);
+        h1D_pt[1][i]->SetMarkerColor(4);
+        h1D_pt[1][i]->SetMarkerStyle(20);
         h1D_pt[0][i]->SetLineColor(2);
-        h1D_pt[1][i]->Draw("hist e");
+        h1D_pt[1][i]->Draw("hist pe");
         h1D_pt[0][i]->Draw("hist same e");
         gPad->SetLogy();
         gPad->SetLogx();
         if(i==0){
             l1->AddEntry(h1D_pt[0][i], "GEN", "l");
-            l1->AddEntry(h1D_pt[1][i], "RECO", "l");
+            l1->AddEntry(h1D_pt[1][i], "RECO", "pl");
         }
         l1->Draw("same");
         if(coll=="pp") drawText(Form("pp%s",""),0.4,1.0-c2->GetTopMargin()-0.06);
@@ -270,13 +273,13 @@ void correlation_genPt_recoPt_v3(TString coll="pp", TString ver="190625_temp_v29
         h1D_pt_ratio[i]->SetTitle(";p_{T}^{#gamma} (GeV);Reco p_{T}/Gen p_{T}");
         h1D_pt_ratio[i]->GetYaxis()->SetRangeUser(0.8,1.2);
         SetHistTextSize(h1D_pt_ratio[i]);
-        h1D_pt_ratio[i]->Draw("e");
+        h1D_pt_ratio[i]->Draw("hist pe");
         jumSun(ptBins[0],1,ptBins_unfolding_centDep[nPtBin_unfolding_centDep],1);
     } 
     c2->SaveAs(Form("%sfigures/correlation_genPt_recoPt_1D_%s.pdf",dir.Data(),cap.Data()));
     
     /////////////////////////////////////////////////////////////////////
-    // DRAWING : h2D genPt vs. recoPt correlation : Centrality Dependence  
+    // DRAWING : h2D genPt vs. recoPt correlation : Centrality Dependence : Response matrix 
    
     TCanvas* c1 =new TCanvas(Form("c%d",1),"", 400*nCENTBINS,400);
     c1->Divide(nCENTBINS,1);
@@ -291,7 +294,7 @@ void correlation_genPt_recoPt_v3(TString coll="pp", TString ver="190625_temp_v29
     c1->SaveAs(Form("%sfigures/correlation_genPt_recoPt_2D_%s.pdf",dir.Data(),cap.Data()));
 
     /////////////////////////////////////////////////////////////////////
-    // Do matrix
+    // Calculate Matrix for h2D genPt vs. recoPt correlation with percent : Response matrix 
     for(Int_t i=0;i<nCENTBINS;++i){
         for(int ypt=1; ypt<=h2D_gen_reco[i]->GetNbinsY(); ++ypt){
             int totEvtInAbin = 0;
@@ -299,7 +302,7 @@ void correlation_genPt_recoPt_v3(TString coll="pp", TString ver="190625_temp_v29
                 totEvtInAbin += h2D_gen_reco[i]->GetBinContent(xpt,ypt);
 
             for(int xpt=1; xpt<=h2D_gen_reco[i]->GetNbinsX(); ++xpt){
-                int evtInAbin = h2D_gen_reco[i]->GetBinContent(xpt,ypt); 
+                double evtInAbin = h2D_gen_reco[i]->GetBinContent(xpt,ypt); 
                 double percent = 0;
                 percent = (double)evtInAbin/(double)totEvtInAbin;
                 h2D_gen_reco_percent[i]->SetBinContent(xpt,ypt,percent);
@@ -307,9 +310,12 @@ void correlation_genPt_recoPt_v3(TString coll="pp", TString ver="190625_temp_v29
         }//y loop
     }//centrality loop
     
+    /////////////////////////////////////////////////////////////////////
+    // DRAWING : h2D genPt vs. recoPt correlation with percent : Response matrix 
     //gStyle->SetPaintTextFormat("4.2f");
     TCanvas* c3 =new TCanvas(Form("c%d",3),"", 400*nCENTBINS,400);
     c3->Divide(nCENTBINS,1);
+    TCanvas* c3_each[nCENTBINS];
     for(Int_t i=0;i<nCENTBINS;++i){
         c3->cd(i+1);
         gPad->SetLogy();
@@ -317,10 +323,18 @@ void correlation_genPt_recoPt_v3(TString coll="pp", TString ver="190625_temp_v29
         h2D_gen_reco_percent[i]->Draw("colz text");
         //h2D_gen_reco[i]->GetYaxis()->SetTitleOffset(0.5);
         //h2D_gen_reco[i]->Draw("colz text");
-        drawText(Form("%d-%d %%",(int)centBins_i[i]/2,(int)centBins_f[i]/2),0.2,1.0-c1->GetTopMargin()-0.06);
+        drawText(Form("%s",coll.Data()),0.2,1.0-c1->GetTopMargin()-0.06);
+        if(coll!="pp"){
+            drawText(Form("%d-%d %%",(int)centBins_i[i]/2,(int)centBins_f[i]/2),0.2,1.0-c1->GetTopMargin()-0.06-0.05);
+            c3_each[i] = new TCanvas(Form("c3_each_cent%d",i),"", 400,400);
+            gPad->SetLogy();
+            gPad->SetLogx();
+            h2D_gen_reco_percent[i]->Draw("colz text");
+            drawText(Form("%d-%d %%",(int)centBins_i[i]/2,(int)centBins_f[i]/2),0.2,1.0-c1->GetTopMargin()-0.06);
+            c3_each[i]->SaveAs(Form("%sfigures/correlation_genPt_recoPt_2D_percent_%s_cent%d.pdf",dir.Data(),cap.Data(),i));
+        }
     }
     c3->SaveAs(Form("%sfigures/correlation_genPt_recoPt_2D_percent_%s.pdf",dir.Data(),cap.Data()));
-
 
     
 }
